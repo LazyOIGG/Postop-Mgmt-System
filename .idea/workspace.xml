@@ -4,8 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="2026/4/20/9:00 合并">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+    <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="删除.env在仓库中的显示">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -117,7 +121,7 @@
       <recent name="E:\Code\Python\KG_LLM_Medical_QA_System\database" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.build_up_graph">
+  <component name="RunManager" selected="Python.run">
     <configuration name="build_up_graph" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Postop-Mgmt-System" />
       <option name="ENV_FILES" value="" />
@@ -198,8 +202,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.build_up_graph" />
         <item itemvalue="Python.run" />
+        <item itemvalue="Python.build_up_graph" />
         <item itemvalue="Python 测试.Python 测试 (db_operation.py 内)" />
         <item itemvalue="Python 测试.database.db_operation.test_database_connection 的 Python 测试" />
       </list>
@@ -208,8 +212,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.142" />
-        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
+        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-PY-252.25557.178" />
+        <option value="bundled-python-sdk-ce6832f46686-7b97d883f26b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.25557.178" />
       </set>
     </attachedChunks>
   </component>
@@ -251,13 +255,17 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/model/chinese-roberta-wwm-ext" />
+    </ignored-roots>
     <MESSAGE value="重命名" />
     <MESSAGE value="最小可运行可连接版本" />
     <MESSAGE value="小型优化" />
     <MESSAGE value="使用DeepSeek" />
     <MESSAGE value="术后管理系统&#10;重构后初版" />
     <MESSAGE value="2026/4/20/9:00 合并" />
-    <option name="LAST_COMMIT_MESSAGE" value="2026/4/20/9:00 合并" />
+    <MESSAGE value="删除.env在仓库中的显示" />
+    <option name="LAST_COMMIT_MESSAGE" value="删除.env在仓库中的显示" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$main.coverage" NAME="main 覆盖结果" MODIFIED="1765257496968" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
@@ -265,7 +273,7 @@
     <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$db_operation.coverage" NAME="db_operation 覆盖结果" MODIFIED="1765255916261" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/database" />
     <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$.coverage" NAME=" 覆盖结果" MODIFIED="1765257278505" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Postop_Mgmt_System$build_up_graph.coverage" NAME="build_up_graph 覆盖结果" MODIFIED="1776062670804" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
-    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$run.coverage" NAME="run 覆盖结果" MODIFIED="1776062330433" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$run.coverage" NAME="run 覆盖结果" MODIFIED="1776653048313" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$run.coverage" NAME="run 覆盖结果" MODIFIED="1776061346340" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$init_database.coverage" NAME="init_database 覆盖结果" MODIFIED="1765250765471" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/database" />
   </component>

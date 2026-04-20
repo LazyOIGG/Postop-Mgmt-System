@@ -43,29 +43,33 @@
 
 ## ⚙️ 个人配置 (必备)
 
-在协作开发前，请在根目录下创建 `.env` 文件，并配置以下个人私有参数：
+在协作开发前，请在根目录下创建 `.env` 文件，并配置以下个人私有参数
+### 注意：若新增设置项，需在提交说明中说明，并将新的格式填入下面（不要暴露api key）
 
 ```env
 # 1. DeepSeek API 配置 (必填)
-DEEPSEEK_API_KEY=your_sk_here
+DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
 
 # 2. Neo4j 知识图谱配置 (必填)
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password_here
+NEO4J_PASSWORD=
 NEO4J_NAME=neo4j
 
 # 3. MySQL 数据库配置 (必填)
 MYSQL_HOST=localhost
 MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password
+MYSQL_PASSWORD=
 MYSQL_DATABASE=RAG
 
 # 4. 安全设置 (建议修改)
 SECRET_KEY=yoursupersecretkeyhere
+
+# 5. 阿里云语音识别配置 (可选，用于多模态功能)
+DASHSCOPE_API_KEY=
 ```
 
 ***
@@ -74,7 +78,7 @@ SECRET_KEY=yoursupersecretkeyhere
 
 ### 1. 环境准备
 
-推荐使用 Python 3.10 或 3.11 环境（我使用的是3.13，如果不行推荐试一下）：
+推荐使用 Python 3.10.11 ：
 
 ```bash
 pip install -r requirements.txt
