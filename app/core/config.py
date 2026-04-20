@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     """项目全局配置"""
     # 基础设置
     PROJECT_NAME: str = "术后管理系统API"
-    VERSION: str = "2.0.0"
+    VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     
     # DeepSeek API 配置

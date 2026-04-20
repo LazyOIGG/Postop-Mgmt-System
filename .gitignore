@@ -3,3 +3,4 @@ model/chinese-roberta-wwm-ext/
 model/best_roberta_rnn_model_ent_aug.pt
 .env
 __pycache__/
+/.idea/shelf/_2026_4_20_09_03____.xml

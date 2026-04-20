@@ -6,19 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="术后管理系统&#10;重构后初版">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/kg_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/kg_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/ner_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/ner_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/db_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_operation.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/local_db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/local_db_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/test_mysql.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/test_mysql.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/legacy/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/legacy/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/streamlit_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -145,7 +132,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/build_up_graph.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -169,7 +155,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -190,7 +175,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;$PROJECT_DIR$/database/db_operation.py&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
@@ -207,7 +191,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="RUN_TOOL" value="" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;database.db_operation.test_database_connection&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
@@ -255,7 +238,7 @@
                   <entry key="branch">
                     <value>
                       <list>
-                        <option value="origin/master" />
+                        <option value="master" />
                       </list>
                     </value>
                   </entry>
