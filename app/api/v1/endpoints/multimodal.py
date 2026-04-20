@@ -8,10 +8,16 @@ router = APIRouter()
 
 @router.post("/speech/stt")
 async def speech_to_text(file: UploadFile = File(...), user: Dict = Depends(get_current_user)):
-    """语音识别 (未来功能)"""
+    """语音识别"""
     content = await file.read()
     result = await speech_service.transcribe(content)
     return {"success": True, "text": result}
+
+@router.post("/speech/tts")
+async def text_to_speech(text: str, user: Dict = Depends(get_current_user)):
+    """语音合成"""
+    result = await speech_service.synthesize(text)
+    return {"success": True, "audio": result}
 
 @router.post("/image/analyze")
 async def analyze_image(file: UploadFile = File(...), user: Dict = Depends(get_current_user)):

@@ -2,6 +2,8 @@ import streamlit as st
 import requests
 import json
 import time
+import base64
+from io import BytesIO
 
 # FastAPI 后端地址
 API_BASE_URL = "http://localhost:8000/api/v1"
@@ -21,6 +23,10 @@ if "session_id" not in st.session_state:
     st.session_state.session_id = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+if "audio_data" not in st.session_state:
+    st.session_state.audio_data = None
+if "show_audio_input" not in st.session_state:
+    st.session_state.show_audio_input = False
 
 # 登录/注册界面
 def auth_section():
@@ -40,7 +46,7 @@ def auth_section():
                         st.session_state.token = data["token"]
                         st.session_state.logged_in = True
                         st.sidebar.success(f"欢迎回来, {st.session_state.username}!")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.sidebar.error(f"登录失败: {response.json().get('detail', '未知错误')}")
                 except requests.exceptions.ConnectionError:
@@ -70,7 +76,7 @@ def auth_section():
             st.session_state.token = ""
             st.session_state.session_id = None
             st.session_state.messages = []
-            st.experimental_rerun()
+            st.rerun()
 
 # 聊天界面
 def chat_section():
@@ -81,8 +87,82 @@ def chat_section():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # 用户输入
-    if prompt := st.chat_input("请输入您的问题..."):
+    # 语音输入按钮
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        prompt = st.chat_input("请输入您的问题...")
+    with col2:
+        if st.button("🎤 语音输入"):
+            print("[DEBUG] 点击了语音输入按钮")
+            st.session_state.show_audio_input = True
+            st.rerun()
+    
+    # 语音输入组件
+    if st.session_state.show_audio_input:
+        print("[DEBUG] 显示音频输入组件")
+        audio = st.sidebar.audio_input("录制语音", key="audio_input")
+        print(f"[DEBUG] 音频对象: {audio}")
+        
+        if audio:
+            print(f"[DEBUG] 音频文件类型: {type(audio)}")
+            try:
+                st.session_state.audio_data = audio
+                print(f"[DEBUG] 音频数据已保存到会话状态")
+                
+                # 显示上传状态
+                with st.spinner("正在处理语音..."):
+                    # 上传音频到后端进行识别
+                    audio_data = audio.getvalue()
+                    print(f"[DEBUG] 音频数据大小: {len(audio_data)} bytes")
+                    
+                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    files = {"file": ("audio.wav", audio_data, "audio/wav")}
+                    print(f"[DEBUG] 准备发送请求到: {API_BASE_URL}/multimodal/speech/stt")
+                    
+                    try:
+                        response = requests.post(f"{API_BASE_URL}/multimodal/speech/stt", headers=headers, files=files, timeout=30)
+                        print(f"[DEBUG] 请求状态码: {response.status_code}")
+                        print(f"[DEBUG] 请求响应: {response.text}")
+                        
+                        if response.status_code == 200:
+                            result = response.json()
+                            print(f"[DEBUG] 识别结果: {result}")
+                            prompt = result.get("text", "")
+                            if prompt:
+                                print(f"[DEBUG] 识别文本: {prompt}")
+                                st.session_state.messages.append({"role": "user", "content": prompt})
+                                with st.chat_message("user"):
+                                    st.markdown(prompt)
+                                    st.audio(audio)
+                                # 重置状态
+                                st.session_state.show_audio_input = False
+                                st.session_state.audio_data = None
+                                # 刷新页面以显示新消息
+                                print("[DEBUG] 准备刷新页面")
+                                st.rerun()
+                            else:
+                                print("[DEBUG] 识别结果为空")
+                                st.error("语音识别结果为空，请重试")
+                        else:
+                            print(f"[DEBUG] 请求失败: {response.text}")
+                            st.error(f"语音识别失败: {response.json().get('detail', '未知错误')}")
+                    except requests.RequestException as e:
+                        print(f"[DEBUG] 请求异常: {str(e)}")
+                        st.error(f"语音识别请求失败: {e}")
+                
+            except Exception as e:
+                print(f"[DEBUG] 音频处理异常: {str(e)}")
+                st.error(f"音频处理失败: {e}")
+        
+        # 取消按钮
+        if st.sidebar.button("取消语音输入"):
+            print("[DEBUG] 取消语音输入")
+            st.session_state.show_audio_input = False
+            st.session_state.audio_data = None
+            st.rerun()
+
+    # 文本输入处理
+    if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
@@ -128,6 +208,25 @@ def chat_section():
                                 pass
                     message_placeholder.markdown(full_response) # 移除光标
                     st.session_state.messages.append({"role": "assistant", "content": full_response})
+                    
+                    # 语音播放按钮
+                    if st.button("🔊 语音播放"):
+                        # 调用语音合成接口
+                        try:
+                            tts_response = requests.post(f"{API_BASE_URL}/multimodal/speech/tts", 
+                                                       headers=headers, 
+                                                       json={"text": full_response})
+                            if tts_response.status_code == 200:
+                                tts_result = tts_response.json()
+                                if tts_result.get("audio"):
+                                    # 处理音频数据
+                                    st.audio(tts_result["audio"])
+                                else:
+                                    st.info("语音合成功能尚未完全实现")
+                            else:
+                                st.error(f"语音合成失败: {tts_response.json().get('detail', '未知错误')}")
+                        except Exception as e:
+                            st.error(f"语音合成请求失败: {e}")
                 else:
                     error_msg = response.json().get('detail', '未知错误')
                     st.error(f"后端请求失败: {error_msg}")

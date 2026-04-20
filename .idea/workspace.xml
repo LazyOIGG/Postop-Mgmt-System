@@ -5,126 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="术后管理系统&#10;重构后初版">
-      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/Postop-Mgmt-System.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/chat.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/kg.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/multimodal.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/sessions.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/stats.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/tools.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/db/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/db/session.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/schemas.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/image_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/intent_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/kg_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/llm_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/ner_model.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/ner_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/speech_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/检查项目.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/治疗方法.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/疾病.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/疾病症状.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/科目.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/药品.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/药品商.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ent_aug/食物.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/lora_data/dev.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/lora_data/train.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/medical.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/medical_new_2.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/ner_data_aug.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/nl2cyhper_data-Copy1.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/processjson.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/rel_aug.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/db_operation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/local_db_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/password_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/test_mysql.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/README_en.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/configs/ds_zero_2.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/configs/ds_zero_3.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/configs/lora.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/configs/ptuning_v2.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/configs/sft.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/dev.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/finetune_hf.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/inference_hf.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/log.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/lora_finetune.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/nl2cyhper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/nl2cyhper_data.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/nl2cyhper_data_test.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/peft_data.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/questions.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/微调运行.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/finetune_demo/解析.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/RAG.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/admin.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/all.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e3.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e4.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e5.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e6.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/e7.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/jiemian.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/langchain+chatglm.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/login.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/logo.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/neo4j.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/nerdata.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/nl2cyhper.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/register.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/shitishibie.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/user.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/yitushibie.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/img/yuju.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/legacy/Intent_Recognition.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/legacy/Knowledge_Graph_Query.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/legacy/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/legacy/run_modular.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/legacy/user_data_storage.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/legacy/映射关系" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/roberta.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ner_result/NER结果保存1.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ner_result/结果2.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ner_result/结果3.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ner_result/结果4.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/build_up_graph.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/init_mysql.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/ner_data.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/test_deepseek.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tmp_data/tag2idx.npy" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tmp_data/user_credentials.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/kg_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/kg_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/ner_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/ner_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/db_operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/db_operation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/local_db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/local_db_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/test_mysql.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/test_mysql.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/legacy/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/legacy/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/streamlit_app.py" beforeDir="false" afterPath="$PROJECT_DIR$/streamlit_app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -163,6 +57,7 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -176,6 +71,10 @@
     &quot;accountId&quot;: &quot;4f8d586d-676d-4874-b654-4008708231a3&quot;
   }
 }</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
 }</component>
@@ -188,37 +87,40 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python 测试.Python 测试 (db_operation.py 内).executor": "Run",
-    "Python 测试.Python 测试 (test_mysql.py 内).executor": "Run",
-    "Python 测试.database.db_operation.test_database_connection 的 Python 测试.executor": "Run",
-    "Python.build_up_graph.executor": "Run",
-    "Python.db_operation.executor": "Run",
-    "Python.init_database.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.run.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "deletionFromPopupRequiresConfirmation": "false",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "E:/Code/Python/Postop-Mgmt-System",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python 测试.Python 测试 (db_operation.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.Python 测试 (test_mysql.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.database.db_operation.test_database_connection 的 Python 测试.executor&quot;: &quot;Run&quot;,
+    &quot;Python.build_up_graph.executor&quot;: &quot;Run&quot;,
+    &quot;Python.db_operation.executor&quot;: &quot;Run&quot;,
+    &quot;Python.init_database.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Code/Python/Postop-Mgmt-System&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;project.propVCSSupport.DirectoryMappings&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql_aurora"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql_aurora&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="E:\Code\Python\KG_LLM_Medical_QA_System" />
@@ -243,6 +145,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/build_up_graph.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -266,6 +169,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -286,6 +190,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;$PROJECT_DIR$/database/db_operation.py&quot;" />
       <option name="_new_targetType" value="&quot;PATH&quot;" />
@@ -302,6 +207,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;database.db_operation.test_database_connection&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
@@ -319,8 +225,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-b598e85cdad2-JavaScript-PY-252.25557.178" />
-        <option value="bundled-python-sdk-ce6832f46686-7b97d883f26b-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.25557.178" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.142" />
+        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
       </set>
     </attachedChunks>
   </component>
@@ -331,6 +237,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1764664231681</updated>
+      <workItem from="1776603222102" duration="98000" />
     </task>
     <servers />
   </component>
@@ -342,7 +249,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>

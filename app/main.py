@@ -57,9 +57,9 @@ async def startup_event():
     
     # 尝试连接数据库
     if db_instance.connect():
-        print("✅ 数据库连接成功")
+        print("数据库连接成功")
     else:
-        print("⚠️ 数据库连接失败")
+        print("数据库连接失败")
 
     print(f"API 文档地址: http://localhost:8000/docs")
     print("=" * 50)

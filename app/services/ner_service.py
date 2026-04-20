@@ -25,7 +25,7 @@ class NERService:
 
     def _load_models(self):
         """加载 NER 模型及配置"""
-        print("[INFO] ℹ️ 开始加载 NER 模型...")
+        print("[INFO] 开始加载 NER 模型...")
         try:
             if zwk and os.path.exists(settings.TAG2IDX_PATH):
                 with open(settings.TAG2IDX_PATH, 'rb') as f:
@@ -33,23 +33,23 @@ class NERService:
                 self.idx2tag = list(tag2idx)
                 self.rule = zwk.rule_find()
                 self.tfidf_r = zwk.tfidf_alignment()
-                print("[SUCCESS] ✅ NER 配置文件加载成功")
+                print("[SUCCESS] NER 配置文件加载成功")
         except Exception as e:
-            print(f"[ERROR] ❌ NER 配置加载失败: {e}")
+            print(f"[ERROR] NER 配置加载失败: {e}")
 
         try:
             if BertTokenizer and BertModel:
                 local_path = settings.BERT_MODEL_PATH
-                model_name = local_path if os.path.exists(local_path) else 'hfl/chinese-roberta-wwm-ext'
+                model_name = local_path
                 self.bert_tokenizer = BertTokenizer.from_pretrained(model_name)
                 
                 if zwk and os.path.exists(settings.NER_MODEL_WEIGHTS):
                     self.bert_model = zwk.Bert_Model(model_name, hidden_size=128, tag_num=len(tag2idx), bi=True)
                     self.bert_model.load_state_dict(torch.load(settings.NER_MODEL_WEIGHTS, map_location=self.device))
                     self.bert_model = self.bert_model.to(self.device).eval()
-                    print("[SUCCESS] ✅ NER 模型加载成功")
+                    print("[SUCCESS] NER 模型加载成功")
         except Exception as e:
-            print(f"[ERROR] ❌ NER 模型加载失败: {e}")
+            print(f"[ERROR] NER 模型加载失败: {e}")
 
     def recognize(self, query: str) -> Dict:
         """执行实体识别"""

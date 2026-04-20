@@ -13,9 +13,9 @@ class KGService:
                 password=settings.NEO4J_PASSWORD,
                 name=settings.NEO4J_NAME
             )
-            print("[SUCCESS] ✅ Neo4j连接成功")
+            print("[SUCCESS] Neo4j连接成功")
         except Exception as e:
-            print(f"[ERROR] ❌ Neo4j连接失败: {e}")
+            print(f"[ERROR] Neo4j连接失败: {e}")
             self.client = None
 
     def add_shuxing_prompt(self, entity, shuxing):
@@ -28,7 +28,7 @@ class KGService:
                 content = "".join(res[0].values())
                 return f"<提示>用户对{entity}有查询{shuxing}需求，知识库内容：{content}</提示>"
         except Exception as e:
-            print(f"[WARN] ⚠️ 属性查询失败({shuxing}): {e}")
+            print(f"[WARN] 属性查询失败({shuxing}): {e}")
         return ""
 
     def add_lianxi_prompt(self, entity, lianxi, target):
@@ -41,7 +41,7 @@ class KGService:
                 names = "、".join([list(data.values())[0] for data in res])
                 return f"<提示>用户对{entity}有查询{lianxi}需求，知识库内容：{names}</提示>"
         except Exception as e:
-            print(f"[WARN] ⚠️ 关系查询失败({lianxi}): {e}")
+            print(f"[WARN] 关系查询失败({lianxi}): {e}")
         return ""
 
     def generate_enhanced_prompt(self, intent_response: str, query: str, entities: Dict) -> tuple:
@@ -59,7 +59,7 @@ class KGService:
                     entities['疾病'] = random.choice(res)
                     neo4j_prompt += f"<提示>基于{entities['疾病症状']}，推测可能是：{'、'.join(res)}。请告知用户这仅为推测。</提示>"
             except Exception as e:
-                print(f"[ERROR] ❌ 症状推测失败: {e}")
+                print(f"[ERROR] 症状推测失败: {e}")
 
         # 意图映射查询
         intent_map = {
@@ -95,7 +95,7 @@ class KGService:
         try:
             return self.client.run(cypher_query).data()
         except Exception as e:
-            print(f"[ERROR] ❌ 图谱查询失败: {e}")
+            print(f"[ERROR] 图谱查询失败: {e}")
             return []
 
 kg_service = KGService()

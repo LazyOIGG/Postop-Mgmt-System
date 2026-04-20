@@ -21,3 +21,7 @@ python-dotenv
 pydantic-settings
 streamlit
 requests
+whisper
+pydub
+ffmpeg-python
+dashscope

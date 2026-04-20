@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DatabaseConnector:
-    def __init__(self, host='localhost', database='RAG', user='root', password='Ncy18225889352',
+    def __init__(self, host='localhost', database='RAG', user='root', password='GX3216379973.qq',
                  pool_size=5, pool_name='medical_qa_pool'):
         self.host = host
         self.database = database

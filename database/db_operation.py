@@ -4,7 +4,7 @@ from mysql.connector import Error
 from database.password_utils import encrypt_password
 import sys
 
-def create_database_if_not_exists(host='localhost', user='root', password='Ncy18225889352', database='RAG'):
+def create_database_if_not_exists(host='localhost', user='root', password='GX3216379973.qq', database='RAG'):
     """创建数据库（如果不存在）"""
     try:
         # 首先连接到MySQL服务器（不指定数据库）
@@ -43,7 +43,7 @@ def init_database_tables():
         # 使用DatabaseConnector连接到指定的数据库
         from db_utils import DatabaseConnector
 
-        db = DatabaseConnector(host='localhost', database='RAG', user='root', password='Ncy18225889352')
+        db = DatabaseConnector(host='localhost', database='RAG', user='root', password='GX3216379973.qq')
 
         if not db.connect():
             print("数据库连接失败")
@@ -206,7 +206,7 @@ def test_database_connection():
         from db_utils import DatabaseConnector
 
         print("正在测试数据库连接...")
-        db = DatabaseConnector(host='localhost', database='RAG', user='root', password='Ncy18225889352')
+        db = DatabaseConnector(host='localhost', database='RAG', user='root', password='GX3216379973.qq')
 
         if db.connect():
             print("✅ 数据库连接测试成功")
@@ -265,7 +265,7 @@ def init_database():
         test_conn = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='Ncy18225889352'
+            password='GX3216379973.qq'
         )
         test_conn.close()
         print("✅ MySQL服务器连接成功")
@@ -326,7 +326,7 @@ def drop_database():
         connection = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='Ncy18225889352'
+            password='GX3216379973.qq'
         )
 
         if connection.is_connected():
@@ -379,7 +379,7 @@ if __name__ == "__main__":
         # 仅创建管理员账户
         try:
             from local_db_utils import DatabaseConnector
-            db = DatabaseConnector(host='localhost', database='RAG', user='root', password='Ncy18225889352')
+            db = DatabaseConnector(host='localhost', database='RAG', user='root', password='GX3216379973.qq')
             if db.connect():
                 create_admin_account(db)
                 db.close()

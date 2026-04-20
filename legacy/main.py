@@ -227,7 +227,7 @@ def load_models():
         if BertTokenizer and BertModel:
             # 优先使用本地模型
             local_path = './model/chinese-roberta-wwm-ext'
-            model_name = local_path if os.path.exists(local_path) else 'hfl/chinese-roberta-wwm-ext'
+            model_name = local_path
             
             try:
                 bert_tokenizer = BertTokenizer.from_pretrained(model_name)
@@ -250,7 +250,7 @@ def load_models():
     # 3. 连接Neo4j
     try:
         import py2neo
-        neo4j_client = py2neo.Graph('bolt://localhost:7687', user='neo4j', password='Ncy18225889352', name='neo4j')
+        neo4j_client = py2neo.Graph('bolt://localhost:7687', user='neo4j', password='GX3216379973.qq', name='neo4j')
         print("✅ Neo4j连接成功")
     except Exception as e:
         print(f"❌ Neo4j连接失败: {e}")

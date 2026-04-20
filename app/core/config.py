@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # DeepSeek API 配置
-    DEEPSEEK_API_KEY: str
+    DEEPSEEK_API_KEY: str = "sk-58396912557140d5905f46327db61622"
     DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
     DEEPSEEK_MODEL: str = "deepseek-chat"
     
@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # 预留多模态接口
     SPEECH_API_KEY: Optional[str] = None
     IMAGE_API_KEY: Optional[str] = None
+
+    # 阿里云百炼 Fun-ASR 配置
+    DASHSCOPE_API_KEY: Optional[str] = "sk-d9a533762e444fd7846a33f16aaf2942"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra='ignore')
 

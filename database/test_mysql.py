@@ -7,7 +7,7 @@ try:
     conn1 = mysql.connector.connect(
         host='localhost',
         user='root',
-        password='Ncy18225889352',
+        password='GX3216379973.qq',
     )
     print("✅ MySQL服务器连接成功")
     conn1.close()
@@ -16,7 +16,7 @@ try:
     conn2 = mysql.connector.connect(
         host='localhost',
         user='root',
-        password='Ncy18225889352',
+        password='GX3216379973.qq',
         database='rag'  # 使用默认的mysql数据库测试
     )
     print("✅ MySQL数据库连接成功")
