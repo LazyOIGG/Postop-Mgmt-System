@@ -92,6 +92,9 @@ def init_db():
             """)
             print("表 user_conversations 已就绪", flush=True)
 
+            # 先删除旧表（如果存在）
+            cursor.execute("DROP TABLE IF EXISTS health_assessments")
+            
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS health_assessments (
               id INT AUTO_INCREMENT PRIMARY KEY,
@@ -138,6 +141,34 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """)
             print("表 patient_profiles 已就绪", flush=True)
+
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS daily_checkins (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              username VARCHAR(255) NOT NULL,
+              checkin_date DATE NOT NULL,
+              symptoms TEXT,
+              temperature DECIMAL(4,1),
+              blood_pressure VARCHAR(20),
+              blood_sugar DECIMAL(5,2),
+              heart_rate INT,
+              sleep_status VARCHAR(100),
+              diet_status VARCHAR(100),
+              exercise_status VARCHAR(100),
+              medication_taken TINYINT DEFAULT 0,
+              note TEXT,
+              abnormal_flag TINYINT DEFAULT 0,
+              abnormal_reason TEXT,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              UNIQUE KEY uniq_user_date (username, checkin_date),
+              INDEX idx_username (username),
+              INDEX idx_checkin_date (checkin_date),
+              FOREIGN KEY (username) REFERENCES users(username)
+                ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """)
+            print("表 daily_checkins 已就绪", flush=True)
 
             cursor.close()
             conn.close()

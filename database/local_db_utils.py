@@ -592,3 +592,161 @@ class DatabaseConnector:
         except Exception as e:
             print(f"查询最近一次健康评估失败: {e}")
             return None
+
+    def save_daily_checkin(
+        self,
+        username: str,
+        checkin_date: str,
+        symptoms: str = "",
+        temperature: float = None,
+        blood_pressure: str = "",
+        blood_sugar: float = None,
+        heart_rate: int = None,
+        sleep_status: str = "",
+        diet_status: str = "",
+        exercise_status: str = "",
+        medication_taken: int = 0,
+        note: str = "",
+        abnormal_flag: int = 0,
+        abnormal_reason: str = ""
+    ) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+            query = """
+            INSERT INTO daily_checkins (
+                username, checkin_date, symptoms, temperature, blood_pressure,
+                blood_sugar, heart_rate, sleep_status, diet_status, exercise_status,
+                medication_taken, note, abnormal_flag, abnormal_reason
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                symptoms = VALUES(symptoms),
+                temperature = VALUES(temperature),
+                blood_pressure = VALUES(blood_pressure),
+                blood_sugar = VALUES(blood_sugar),
+                heart_rate = VALUES(heart_rate),
+                sleep_status = VALUES(sleep_status),
+                diet_status = VALUES(diet_status),
+                exercise_status = VALUES(exercise_status),
+                medication_taken = VALUES(medication_taken),
+                note = VALUES(note),
+                abnormal_flag = VALUES(abnormal_flag),
+                abnormal_reason = VALUES(abnormal_reason)
+            """
+            cursor.execute(query, (
+                username, checkin_date, symptoms, temperature, blood_pressure,
+                blood_sugar, heart_rate, sleep_status, diet_status, exercise_status,
+                medication_taken, note, abnormal_flag, abnormal_reason
+            ))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存每日打卡失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+
+    def get_daily_checkins(self, username: str, limit: int = 30):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, checkin_date, symptoms, temperature, blood_pressure,
+                       blood_sugar, heart_rate, sleep_status, diet_status,
+                       exercise_status, medication_taken, note,
+                       abnormal_flag, abnormal_reason, created_at, updated_at
+                FROM daily_checkins
+                WHERE username = %s
+                ORDER BY checkin_date DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (username, limit))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取每日打卡记录失败: {e}")
+            return []
+
+
+    def get_today_checkin(self, username: str, checkin_date: str):
+        try:
+            if not self._ensure_connection():
+                return None
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, checkin_date, symptoms, temperature, blood_pressure,
+                       blood_sugar, heart_rate, sleep_status, diet_status,
+                       exercise_status, medication_taken, note,
+                       abnormal_flag, abnormal_reason
+                FROM daily_checkins
+                WHERE username = %s AND checkin_date = %s
+                LIMIT 1
+            """
+            cursor.execute(query, (username, checkin_date))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"获取今日打卡失败: {e}")
+            return None
+
+    def get_recent_checkins_for_overview(self, username: str, days: int = 7):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = f"""
+                SELECT checkin_date, temperature, blood_pressure, blood_sugar,
+                       heart_rate, symptoms, medication_taken,
+                       abnormal_flag, abnormal_reason
+                FROM daily_checkins
+                WHERE username = %s
+                ORDER BY checkin_date DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (username, days))
+            results = cursor.fetchall()
+            cursor.close()
+            return list(reversed(results))  # 反转成时间正序，方便前端画图
+        except Exception as e:
+            print(f"获取趋势分析打卡数据失败: {e}")
+            return []
+
+    def get_checkin_summary_stats(self, username: str, days: int = 7):
+        try:
+            if not self._ensure_connection():
+                return None
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    COUNT(*) AS total_checkins,
+                    SUM(CASE WHEN abnormal_flag = 1 THEN 1 ELSE 0 END) AS abnormal_count,
+                    AVG(temperature) AS avg_temperature,
+                    AVG(heart_rate) AS avg_heart_rate,
+                    AVG(blood_sugar) AS avg_blood_sugar
+                FROM (
+                    SELECT *
+                    FROM daily_checkins
+                    WHERE username = %s
+                    ORDER BY checkin_date DESC
+                    LIMIT %s
+                ) t
+            """
+            cursor.execute(query, (username, days))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"获取打卡汇总统计失败: {e}")
+            return None

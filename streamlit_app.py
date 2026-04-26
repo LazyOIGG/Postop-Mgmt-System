@@ -515,11 +515,106 @@ def profile_section():
     else:
         st.info("暂无健康评估记录")
 
+# 每日健康打卡功能
+from datetime import date
+
+def daily_checkin_section():
+    st.header("每日健康打卡")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+    with st.form("daily_checkin_form"):
+        checkin_date = st.date_input("打卡日期", value=date.today())
+        symptoms = st.text_area("今日症状", placeholder="如：轻微头晕、食欲一般、无发热", height=100)
+        temperature = st.number_input("体温（℃）", min_value=0.0, max_value=45.0, value=0.0, step=0.1)
+        blood_pressure = st.text_input("血压（格式：120/80）")
+        blood_sugar = st.number_input("血糖（mmol/L）", min_value=0.0, max_value=50.0, value=0.0, step=0.1)
+        heart_rate = st.number_input("心率（次/分）", min_value=0, max_value=250, value=0)
+        sleep_status = st.selectbox("睡眠情况", ["", "良好", "一般", "较差"])
+        diet_status = st.selectbox("饮食情况", ["", "正常", "一般", "较差"])
+        exercise_status = st.selectbox("运动情况", ["", "无", "轻度活动", "正常活动", "较多运动"])
+        medication_taken = st.checkbox("今日已按时用药")
+        note = st.text_area("备注", height=80)
+
+        submitted = st.form_submit_button("提交今日打卡")
+
+    if submitted:
+        payload = {
+            "checkin_date": str(checkin_date),
+            "symptoms": symptoms,
+            "temperature": None if temperature == 0.0 else float(temperature),
+            "blood_pressure": blood_pressure,
+            "blood_sugar": None if blood_sugar == 0.0 else float(blood_sugar),
+            "heart_rate": None if heart_rate == 0 else int(heart_rate),
+            "sleep_status": sleep_status,
+            "diet_status": diet_status,
+            "exercise_status": exercise_status,
+            "medication_taken": medication_taken,
+            "note": note
+        }
+
+        try:
+            response = requests.post(
+                f"{API_BASE_URL}/checkin/daily",
+                headers=headers,
+                json=payload
+            )
+            if response.status_code == 200:
+                result = response.json()
+                st.success(result.get("message", "打卡成功"))
+
+                record = result.get("record", {})
+                if record:
+                    if record.get("abnormal_flag"):
+                        st.warning(f"系统提示：{record.get('abnormal_reason', '')}")
+                    else:
+                        st.info(f"系统提示：{record.get('abnormal_reason', '')}")
+            else:
+                st.error(response.json().get("detail", "打卡失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+    st.divider()
+    st.subheader("最近 30 天打卡记录")
+
+    if st.button("刷新打卡记录"):
+        try:
+            response = requests.get(f"{API_BASE_URL}/checkin/daily", headers=headers)
+            if response.status_code == 200:
+                records = response.json().get("records", [])
+                if not records:
+                    st.info("暂无打卡记录")
+                else:
+                    for item in records:
+                        title = f"{item['checkin_date']} | {'异常' if item['abnormal_flag'] else '正常'}"
+                        with st.expander(title):
+                            st.write("症状：", item.get("symptoms", ""))
+                            st.write("体温：", item.get("temperature", ""))
+                            st.write("血压：", item.get("blood_pressure", ""))
+                            st.write("血糖：", item.get("blood_sugar", ""))
+                            st.write("心率：", item.get("heart_rate", ""))
+                            st.write("睡眠：", item.get("sleep_status", ""))
+                            st.write("饮食：", item.get("diet_status", ""))
+                            st.write("运动：", item.get("exercise_status", ""))
+                            st.write("按时用药：", "是" if item.get("medication_taken") else "否")
+                            st.write("备注：", item.get("note", ""))
+                            st.write("系统判断：", item.get("abnormal_reason", ""))
+            else:
+                st.error(response.json().get("detail", "获取打卡记录失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    tab1, tab2, tab3, tab4 = st.tabs(["与医疗助手对话", "病例图片识别", "健康评估中心", "健康档案"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "与医疗助手对话",
+        "病例图片识别",
+        "健康评估中心",
+        "健康档案",
+        "每日健康打卡"
+    ])
 
     with tab1:
         chat_section()
@@ -532,5 +627,8 @@ if st.session_state.logged_in:
 
     with tab4:
         profile_section()
+
+    with tab5:
+        daily_checkin_section()
 else:
     st.info("请先在左侧边栏登录或注册。")

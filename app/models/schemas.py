@@ -64,3 +64,17 @@ class PatientProfileResponse(BaseModel):
     success: bool
     profile: Optional[dict] = None
     latest_assessment: Optional[dict] = None
+
+
+class DailyCheckinRequest(BaseModel):
+    checkin_date: str
+    symptoms: Optional[str] = ""
+    temperature: Optional[float] = None
+    blood_pressure: Optional[str] = ""
+    blood_sugar: Optional[float] = None
+    heart_rate: Optional[int] = None
+    sleep_status: Optional[str] = ""
+    diet_status: Optional[str] = ""
+    exercise_status: Optional[str] = ""
+    medication_taken: Optional[bool] = False
+    note: Optional[str] = ""
