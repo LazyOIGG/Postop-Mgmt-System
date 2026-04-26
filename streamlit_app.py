@@ -297,17 +297,140 @@ def image_ocr_section():
                 except Exception as e:
                     st.error(f"发生错误: {e}")
 
+# 健康评估结果显示
+def show_health_result(result):
+    st.subheader("评估结果")
+
+    risk_level = result.get("risk_level", "未知")
+    if risk_level == "高风险":
+        st.error(f"风险等级：{risk_level}")
+    elif risk_level == "中风险":
+        st.warning(f"风险等级：{risk_level}")
+    else:
+        st.info(f"风险等级：{risk_level}")
+
+    st.write("风险原因：")
+    for reason in result.get("risk_reasons", []):
+        st.write(f"- {reason}")
+
+    st.write("建议尽快线下就医：", "是" if result.get("need_hospital") else "否")
+
+    st.subheader("健康建议")
+    st.markdown(result.get("advice", ""))
+
+# 健康评估功能
+def health_assessment_section():
+    st.header("健康评估中心")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    mode = st.radio("选择输入方式", ["文字输入", "语音上传", "图片/PDF上传"], horizontal=True)
+
+    if mode == "文字输入":
+        text = st.text_area("请输入健康问题、症状描述、检查结果或报告摘要", height=180)
+        if st.button("开始文字评估"):
+            if not text.strip():
+                st.warning("请输入内容")
+                return
+
+            data = {
+                "input_text": text,
+                "session_id": st.session_state.session_id or ""
+            }
+
+            response = requests.post(
+                f"{API_BASE_URL}/health/assess/text",
+                headers=headers,
+                data=data
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                show_health_result(result)
+            else:
+                st.error(response.json().get("detail", "评估失败"))
+
+    elif mode == "语音上传":
+        audio_file = st.file_uploader("上传语音文件", type=["wav", "mp3", "m4a"], key="health_audio")
+        if audio_file and st.button("开始语音评估"):
+            files = {"file": (audio_file.name, audio_file.getvalue(), audio_file.type)}
+            data = {"session_id": st.session_state.session_id or ""}
+
+            response = requests.post(
+                f"{API_BASE_URL}/health/assess/speech",
+                headers=headers,
+                files=files,
+                data=data
+            )
+
+            if response.status_code == 200:
+                result = response.json()
+                show_health_result(result)
+            else:
+                st.error(response.json().get("detail", "语音评估失败"))
+
+    elif mode == "图片/PDF上传":
+        uploaded = st.file_uploader("上传检查单、病例图片或 PDF", type=["png", "jpg", "jpeg", "pdf"], key="health_image")
+        if uploaded:
+            if uploaded.type.startswith("image/"):
+                st.image(uploaded, caption="上传内容", width=700)
+
+            if st.button("开始图片评估"):
+                files = {"file": (uploaded.name, uploaded.getvalue(), uploaded.type)}
+                data = {"session_id": st.session_state.session_id or ""}
+
+                response = requests.post(
+                    f"{API_BASE_URL}/health/assess/image",
+                    headers=headers,
+                    files=files,
+                    data=data
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+                    show_health_result(result)
+
+                    if result.get("ocr_structured"):
+                        st.subheader("OCR结构化结果")
+                        st.json(result["ocr_structured"])
+                else:
+                    st.error(response.json().get("detail", "图片评估失败"))
+
+    st.divider()
+    st.subheader("历史评估记录")
+
+    if st.button("刷新历史记录"):
+        response = requests.get(f"{API_BASE_URL}/health/assess/history", headers=headers)
+        if response.status_code == 200:
+            records = response.json().get("records", [])
+            if not records:
+                st.info("暂无评估记录")
+            else:
+                for item in records:
+                    with st.expander(f"{item['created_at']} | {item['risk_level']} | {item['source_type']}"):
+                        st.write("输入内容：")
+                        st.write(item["input_text"])
+                        st.write("风险原因：")
+                        st.write(item["risk_reasons"])
+                        st.write("建议：")
+                        st.write(item["advice"])
+                        st.write("建议线下就医：", "是" if item["need_hospital"] else "否")
+        else:
+            st.error(response.json().get("detail", "获取历史记录失败"))
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
     # 创建标签页
-    tab1, tab2 = st.tabs(["与医疗助手对话", "病例图片识别"])
+    tab1, tab2, tab3 = st.tabs(["与医疗助手对话", "病例图片识别", "健康评估中心"])
     
     with tab1:
         chat_section()
     
     with tab2:
         image_ocr_section()
+
+    with tab3:
+        health_assessment_section()
 else:
     st.info("请先在左侧边栏登录或注册。")

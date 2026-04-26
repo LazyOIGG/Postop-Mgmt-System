@@ -2,11 +2,9 @@ import mysql.connector
 from mysql.connector import Error
 import os
 from dotenv import load_dotenv
-
-# 修复编码问题
 import sys
-import io
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 def init_db():
     host = "localhost"
@@ -16,7 +14,7 @@ def init_db():
     database = "RAG"
 
     try:
-        # 1. 连接到 MySQL
+        print("正在连接数据库...", flush=True)
         conn = mysql.connector.connect(
             host=host,
             port=port,
@@ -25,17 +23,12 @@ def init_db():
         )
         if conn.is_connected():
             cursor = conn.cursor()
-            
-            # 2. 创建数据库
+
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS {database} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-            print(f"✅ 数据库 {database} 已就绪")
-            
-            # 3. 切换到数据库
+            print(f"数据库 {database} 已就绪", flush=True)
+
             conn.database = database
-            
-            # 4. 创建表
-            
-            # Users 表
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
               id INT AUTO_INCREMENT PRIMARY KEY,
@@ -47,9 +40,8 @@ def init_db():
               INDEX idx_username (username)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """)
-            print("✅ 表 users 已就绪")
-            
-            # Patient Reports 表
+            print("表 users 已就绪", flush=True)
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS patient_reports (
               id INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,9 +58,8 @@ def init_db():
                 ON DELETE CASCADE ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """)
-            print("✅ 表 patient_reports 已就绪")
-            
-            # Chat Sessions 表
+            print("表 patient_reports 已就绪", flush=True)
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS chat_sessions (
               session_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -80,9 +71,8 @@ def init_db():
               FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """)
-            print("✅ 表 chat_sessions 已就绪")
-            
-            # Conversations 表
+            print("表 chat_sessions 已就绪", flush=True)
+
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_conversations (
               id INT AUTO_INCREMENT PRIMARY KEY,
@@ -100,14 +90,35 @@ def init_db():
               FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """)
-            print("✅ 表 user_conversations 已就绪")
-            
+            print("表 user_conversations 已就绪", flush=True)
+
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS health_assessments (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              username VARCHAR(255) NOT NULL,
+              session_id INT NOT NULL,
+              source_type VARCHAR(50) NOT NULL,
+              input_text LONGTEXT NOT NULL,
+              risk_level VARCHAR(50) NOT NULL,
+              risk_reasons LONGTEXT,
+              advice LONGTEXT,
+              need_hospital TINYINT DEFAULT 0,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              INDEX idx_username (username),
+              INDEX idx_session_id (session_id),
+              INDEX idx_created_at (created_at),
+              FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
+              FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id) ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """)
+            print("表 health_assessments 已就绪", flush=True)
+
             cursor.close()
             conn.close()
-            print("✨ 数据库初始化完成！")
-            
+            print("数据库初始化完成!", flush=True)
+
     except Error as e:
-        print(f"❌ 数据库初始化失败: {e}")
+        print(f"数据库初始化失败: {e}", flush=True)
 
 if __name__ == "__main__":
     init_db()

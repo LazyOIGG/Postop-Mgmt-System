@@ -6,7 +6,6 @@ from typing import List, Dict, Optional, Any
 from datetime import datetime
 import json
 
-# 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -22,11 +21,9 @@ class DatabaseConnector:
         self.connection_pool = None
         self.connection = None
 
-        # 尝试创建连接池
         self._create_connection_pool()
 
     def _create_connection_pool(self):
-        """创建数据库连接池"""
         try:
             self.connection_pool = mysql.connector.pooling.MySQLConnectionPool(
                 pool_name=self.pool_name,
@@ -46,12 +43,10 @@ class DatabaseConnector:
             self.connection_pool = None
 
     def connect(self) -> bool:
-        """连接到数据库（从连接池获取连接）"""
         try:
             if self.connection_pool:
                 self.connection = self.connection_pool.get_connection()
             else:
-                # 如果没有连接池，直接创建连接
                 self.connection = mysql.connector.connect(
                     host=self.host,
                     database=self.database,
@@ -74,25 +69,20 @@ class DatabaseConnector:
             return False
 
     def close(self):
-        """关闭数据库连接"""
         if self.connection and self.connection.is_connected():
             if self.connection_pool:
-                # 如果是连接池的连接，归还到连接池
                 self.connection.close()
             else:
-                # 如果是普通连接，直接关闭
                 self.connection.close()
             self.connection = None
             logger.info("数据库连接已关闭")
 
     def _ensure_connection(self) -> bool:
-        """确保数据库连接正常"""
         if not self.connection or not self.connection.is_connected():
             return self.connect()
         return True
 
     def _execute_with_retry(self, query: str, params: tuple = None, retries: int = 3) -> Any:
-        """执行SQL查询，支持重试"""
         for attempt in range(retries):
             try:
                 if not self._ensure_connection():
@@ -107,14 +97,13 @@ class DatabaseConnector:
             except Error as e:
                 logger.error(f"SQL执行失败 (尝试 {attempt + 1}/{retries}): {e}")
                 if attempt < retries - 1:
-                    time.sleep(1)  # 等待1秒后重试
-                    self.close()   # 关闭旧连接
+                    time.sleep(1)
+                    self.close()
                     continue
                 else:
                     raise
 
     def check_user_exists(self, username: str) -> bool:
-        """检查用户是否存在"""
         try:
             query = "SELECT username FROM users WHERE username = %s"
             result = self._execute_with_retry(query, (username,))
@@ -124,7 +113,6 @@ class DatabaseConnector:
             return False
 
     def create_session(self, username: str, session_title: str = "新对话") -> Optional[int]:
-        """创建新的对话会话"""
         try:
             if not self._ensure_connection():
                 return None
@@ -141,7 +129,6 @@ class DatabaseConnector:
 
             logger.info(f"创建会话成功: session_id={session_id}, username={username}")
 
-            # 记录API日志
             self.log_api_access(username, f"/api/sessions/create", "POST", 200, 0)
 
             return session_id
@@ -154,7 +141,6 @@ class DatabaseConnector:
     def save_message(self, session_id: int, username: str, role: str, content: str,
                      entities: Optional[str] = None, intents: Optional[str] = None,
                      knowledge: Optional[str] = None) -> bool:
-        """保存对话消息"""
         try:
             if not self._ensure_connection():
                 return False
@@ -172,7 +158,6 @@ class DatabaseConnector:
 
             logger.info(f"消息保存成功: session_id={session_id}, role={role}, length={len(content)}")
 
-            # 更新会话的last_updated时间
             self.update_session_last_updated(session_id)
 
             return True
@@ -183,7 +168,6 @@ class DatabaseConnector:
             return False
 
     def update_session_last_updated(self, session_id: int) -> bool:
-        """更新会话的最后更新时间"""
         try:
             if not self._ensure_connection():
                 return False
@@ -199,7 +183,6 @@ class DatabaseConnector:
             return False
 
     def get_user_sessions(self, username: str) -> List[Dict]:
-        """获取用户所有会话列表"""
         try:
             query = """
                     SELECT
@@ -217,11 +200,9 @@ class DatabaseConnector:
                     """
             sessions = self._execute_with_retry(query, (username,))
 
-            # 处理每个会话，确保有合适的标题
             for session in sessions:
                 if not session['session_title'] or session['session_title'] == '新对话':
                     if session['first_message']:
-                        # 使用第一条消息的前20个字符作为标题
                         title = session['first_message'][:20] + ('...' if len(session['first_message']) > 20 else '')
                         session['session_title'] = title
 
@@ -231,10 +212,8 @@ class DatabaseConnector:
             return []
 
     def get_session_messages(self, session_id: int, username: str = None) -> List[Dict]:
-        """获取指定会话的所有消息"""
         try:
             if username:
-                # 验证会话属于该用户
                 query = """
                         SELECT uc.id, uc.role, uc.content, uc.entities, uc.intents, uc.knowledge, uc.timestamp
                         FROM user_conversations uc
@@ -258,7 +237,6 @@ class DatabaseConnector:
             return []
 
     def update_session_title(self, session_id: int, new_title: str) -> bool:
-        """更新会话标题"""
         try:
             if not self._ensure_connection():
                 return False
@@ -281,7 +259,6 @@ class DatabaseConnector:
             return False
 
     def delete_session(self, session_id: int, username: str = None) -> bool:
-        """删除会话及其所有消息"""
         try:
             if not self._ensure_connection():
                 return False
@@ -289,7 +266,6 @@ class DatabaseConnector:
             cursor = self.connection.cursor()
 
             if username:
-                # 验证会话属于该用户
                 query = "DELETE FROM chat_sessions WHERE session_id = %s AND username = %s"
                 cursor.execute(query, (session_id, username))
             else:
@@ -311,7 +287,6 @@ class DatabaseConnector:
             return False
 
     def get_session_info(self, session_id: int) -> Optional[Dict]:
-        """获取会话详细信息"""
         try:
             query = """
                     SELECT cs.*, u.username, u.is_admin,
@@ -329,23 +304,19 @@ class DatabaseConnector:
             return None
 
     def get_user_statistics(self, username: str) -> Dict:
-        """获取用户统计信息"""
         try:
             stats = {}
 
-            # 获取会话数量
             query = "SELECT COUNT(*) as session_count FROM chat_sessions WHERE username = %s"
             result = self._execute_with_retry(query, (username,))
             if result:
                 stats['session_count'] = result[0]['session_count']
 
-            # 获取消息总数
             query = "SELECT COUNT(*) as total_messages FROM user_conversations WHERE username = %s"
             result = self._execute_with_retry(query, (username,))
             if result:
                 stats['total_messages'] = result[0]['total_messages']
 
-            # 获取最近活动时间
             query = """
                     SELECT MAX(last_updated) as last_active
                     FROM chat_sessions
@@ -355,7 +326,6 @@ class DatabaseConnector:
             if result:
                 stats['last_active'] = result[0]['last_active']
 
-            # 获取今天发送的消息数
             query = """
                     SELECT COUNT(*) as today_messages
                     FROM user_conversations
@@ -370,9 +340,7 @@ class DatabaseConnector:
             logger.error(f"获取用户统计信息失败: {e}")
             return {}
 
-    # 日志记录功能
     def log_system_event(self, level: str, module: str, message: str, details: Dict = None):
-        """记录系统事件到数据库"""
         try:
             if not self._ensure_connection():
                 return
@@ -392,7 +360,6 @@ class DatabaseConnector:
     def log_api_access(self, username: str, endpoint: str, method: str,
                        status_code: int, duration_ms: int,
                        user_agent: str = None, ip_address: str = None):
-        """记录API访问日志"""
         try:
             if not self._ensure_connection():
                 return
@@ -410,13 +377,10 @@ class DatabaseConnector:
         except Error as e:
             logger.error(f"记录API访问日志失败: {e}")
 
-    # 管理功能
     def get_database_stats(self) -> Dict:
-        """获取数据库统计信息"""
         try:
             stats = {}
 
-            # 各表记录数
             tables = ['users', 'chat_sessions', 'user_conversations', 'system_logs', 'api_access_logs']
 
             for table in tables:
@@ -428,7 +392,6 @@ class DatabaseConnector:
                 except:
                     stats[f'{table}_count'] = 0
 
-            # 数据库大小
             query = """
                     SELECT
                         table_schema as database_name,
@@ -441,7 +404,6 @@ class DatabaseConnector:
             if result:
                 stats['database_size_mb'] = round(result[0]['size_mb'], 2)
 
-            # 活跃用户数（最近7天）
             query = """
                     SELECT COUNT(DISTINCT username) as active_users
                     FROM chat_sessions
@@ -456,9 +418,8 @@ class DatabaseConnector:
             logger.error(f"获取数据库统计失败: {e}")
             return {}
 
-    def save_patient_report(self, username: str, file_name: str, file_type: str, 
+    def save_patient_report(self, username: str, file_name: str, file_type: str,
                            raw_ocr_text: str, structured_json: str, ocr_score: float) -> bool:
-        """保存患者报告OCR结果"""
         try:
             if not self._ensure_connection():
                 return False
@@ -480,5 +441,50 @@ class DatabaseConnector:
             if self.connection:
                 self.connection.rollback()
             return False
-        
-    
+
+    def save_health_assessment(self, username: str, session_id: int, source_type: str,
+                            input_text: str, risk_level: str, risk_reasons: str,
+                            advice: str, need_hospital: int) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO health_assessments
+                (username, session_id, source_type, input_text, risk_level, risk_reasons, advice, need_hospital)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (
+                username, session_id, source_type, input_text,
+                risk_level, risk_reasons, advice, need_hospital
+            ))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存健康评估记录失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_health_assessment_history(self, username: str):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, session_id, source_type, input_text, risk_level,
+                       risk_reasons, advice, need_hospital, created_at
+                FROM health_assessments
+                WHERE username = %s
+                ORDER BY created_at DESC
+            """
+            cursor.execute(query, (username,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"查询健康评估历史失败: {e}")
+            return []
