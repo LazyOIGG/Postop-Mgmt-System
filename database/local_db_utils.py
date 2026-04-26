@@ -750,3 +750,125 @@ class DatabaseConnector:
         except Exception as e:
             print(f"获取打卡汇总统计失败: {e}")
             return None
+
+    def save_reminder(
+        self,
+        username: str,
+        reminder_type: str,
+        title: str,
+        description: str,
+        reminder_date: str,
+        reminder_time: str = None
+    ) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO reminders
+                (username, reminder_type, title, description, reminder_date, reminder_time, status)
+                VALUES (%s, %s, %s, %s, %s, %s, 'pending')
+            """
+            cursor.execute(query, (
+                username, reminder_type, title, description,
+                reminder_date, reminder_time
+            ))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存提醒失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_reminders(self, username: str, limit: int = 50):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, reminder_type, title, description,
+                       reminder_date, reminder_time, status,
+                       created_at, updated_at
+                FROM reminders
+                WHERE username = %s
+                ORDER BY reminder_date ASC, reminder_time ASC
+                LIMIT %s
+            """
+            cursor.execute(query, (username, limit))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取提醒列表失败: {e}")
+            return []
+
+    def update_reminder_status(self, username: str, reminder_id: int, status: str) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+            query = """
+                UPDATE reminders
+                SET status = %s
+                WHERE id = %s AND username = %s
+            """
+            cursor.execute(query, (status, reminder_id, username))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"更新提醒状态失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def delete_reminder(self, username: str, reminder_id: int) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+            query = """
+                DELETE FROM reminders
+                WHERE id = %s AND username = %s
+            """
+            cursor.execute(query, (reminder_id, username))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"删除提醒失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_today_reminder_stats(self, username: str):
+        try:
+            if not self._ensure_connection():
+                return {"pending_count": 0, "completed_count": 0}
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_count,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_count
+                FROM reminders
+                WHERE username = %s AND reminder_date = CURDATE()
+            """
+            cursor.execute(query, (username,))
+            result = cursor.fetchone()
+            cursor.close()
+            return {
+                "pending_count": int(result.get("pending_count") or 0),
+                "completed_count": int(result.get("completed_count") or 0)
+            }
+        except Exception as e:
+            print(f"获取今日提醒统计失败: {e}")
+            return {"pending_count": 0, "completed_count": 0}

@@ -78,3 +78,16 @@ class DailyCheckinRequest(BaseModel):
     exercise_status: Optional[str] = ""
     medication_taken: Optional[bool] = False
     note: Optional[str] = ""
+
+
+class ReminderCreateRequest(BaseModel):
+    reminder_type: str
+    title: str
+    description: Optional[str] = ""
+    reminder_date: str
+    reminder_time: Optional[str] = None
+
+
+class ReminderStatusUpdateRequest(BaseModel):
+    reminder_id: int
+    status: str

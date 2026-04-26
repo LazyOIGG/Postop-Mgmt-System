@@ -170,6 +170,27 @@ def init_db():
             """)
             print("表 daily_checkins 已就绪", flush=True)
 
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS reminders (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              username VARCHAR(255) NOT NULL,
+              reminder_type VARCHAR(50) NOT NULL,
+              title VARCHAR(255) NOT NULL,
+              description TEXT,
+              reminder_date DATE NOT NULL,
+              reminder_time TIME DEFAULT NULL,
+              status VARCHAR(20) DEFAULT 'pending',
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              INDEX idx_username (username),
+              INDEX idx_reminder_date (reminder_date),
+              INDEX idx_status (status),
+              FOREIGN KEY (username) REFERENCES users(username)
+                ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """)
+            print("表 reminders 已就绪", flush=True)
+
             cursor.close()
             conn.close()
             print("数据库初始化完成!", flush=True)

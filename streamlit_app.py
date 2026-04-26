@@ -517,7 +517,7 @@ def profile_section():
         st.info("暂无健康评估记录")
 
 # 每日健康打卡功能
-from datetime import date
+from datetime import date, time
 
 def daily_checkin_section():
     st.header("每日健康打卡")
@@ -706,17 +706,137 @@ def overview_section():
     else:
         st.success("最近没有异常记录")
 
+def reminder_center_section():
+    st.header("提醒中心")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+    st.subheader("新建提醒")
+    with st.form("reminder_form"):
+        reminder_type = st.selectbox("提醒类型", ["用药提醒", "复诊提醒", "打卡提醒", "检查提醒", "其他"])
+        title = st.text_input("提醒标题")
+        description = st.text_area("提醒说明", height=100)
+        reminder_date = st.date_input("提醒日期", value=date.today())
+        reminder_time = st.time_input("提醒时间", value=time(9, 0))
+        create_submitted = st.form_submit_button("创建提醒")
+
+    if create_submitted:
+        if not title.strip():
+            st.warning("请输入提醒标题")
+        else:
+            payload = {
+                "reminder_type": reminder_type,
+                "title": title,
+                "description": description,
+                "reminder_date": str(reminder_date),
+                "reminder_time": reminder_time.strftime("%H:%M:%S")
+            }
+
+            try:
+                response = requests.post(
+                    f"{API_BASE_URL}/reminder/",
+                    headers=headers,
+                    json=payload
+                )
+                if response.status_code == 200:
+                    st.success("提醒创建成功")
+                    st.rerun()
+                else:
+                    st.error(response.json().get("detail", "创建提醒失败"))
+            except Exception as e:
+                st.error(f"请求失败: {e}")
+
+    st.divider()
+    st.subheader("我的提醒")
+
+    try:
+        response = requests.get(f"{API_BASE_URL}/reminder/", headers=headers)
+        if response.status_code != 200:
+            st.error(response.json().get("detail", "获取提醒失败"))
+            return
+    except Exception as e:
+        st.error(f"请求失败: {e}")
+        return
+
+    result = response.json()
+    reminders = result.get("reminders", [])
+    today_stats = result.get("today_stats", {})
+
+    col1, col2 = st.columns(2)
+    col1.metric("今日待完成提醒", today_stats.get("pending_count", 0))
+    col2.metric("今日已完成提醒", today_stats.get("completed_count", 0))
+
+    if not reminders:
+        st.info("暂无提醒")
+        return
+
+    for item in reminders:
+        status_text = "已完成" if item["status"] == "completed" else "待完成"
+        with st.expander(f"{item['reminder_date']} {item.get('reminder_time') or ''} | {item['title']} | {status_text}"):
+            st.write("提醒类型：", item.get("reminder_type", ""))
+            st.write("提醒说明：", item.get("description", ""))
+            st.write("状态：", status_text)
+
+            c1, c2 = st.columns(2)
+
+            with c1:
+                if item["status"] == "pending":
+                    if st.button("标记完成", key=f"complete_{item['id']}"):
+                        payload = {
+                            "reminder_id": item["id"],
+                            "status": "completed"
+                        }
+                        resp = requests.post(
+                            f"{API_BASE_URL}/reminder/status",
+                            headers=headers,
+                            json=payload
+                        )
+                        if resp.status_code == 200:
+                            st.success("已标记完成")
+                            st.rerun()
+                        else:
+                            st.error(resp.json().get("detail", "更新失败"))
+                else:
+                    if st.button("恢复待完成", key=f"pending_{item['id']}"):
+                        payload = {
+                            "reminder_id": item["id"],
+                            "status": "pending"
+                        }
+                        resp = requests.post(
+                            f"{API_BASE_URL}/reminder/status",
+                            headers=headers,
+                            json=payload
+                        )
+                        if resp.status_code == 200:
+                            st.success("已恢复为待完成")
+                            st.rerun()
+                        else:
+                            st.error(resp.json().get("detail", "更新失败"))
+
+            with c2:
+                if st.button("删除提醒", key=f"delete_{item['id']}"):
+                    resp = requests.delete(
+                        f"{API_BASE_URL}/reminder/{item['id']}",
+                        headers=headers
+                    )
+                    if resp.status_code == 200:
+                        st.success("提醒已删除")
+                        st.rerun()
+                    else:
+                        st.error(resp.json().get("detail", "删除失败"))
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "与医疗助手对话",
         "病例图片识别",
         "健康评估中心",
         "健康档案",
         "每日健康打卡",
-        "趋势分析/健康概览"
+        "趋势分析/健康概览",
+        "提醒中心"
     ])
 
     with tab1:
@@ -736,5 +856,8 @@ if st.session_state.logged_in:
 
     with tab6:
         overview_section()
+
+    with tab7:
+        reminder_center_section()
 else:
     st.info("请先在左侧边栏登录或注册。")
