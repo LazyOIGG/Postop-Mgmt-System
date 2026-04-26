@@ -113,6 +113,32 @@ def init_db():
             """)
             print("表 health_assessments 已就绪", flush=True)
 
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS patient_profiles (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              username VARCHAR(255) NOT NULL UNIQUE,
+              real_name VARCHAR(100),
+              gender VARCHAR(20),
+              age INT,
+              phone VARCHAR(50),
+              height DECIMAL(5,2),
+              weight DECIMAL(5,2),
+              blood_type VARCHAR(20),
+              medical_history TEXT,
+              allergy_history TEXT,
+              current_medications TEXT,
+              emergency_contact VARCHAR(100),
+              emergency_phone VARCHAR(50),
+              health_stage VARCHAR(50) DEFAULT '长期管理',
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              INDEX idx_username (username),
+              FOREIGN KEY (username) REFERENCES users(username)
+                ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """)
+            print("表 patient_profiles 已就绪", flush=True)
+
             cursor.close()
             conn.close()
             print("数据库初始化完成!", flush=True)

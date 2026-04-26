@@ -488,3 +488,107 @@ class DatabaseConnector:
         except Exception as e:
             print(f"查询健康评估历史失败: {e}")
             return []
+
+    def save_patient_profile(
+        self,
+        username: str,
+        real_name: str = "",
+        gender: str = "",
+        age: int = None,
+        phone: str = "",
+        height: float = None,
+        weight: float = None,
+        blood_type: str = "",
+        medical_history: str = "",
+        allergy_history: str = "",
+        current_medications: str = "",
+        emergency_contact: str = "",
+        emergency_phone: str = "",
+        health_stage: str = "长期管理"
+    ) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+
+            query = """
+            INSERT INTO patient_profiles (
+                username, real_name, gender, age, phone, height, weight, blood_type,
+                medical_history, allergy_history, current_medications,
+                emergency_contact, emergency_phone, health_stage
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                real_name = VALUES(real_name),
+                gender = VALUES(gender),
+                age = VALUES(age),
+                phone = VALUES(phone),
+                height = VALUES(height),
+                weight = VALUES(weight),
+                blood_type = VALUES(blood_type),
+                medical_history = VALUES(medical_history),
+                allergy_history = VALUES(allergy_history),
+                current_medications = VALUES(current_medications),
+                emergency_contact = VALUES(emergency_contact),
+                emergency_phone = VALUES(emergency_phone),
+                health_stage = VALUES(health_stage)
+            """
+            cursor.execute(query, (
+                username, real_name, gender, age, phone, height, weight, blood_type,
+                medical_history, allergy_history, current_medications,
+                emergency_contact, emergency_phone, health_stage
+            ))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存健康档案失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_patient_profile(self, username: str):
+        try:
+            if not self._ensure_connection():
+                return None
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, username, real_name, gender, age, phone, height, weight,
+                       blood_type, medical_history, allergy_history, current_medications,
+                       emergency_contact, emergency_phone, health_stage,
+                       created_at, updated_at
+                FROM patient_profiles
+                WHERE username = %s
+                LIMIT 1
+            """
+            cursor.execute(query, (username,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"查询健康档案失败: {e}")
+            return None
+
+    def get_latest_health_assessment(self, username: str):
+        try:
+            if not self._ensure_connection():
+                return None
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, source_type, input_text, risk_level, risk_reasons,
+                       advice, need_hospital, created_at
+                FROM health_assessments
+                WHERE username = %s
+                ORDER BY created_at DESC
+                LIMIT 1
+            """
+            cursor.execute(query, (username,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"查询最近一次健康评估失败: {e}")
+            return None

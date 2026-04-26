@@ -43,3 +43,24 @@ class UserStatsResponse(BaseModel):
     session_count: int
     total_messages: int
     last_active: Optional[datetime] = None
+
+class PatientProfileUpdateRequest(BaseModel):
+    real_name: Optional[str] = ""
+    gender: Optional[str] = ""
+    age: Optional[int] = None
+    phone: Optional[str] = ""
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    blood_type: Optional[str] = ""
+    medical_history: Optional[str] = ""
+    allergy_history: Optional[str] = ""
+    current_medications: Optional[str] = ""
+    emergency_contact: Optional[str] = ""
+    emergency_phone: Optional[str] = ""
+    health_stage: Optional[str] = "长期管理"
+
+
+class PatientProfileResponse(BaseModel):
+    success: bool
+    profile: Optional[dict] = None
+    latest_assessment: Optional[dict] = None

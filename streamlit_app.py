@@ -417,20 +417,120 @@ def health_assessment_section():
         else:
             st.error(response.json().get("detail", "获取历史记录失败"))
 
+# 健康档案功能
+def profile_section():
+    st.header("健康档案")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+    try:
+        response = requests.get(f"{API_BASE_URL}/profile/me", headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            profile = data.get("profile") or {}
+            latest_assessment = data.get("latest_assessment")
+        else:
+            st.error("获取健康档案失败")
+            return
+    except Exception as e:
+        st.error(f"请求失败: {e}")
+        return
+
+    with st.form("profile_form"):
+        real_name = st.text_input("姓名", value=profile.get("real_name", ""))
+        gender = st.selectbox(
+            "性别",
+            ["", "男", "女", "其他"],
+            index=["", "男", "女", "其他"].index(profile.get("gender", "")) if profile.get("gender", "") in ["", "男", "女", "其他"] else 0
+        )
+        age = st.number_input("年龄", min_value=0, max_value=120, value=int(profile["age"]) if profile.get("age") is not None else 0)
+        phone = st.text_input("手机号", value=profile.get("phone", ""))
+        height = st.number_input("身高(cm)", min_value=0.0, max_value=250.0, value=float(profile["height"]) if profile.get("height") is not None else 0.0)
+        weight = st.number_input("体重(kg)", min_value=0.0, max_value=300.0, value=float(profile["weight"]) if profile.get("weight") is not None else 0.0)
+        blood_type = st.text_input("血型", value=profile.get("blood_type", ""))
+        health_stage = st.selectbox(
+            "当前健康阶段",
+            ["就诊前", "治疗中", "康复期", "长期管理"],
+            index=["就诊前", "治疗中", "康复期", "长期管理"].index(profile.get("health_stage", "长期管理")) if profile.get("health_stage", "长期管理") in ["就诊前", "治疗中", "康复期", "长期管理"] else 3
+        )
+        medical_history = st.text_area("既往病史", value=profile.get("medical_history", ""), height=120)
+        allergy_history = st.text_area("过敏史", value=profile.get("allergy_history", ""), height=100)
+        current_medications = st.text_area("当前用药", value=profile.get("current_medications", ""), height=100)
+        emergency_contact = st.text_input("紧急联系人", value=profile.get("emergency_contact", ""))
+        emergency_phone = st.text_input("紧急联系电话", value=profile.get("emergency_phone", ""))
+
+        submitted = st.form_submit_button("保存健康档案")
+
+    if submitted:
+        payload = {
+            "real_name": real_name,
+            "gender": gender,
+            "age": int(age) if age != 0 else None,
+            "phone": phone,
+            "height": float(height) if height != 0 else None,
+            "weight": float(weight) if weight != 0 else None,
+            "blood_type": blood_type,
+            "medical_history": medical_history,
+            "allergy_history": allergy_history,
+            "current_medications": current_medications,
+            "emergency_contact": emergency_contact,
+            "emergency_phone": emergency_phone,
+            "health_stage": health_stage
+        }
+
+        try:
+            save_resp = requests.post(f"{API_BASE_URL}/profile/me", headers=headers, json=payload)
+            if save_resp.status_code == 200:
+                st.success("健康档案保存成功")
+                st.rerun()
+            else:
+                st.error(save_resp.json().get("detail", "保存失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+    st.divider()
+    st.subheader("最近一次健康评估")
+
+    if latest_assessment:
+        st.write("评估时间：", latest_assessment.get("created_at", ""))
+        risk_level = latest_assessment.get("risk_level", "未知")
+        if risk_level == "高风险":
+            st.error(f"风险等级：{risk_level}")
+        elif risk_level == "中风险":
+            st.warning(f"风险等级：{risk_level}")
+        else:
+            st.info(f"风险等级：{risk_level}")
+
+        st.write("输入来源：", latest_assessment.get("source_type", ""))
+        st.write("输入内容：")
+        st.write(latest_assessment.get("input_text", ""))
+
+        st.write("风险原因：")
+        st.write(latest_assessment.get("risk_reasons", ""))
+
+        st.write("建议：")
+        st.write(latest_assessment.get("advice", ""))
+
+        st.write("建议线下就医：", "是" if latest_assessment.get("need_hospital") else "否")
+    else:
+        st.info("暂无健康评估记录")
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    # 创建标签页
-    tab1, tab2, tab3 = st.tabs(["与医疗助手对话", "病例图片识别", "健康评估中心"])
-    
+    tab1, tab2, tab3, tab4 = st.tabs(["与医疗助手对话", "病例图片识别", "健康评估中心", "健康档案"])
+
     with tab1:
         chat_section()
-    
+
     with tab2:
         image_ocr_section()
 
     with tab3:
         health_assessment_section()
+
+    with tab4:
+        profile_section()
 else:
     st.info("请先在左侧边栏登录或注册。")
