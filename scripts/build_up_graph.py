@@ -3,6 +3,7 @@ import re
 import py2neo
 from tqdm import tqdm
 import argparse
+from dotenv import load_dotenv
 
 
 #导入普通实体
@@ -39,12 +40,13 @@ def create_all_relationship(client,all_relationship):
         create_relationship(client,type1, name1,relation, type2,name2)
 
 if __name__ == "__main__":
+    load_dotenv()
     #连接数据库的一些参数
     parser = argparse.ArgumentParser(description="通过medical.json文件,创建一个知识图谱")
-    parser.add_argument('--website', type=str, default='bolt://localhost:7687', help='neo4j的连接网站')
-    parser.add_argument('--user', type=str, default='neo4j', help='neo4j的用户名')
-    parser.add_argument('--password', type=str, default='Ncy18225889352', help='neo4j的密码')
-    parser.add_argument('--dbname', type=str, default='neo4j', help='基于知识图谱的术后管理系统')
+    parser.add_argument('--website', type=str, default=os.getenv('NEO4J_URI', 'bolt://localhost:7687'), help='neo4j的连接网站')
+    parser.add_argument('--user', type=str, default=os.getenv('NEO4J_USER', 'neo4j'), help='neo4j的用户名')
+    parser.add_argument('--password', type=str, default=os.getenv('NEO4J_PASSWORD', ''), help='neo4j的密码')
+    parser.add_argument('--dbname', type=str, default=os.getenv('NEO4J_NAME', 'neo4j'), help='基于知识图谱的术后管理系统')
     args = parser.parse_args()
 
     #连接...
@@ -173,9 +175,3 @@ if __name__ == "__main__":
             
             import_disease_data(client,k,all_entity[k])
     create_all_relationship(client,relationship)
-
-    
-
-    
-
-    

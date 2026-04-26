@@ -41,12 +41,43 @@
 
 ***
 
+## 📋 Service 服务介绍
+
+### 核心服务模块
+
+| 服务名称 | 模块文件 | 功能描述 |
+|---------|---------|--------|
+| **大语言模型服务** | `llm_service.py` | 封装 DeepSeek API 调用，处理聊天响应生成与流式输出 |
+| **知识图谱服务** | `kg_service.py` | 管理 Neo4j 连接，执行 Cypher 查询，提供医疗知识检索 |
+| **命名实体识别** | `ner_service.py` | 使用 RoBERTa 模型识别医疗文本中的实体（疾病、症状、药品等） |
+| **意图识别服务** | `intent_service.py` | 分析用户问题意图，确定查询类型（如疾病简介、治疗方法等） |
+| **语音服务** | `speech_service.py` | 集成阿里云语音识别 API，支持语音输入转文本 |
+| **图像服务** | `image_service.py` | 处理医疗图像分析，支持 OCR 识别与图像理解 |
+
+### 业务服务模块
+
+| 服务名称 | 模块文件 | 功能描述 |
+|---------|---------|--------|
+| **健康评估服务** | `health_assessment_service.py` | 基于用户输入进行健康风险评估，生成风险等级与建议 |
+| **打卡服务** | `checkin_service.py` | 管理用户每日健康打卡数据，包括症状、体征记录 |
+| **提醒服务** | `reminder_service.py` | 处理用户医疗提醒，支持定时提醒与状态管理 |
+| **医生服务** | `doctor_service.py` | 提供医生端功能，包括患者管理与异常情况监控 |
+| **仪表盘服务** | `dashboard_service.py` | 生成系统统计数据与可视化仪表盘 |
+| **概览服务** | `overview_service.py` | 提供用户健康概览与数据汇总 |
+
+***
+
 ## ⚙️ 个人配置 (必备)
 
 在协作开发前，请在根目录下创建 `.env` 文件，并配置以下个人私有参数
 ### 注意：若新增设置项，需在提交说明中说明，并将新的格式填入下面（不要暴露api key）
 
 ```env
+# 基础设置
+PROJECT_NAME="术后管理系统API"
+VERSION="1.0.0"
+API_V1_STR="/api/v1"
+
 # 1. DeepSeek API 配置 (必填)
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
@@ -65,11 +96,24 @@ MYSQL_USER=root
 MYSQL_PASSWORD=
 MYSQL_DATABASE=RAG
 
-# 4. 安全设置 (建议修改)
-SECRET_KEY=yoursupersecretkeyhere
+# 4. 模型路径配置
+BERT_MODEL_PATH="./model/chinese-roberta-wwm-ext"
+NER_MODEL_WEIGHTS="model/best_roberta_rnn_model_ent_aug.pt"
+TAG2IDX_PATH="tmp_data/tag2idx.npy"
 
-# 5. 阿里云语音识别配置 (可选，用于多模态功能)
+# 5. 安全配置 (建议修改)
+SECRET_KEY=yoursupersecretkeyhere
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# 6. 预留多模态接口
+SPEECH_API_KEY=
+IMAGE_API_KEY=
+
+# 7. 阿里云百炼 Fun-ASR 配置 (可选，用于多模态功能)
 DASHSCOPE_API_KEY=
+
+# 8. 智谱AI配置 (可选，用于finetune_demo)
+ZHIPUAI_API_KEY=
 ```
 
 ***

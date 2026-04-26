@@ -3,8 +3,18 @@ import mysql.connector
 from mysql.connector import Error
 from database.password_utils import encrypt_password
 import sys
+import os
+from dotenv import load_dotenv
 
-def create_database_if_not_exists(host='localhost', user='root', password='GX3216379973.qq', database='RAG'):
+# 加载环境变量
+load_dotenv()
+
+def create_database_if_not_exists(host=None, user=None, password=None, database=None):
+    # 从环境变量中读取配置，如果参数未提供
+    host = host or os.getenv('MYSQL_HOST', 'localhost')
+    user = user or os.getenv('MYSQL_USER', 'root')
+    password = password or os.getenv('MYSQL_PASSWORD', '')
+    database = database or os.getenv('MYSQL_DATABASE', 'RAG')
     """创建数据库（如果不存在）"""
     try:
         # 首先连接到MySQL服务器（不指定数据库）
@@ -206,7 +216,7 @@ def test_database_connection():
         from db_utils import DatabaseConnector
 
         print("正在测试数据库连接...")
-        db = DatabaseConnector(host='localhost', database='RAG', user='root', password='GX3216379973.qq')
+        db = DatabaseConnector()
 
         if db.connect():
             print("✅ 数据库连接测试成功")
@@ -253,19 +263,24 @@ def init_database():
     print("="*60)
 
     # 获取MySQL连接参数
+    host = os.getenv('MYSQL_HOST', 'localhost')
+    user = os.getenv('MYSQL_USER', 'root')
+    password = os.getenv('MYSQL_PASSWORD', '')
+    database = os.getenv('MYSQL_DATABASE', 'RAG')
+    
     print("\n请确认MySQL连接参数:")
-    print(f"主机: localhost")
-    print(f"用户名: root")
-    print(f"密码: {'*' * len('Ncy18225889352')}")
-    print(f"数据库: RAG")
+    print(f"主机: {host}")
+    print(f"用户名: {user}")
+    print(f"密码: {'*' * len(password)}")
+    print(f"数据库: {database}")
 
     # 检查MySQL服务是否运行
     try:
         # 尝试连接到MySQL服务器
         test_conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='GX3216379973.qq'
+            host=host,
+            user=user,
+            password=password
         )
         test_conn.close()
         print("✅ MySQL服务器连接成功")
@@ -323,10 +338,14 @@ def drop_database():
 
     try:
         # 连接到MySQL服务器
+        host = os.getenv('MYSQL_HOST', 'localhost')
+        user = os.getenv('MYSQL_USER', 'root')
+        password = os.getenv('MYSQL_PASSWORD', '')
+        
         connection = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='GX3216379973.qq'
+            host=host,
+            user=user,
+            password=password
         )
 
         if connection.is_connected():
@@ -379,7 +398,7 @@ if __name__ == "__main__":
         # 仅创建管理员账户
         try:
             from local_db_utils import DatabaseConnector
-            db = DatabaseConnector(host='localhost', database='RAG', user='root', password='GX3216379973.qq')
+            db = DatabaseConnector()
             if db.connect():
                 create_admin_account(db)
                 db.close()

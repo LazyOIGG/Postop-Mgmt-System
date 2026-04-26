@@ -3,7 +3,11 @@ from dashscope.audio.asr import Recognition
 
 # 若没有将API Key配置到环境变量中，需将下面这行代码注释放开，并将apiKey替换为自己的API Key
 import dashscope
-dashscope.api_key = "sk-d9a533762e444fd7846a33f16aaf2942"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+dashscope.api_key = os.getenv("DASHSCOPE_API_KEY", "")
 
 recognition = Recognition(model='fun-asr-realtime-2026-02-28',
                           format='wav',

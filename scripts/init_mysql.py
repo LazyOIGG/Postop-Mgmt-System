@@ -7,11 +7,12 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 def init_db():
-    host = "localhost"
-    port = "3306"
-    user = "root"
-    password = "GX3216379973.qq"
-    database = "RAG"
+    load_dotenv()
+    host = os.getenv("MYSQL_HOST", "localhost")
+    port = os.getenv("MYSQL_PORT", "3306")
+    user = os.getenv("MYSQL_USER", "root")
+    password = os.getenv("MYSQL_PASSWORD", "")
+    database = os.getenv("MYSQL_DATABASE", "RAG")
 
     try:
         print("正在连接数据库...", flush=True)

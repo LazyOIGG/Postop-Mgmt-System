@@ -4,13 +4,20 @@ from zhipuai import ZhipuAI
 from tqdm import tqdm
 import json
 import time
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 os.chdir(os.path.dirname(__file__))#vscode要用
 import pandas as pd
 def append_data_to_json(data, filename):
     with open(filename, 'a', encoding='utf-8') as file:  # 使用UTF-8编码打开文件
         json_data = json.dumps(data, ensure_ascii=False)  # 将字典转换为JSON字符串，保持中文等字符的正确显示
         file.write(json_data + ',\n')  # 写入JSON数据，并在末尾添加逗号和换行符
-client = ZhipuAI(api_key="d0e5b641e4606dd20e98906b231bc59d.zFeDxjbHDl5V6KlY") # 填写您自己的APIKey
+
+# 从环境变量中读取API密钥
+api_key = os.getenv("ZHIPUAI_API_KEY", "")
+client = ZhipuAI(api_key=api_key) # 填写您自己的APIKey
 
 
 # 读取CSV文件
@@ -83,4 +90,3 @@ for i,content in enumerate(tqdm(content_list[5000:])):
         time.sleep(10)
         with open('log.txt', 'a', encoding='utf-8') as file:  # 使用UTF-8编码打开文件
             file.write(f'失败{i}\n')  # 写入JSON数据，并在末尾添加逗号和换行符
-

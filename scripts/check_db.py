@@ -5,7 +5,7 @@ from mysql.connector import Error
 config = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'GX3216379973.qq',
+    'password': 'Ncy18225889352',
     'database': 'RAG'
 }
 

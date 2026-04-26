@@ -250,7 +250,11 @@ def load_models():
     # 3. 连接Neo4j
     try:
         import py2neo
-        neo4j_client = py2neo.Graph('bolt://localhost:7687', user='neo4j', password='GX3216379973.qq', name='neo4j')
+        neo4j_uri = os.getenv('NEO4J_URI', 'bolt://localhost:7687')
+        neo4j_user = os.getenv('NEO4J_USER', 'neo4j')
+        neo4j_password = os.getenv('NEO4J_PASSWORD', '')
+        neo4j_name = os.getenv('NEO4J_NAME', 'neo4j')
+        neo4j_client = py2neo.Graph(neo4j_uri, user=neo4j_user, password=neo4j_password, name=neo4j_name)
         print("✅ Neo4j连接成功")
     except Exception as e:
         print(f"❌ Neo4j连接失败: {e}")

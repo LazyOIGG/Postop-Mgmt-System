@@ -5,17 +5,23 @@ import logging
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 import json
+import os
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DatabaseConnector:
-    def __init__(self, host='localhost', database='RAG', user='root', password='GX3216379973.qq',
+    def __init__(self, host=None, database=None, user=None, password=None,
                  pool_size=5, pool_name='medical_qa_pool'):
-        self.host = host
-        self.database = database
-        self.user = user
-        self.password = password
+        # 从环境变量中读取配置，如果参数未提供
+        self.host = host or os.getenv('MYSQL_HOST', 'localhost')
+        self.database = database or os.getenv('MYSQL_DATABASE', 'RAG')
+        self.user = user or os.getenv('MYSQL_USER', 'root')
+        self.password = password or os.getenv('MYSQL_PASSWORD', '')
         self.pool_size = pool_size
         self.pool_name = pool_name
         self.connection_pool = None
