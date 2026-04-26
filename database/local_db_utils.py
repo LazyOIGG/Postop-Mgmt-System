@@ -872,3 +872,114 @@ class DatabaseConnector:
         except Exception as e:
             print(f"获取今日提醒统计失败: {e}")
             return {"pending_count": 0, "completed_count": 0}
+
+    def get_doctor_patient_list(self, limit: int = 100):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    u.username,
+                    p.real_name,
+                    p.gender,
+                    p.age,
+                    p.health_stage,
+                    ha.risk_level AS latest_risk_level,
+                    ha.created_at AS latest_assessment_time
+                FROM users u
+                LEFT JOIN patient_profiles p
+                    ON u.username = p.username
+                LEFT JOIN (
+                    SELECT h1.username, h1.risk_level, h1.created_at
+                    FROM health_assessments h1
+                    INNER JOIN (
+                        SELECT username, MAX(created_at) AS max_created_at
+                        FROM health_assessments
+                        GROUP BY username
+                    ) h2
+                    ON h1.username = h2.username AND h1.created_at = h2.max_created_at
+                ) ha
+                    ON u.username = ha.username
+                ORDER BY ha.created_at DESC, u.username ASC
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取患者列表失败: {e}")
+            return []
+
+    def get_high_risk_assessments(self, limit: int = 50):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    h.id, h.username, p.real_name, h.source_type, h.input_text,
+                    h.risk_level, h.risk_reasons, h.advice, h.need_hospital, h.created_at
+                FROM health_assessments h
+                LEFT JOIN patient_profiles p
+                    ON h.username = p.username
+                WHERE h.risk_level = '高风险'
+                ORDER BY h.created_at DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取高风险评估失败: {e}")
+            return []
+
+    def get_abnormal_checkins_for_doctor(self, limit: int = 50):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    d.id, d.username, p.real_name, d.checkin_date, d.symptoms,
+                    d.temperature, d.blood_pressure, d.blood_sugar, d.heart_rate,
+                    d.abnormal_flag, d.abnormal_reason, d.created_at
+                FROM daily_checkins d
+                LEFT JOIN patient_profiles p
+                    ON d.username = p.username
+                WHERE d.abnormal_flag = 1
+                ORDER BY d.checkin_date DESC, d.created_at DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取异常打卡失败: {e}")
+            return []
+
+    def get_patient_detail_for_doctor(self, username: str):
+        try:
+            if not self._ensure_connection():
+                return None
+
+            profile = self.get_patient_profile(username)
+            latest_assessment = self.get_latest_health_assessment(username)
+            checkins = self.get_daily_checkins(username, limit=7)
+            reminders = self.get_reminders(username, limit=10)
+
+            return {
+                "profile": profile,
+                "latest_assessment": latest_assessment,
+                "recent_checkins": checkins,
+                "recent_reminders": reminders
+            }
+        except Exception as e:
+            print(f"获取患者详情失败: {e}")
+            return None

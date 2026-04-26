@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, chat, sessions, kg, stats, tools, multimodal, health, profile, checkin, overview, reminder
+from app.api.v1.endpoints import (auth, chat, sessions, kg, stats, tools, multimodal, 
+                                 health, profile, checkin, overview, reminder, doctor)
 
 api_router = APIRouter()
 
@@ -15,3 +16,4 @@ api_router.include_router(profile.router, prefix="/profile", tags=["健康档案
 api_router.include_router(checkin.router, prefix="/checkin", tags=["每日健康打卡"])
 api_router.include_router(overview.router, prefix="/overview", tags=["趋势分析与健康概览"])
 api_router.include_router(reminder.router, prefix="/reminder", tags=["提醒中心"])
+api_router.include_router(doctor.router, prefix="/doctor", tags=["医生端最小版"])

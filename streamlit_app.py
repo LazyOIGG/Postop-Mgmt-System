@@ -825,18 +825,163 @@ def reminder_center_section():
                     else:
                         st.error(resp.json().get("detail", "删除失败"))
 
+# 医生端管理（最小版）
+def doctor_console_section():
+    st.header("医生端管理（最小版）")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+    tab_a, tab_b, tab_c, tab_d = st.tabs(["患者列表", "高风险记录", "异常打卡", "患者详情"])
+
+    # 1. 患者列表
+    with tab_a:
+        st.subheader("患者列表")
+        try:
+            response = requests.get(f"{API_BASE_URL}/doctor/patients", headers=headers)
+            if response.status_code == 200:
+                patients = response.json().get("patients", [])
+                if patients:
+                    df = pd.DataFrame(patients)
+                    st.dataframe(df, use_container_width=True)
+                else:
+                    st.info("暂无患者数据")
+            else:
+                st.error(response.json().get("detail", "获取患者列表失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+    # 2. 高风险记录
+    with tab_b:
+        st.subheader("高风险健康评估记录")
+        try:
+            response = requests.get(f"{API_BASE_URL}/doctor/high-risk", headers=headers)
+            if response.status_code == 200:
+                records = response.json().get("records", [])
+                if records:
+                    for item in records:
+                        name_text = item.get("real_name") or item.get("username")
+                        with st.expander(f"{item['created_at']} | {name_text} | 高风险"):
+                            st.write("患者用户名：", item.get("username", ""))
+                            st.write("姓名：", item.get("real_name", ""))
+                            st.write("输入来源：", item.get("source_type", ""))
+                            st.write("输入内容：")
+                            st.write(item.get("input_text", ""))
+                            st.write("风险原因：")
+                            st.write(item.get("risk_reasons", ""))
+                            st.write("建议：")
+                            st.write(item.get("advice", ""))
+                            st.write("建议线下就医：", "是" if item.get("need_hospital") else "否")
+                else:
+                    st.success("当前暂无高风险评估记录")
+            else:
+                st.error(response.json().get("detail", "获取高风险记录失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+    # 3. 异常打卡
+    with tab_c:
+        st.subheader("异常打卡记录")
+        try:
+            response = requests.get(f"{API_BASE_URL}/doctor/abnormal-checkins", headers=headers)
+            if response.status_code == 200:
+                records = response.json().get("records", [])
+                if records:
+                    for item in records:
+                        name_text = item.get("real_name") or item.get("username")
+                        with st.expander(f"{item['checkin_date']} | {name_text} | 异常打卡"):
+                            st.write("患者用户名：", item.get("username", ""))
+                            st.write("姓名：", item.get("real_name", ""))
+                            st.write("症状：", item.get("symptoms", ""))
+                            st.write("体温：", item.get("temperature", ""))
+                            st.write("血压：", item.get("blood_pressure", ""))
+                            st.write("血糖：", item.get("blood_sugar", ""))
+                            st.write("心率：", item.get("heart_rate", ""))
+                            st.write("异常原因：", item.get("abnormal_reason", ""))
+                else:
+                    st.success("当前暂无异常打卡记录")
+            else:
+                st.error(response.json().get("detail", "获取异常打卡失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+    # 4. 患者详情
+    with tab_d:
+        st.subheader("患者详情查看")
+        query_username = st.text_input("请输入患者用户名", key="doctor_query_username")
+
+        if st.button("查询患者详情", key="doctor_query_btn"):
+            if not query_username.strip():
+                st.warning("请输入患者用户名")
+            else:
+                try:
+                    response = requests.get(
+                        f"{API_BASE_URL}/doctor/patient-detail",
+                        headers=headers,
+                        params={"username": query_username}
+                    )
+                    if response.status_code == 200:
+                        data = response.json().get("data", {})
+                        profile = data.get("profile")
+                        latest_assessment = data.get("latest_assessment")
+                        recent_checkins = data.get("recent_checkins", [])
+                        recent_reminders = data.get("recent_reminders", [])
+
+                        st.subheader("健康档案")
+                        if profile:
+                            st.json(profile)
+                        else:
+                            st.info("该患者暂无健康档案")
+
+                        st.subheader("最近一次健康评估")
+                        if latest_assessment:
+                            risk_level = latest_assessment.get("risk_level", "未知")
+                            if risk_level == "高风险":
+                                st.error(f"风险等级：{risk_level}")
+                            elif risk_level == "中风险":
+                                st.warning(f"风险等级：{risk_level}")
+                            else:
+                                st.info(f"风险等级：{risk_level}")
+
+                            st.write("评估时间：", latest_assessment.get("created_at", ""))
+                            st.write("输入来源：", latest_assessment.get("source_type", ""))
+                            st.write("输入内容：")
+                            st.write(latest_assessment.get("input_text", ""))
+                            st.write("风险原因：")
+                            st.write(latest_assessment.get("risk_reasons", ""))
+                        else:
+                            st.info("该患者暂无健康评估记录")
+
+                        st.subheader("最近 7 条打卡记录")
+                        if recent_checkins:
+                            checkin_df = pd.DataFrame(recent_checkins)
+                            st.dataframe(checkin_df, use_container_width=True)
+                        else:
+                            st.info("该患者暂无打卡记录")
+
+                        st.subheader("最近提醒")
+                        if recent_reminders:
+                            reminder_df = pd.DataFrame(recent_reminders)
+                            st.dataframe(reminder_df, use_container_width=True)
+                        else:
+                            st.info("该患者暂无提醒记录")
+                    else:
+                        st.error(response.json().get("detail", "查询患者详情失败"))
+                except Exception as e:
+                    st.error(f"请求失败: {e}")
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
         "与医疗助手对话",
         "病例图片识别",
         "健康评估中心",
         "健康档案",
         "每日健康打卡",
         "趋势分析/健康概览",
-        "提醒中心"
+        "提醒中心",
+        "医生端管理"
     ])
 
     with tab1:
@@ -859,5 +1004,8 @@ if st.session_state.logged_in:
 
     with tab7:
         reminder_center_section()
+
+    with tab8:
+        doctor_console_section()
 else:
     st.info("请先在左侧边栏登录或注册。")
