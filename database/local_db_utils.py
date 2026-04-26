@@ -983,3 +983,142 @@ class DatabaseConnector:
         except Exception as e:
             print(f"获取患者详情失败: {e}")
             return None
+
+    def get_system_basic_stats(self):
+        try:
+            if not self._ensure_connection():
+                return {}
+
+            cursor = self.connection.cursor(dictionary=True)
+
+            stats = {}
+
+            # 1. 用户总数
+            cursor.execute("SELECT COUNT(*) AS total_users FROM users")
+            stats["total_users"] = int(cursor.fetchone()["total_users"])
+
+            # 2. 健康评估总数
+            cursor.execute("SELECT COUNT(*) AS total_assessments FROM health_assessments")
+            stats["total_assessments"] = int(cursor.fetchone()["total_assessments"])
+
+            # 3. 高风险评估数
+            cursor.execute("SELECT COUNT(*) AS high_risk_assessments FROM health_assessments WHERE risk_level = '高风险'")
+            stats["high_risk_assessments"] = int(cursor.fetchone()["high_risk_assessments"])
+
+            # 4. 打卡总数
+            cursor.execute("SELECT COUNT(*) AS total_checkins FROM daily_checkins")
+            stats["total_checkins"] = int(cursor.fetchone()["total_checkins"])
+
+            # 5. 异常打卡数
+            cursor.execute("SELECT COUNT(*) AS abnormal_checkins FROM daily_checkins WHERE abnormal_flag = 1")
+            stats["abnormal_checkins"] = int(cursor.fetchone()["abnormal_checkins"])
+
+            # 6. 提醒总数
+            cursor.execute("SELECT COUNT(*) AS total_reminders FROM reminders")
+            stats["total_reminders"] = int(cursor.fetchone()["total_reminders"])
+
+            # 7. 今日待完成提醒数
+            cursor.execute("""
+                SELECT COUNT(*) AS today_pending_reminders
+                FROM reminders
+                WHERE reminder_date = CURDATE() AND status = 'pending'
+            """)
+            stats["today_pending_reminders"] = int(cursor.fetchone()["today_pending_reminders"])
+
+            cursor.close()
+            return stats
+        except Exception as e:
+            print(f"获取系统基础统计失败: {e}")
+            return {}
+
+    def get_system_ratio_stats(self):
+        try:
+            if not self._ensure_connection():
+                return {}
+
+            cursor = self.connection.cursor(dictionary=True)
+
+            ratios = {}
+
+            cursor.execute("""
+                SELECT
+                    COUNT(*) AS total_assessments,
+                    SUM(CASE WHEN risk_level = '高风险' THEN 1 ELSE 0 END) AS high_risk_assessments
+                FROM health_assessments
+            """)
+            assessment_result = cursor.fetchone()
+            total_assessments = int(assessment_result["total_assessments"] or 0)
+            high_risk_assessments = int(assessment_result["high_risk_assessments"] or 0)
+
+            cursor.execute("""
+                SELECT
+                    COUNT(*) AS total_checkins,
+                    SUM(CASE WHEN abnormal_flag = 1 THEN 1 ELSE 0 END) AS abnormal_checkins
+                FROM daily_checkins
+            """)
+            checkin_result = cursor.fetchone()
+            total_checkins = int(checkin_result["total_checkins"] or 0)
+            abnormal_checkins = int(checkin_result["abnormal_checkins"] or 0)
+
+            ratios["high_risk_ratio"] = round(high_risk_assessments / total_assessments * 100, 2) if total_assessments > 0 else 0.0
+            ratios["abnormal_checkin_ratio"] = round(abnormal_checkins / total_checkins * 100, 2) if total_checkins > 0 else 0.0
+
+            cursor.close()
+            return ratios
+        except Exception as e:
+            print(f"获取系统比例统计失败: {e}")
+            return {}
+
+    def get_recent_high_risk_records(self, limit: int = 10):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    h.username,
+                    p.real_name,
+                    h.source_type,
+                    h.risk_level,
+                    h.created_at
+                FROM health_assessments h
+                LEFT JOIN patient_profiles p ON h.username = p.username
+                WHERE h.risk_level = '高风险'
+                ORDER BY h.created_at DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取最近高风险记录失败: {e}")
+            return []
+
+    def get_recent_abnormal_checkins(self, limit: int = 10):
+        try:
+            if not self._ensure_connection():
+                return []
+
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    d.username,
+                    p.real_name,
+                    d.checkin_date,
+                    d.abnormal_reason,
+                    d.created_at
+                FROM daily_checkins d
+                LEFT JOIN patient_profiles p ON d.username = p.username
+                WHERE d.abnormal_flag = 1
+                ORDER BY d.checkin_date DESC, d.created_at DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取最近异常打卡失败: {e}")
+            return []

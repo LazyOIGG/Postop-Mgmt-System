@@ -842,7 +842,7 @@ def doctor_console_section():
                 patients = response.json().get("patients", [])
                 if patients:
                     df = pd.DataFrame(patients)
-                    st.dataframe(df, use_container_width=True)
+                    st.dataframe(df, width='stretch')
                 else:
                     st.info("暂无患者数据")
             else:
@@ -954,14 +954,14 @@ def doctor_console_section():
                         st.subheader("最近 7 条打卡记录")
                         if recent_checkins:
                             checkin_df = pd.DataFrame(recent_checkins)
-                            st.dataframe(checkin_df, use_container_width=True)
+                            st.dataframe(checkin_df, width='stretch')
                         else:
                             st.info("该患者暂无打卡记录")
 
                         st.subheader("最近提醒")
                         if recent_reminders:
                             reminder_df = pd.DataFrame(recent_reminders)
-                            st.dataframe(reminder_df, use_container_width=True)
+                            st.dataframe(reminder_df, width='stretch')
                         else:
                             st.info("该患者暂无提醒记录")
                     else:
@@ -969,11 +969,89 @@ def doctor_console_section():
                 except Exception as e:
                     st.error(f"请求失败: {e}")
 
+# 系统统计 / 项目展示页
+def system_dashboard_section():
+    st.header("系统统计 / 项目展示页")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+
+    try:
+        response = requests.get(f"{API_BASE_URL}/stats/system-dashboard", headers=headers)
+        if response.status_code != 200:
+            st.error(response.json().get("detail", "获取系统统计失败"))
+            return
+    except Exception as e:
+        st.error(f"请求失败: {e}")
+        return
+
+    result = response.json()
+    data = result.get("data", {})
+    basic_stats = data.get("basic_stats", {})
+    ratio_stats = data.get("ratio_stats", {})
+    recent_high_risk = data.get("recent_high_risk", [])
+    recent_abnormal_checkins = data.get("recent_abnormal_checkins", [])
+
+    st.subheader("核心统计指标")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("用户总数", basic_stats.get("total_users", 0))
+    col2.metric("健康评估总数", basic_stats.get("total_assessments", 0))
+    col3.metric("高风险评估数", basic_stats.get("high_risk_assessments", 0))
+    col4.metric("高风险占比", f"{ratio_stats.get('high_risk_ratio', 0)}%")
+
+    col5, col6, col7, col8 = st.columns(4)
+    col5.metric("打卡总数", basic_stats.get("total_checkins", 0))
+    col6.metric("异常打卡数", basic_stats.get("abnormal_checkins", 0))
+    col7.metric("异常打卡占比", f"{ratio_stats.get('abnormal_checkin_ratio', 0)}%")
+    col8.metric("提醒总数", basic_stats.get("total_reminders", 0))
+
+    col9, col10 = st.columns(2)
+    col9.metric("今日待完成提醒数", basic_stats.get("today_pending_reminders", 0))
+    col10.metric("系统状态", "运行中")
+
+    st.divider()
+
+    left, right = st.columns(2)
+
+    with left:
+        st.subheader("最近高风险评估记录")
+        if recent_high_risk:
+            df_high = pd.DataFrame(recent_high_risk)
+            st.dataframe(df_high, width='stretch')
+        else:
+            st.success("暂无高风险评估记录")
+
+    with right:
+        st.subheader("最近异常打卡记录")
+        if recent_abnormal_checkins:
+            df_abnormal = pd.DataFrame(recent_abnormal_checkins)
+            st.dataframe(df_abnormal, width='stretch')
+        else:
+            st.success("暂无异常打卡记录")
+
+    st.divider()
+    st.subheader("项目展示说明")
+    st.markdown("""
+**本系统当前已完成的核心模块：**
+- 健康评估
+- 健康档案
+- 每日健康打卡
+- 趋势分析 / 健康概览
+- 提醒中心
+- 医生端最小版
+
+**系统价值：**
+- 支持患者全周期健康管理
+- 支持风险识别与异常发现
+- 支持患者侧与医生侧数据联动
+- 支持多模块业务闭环展示
+""")
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
         "与医疗助手对话",
         "病例图片识别",
         "健康评估中心",
@@ -981,7 +1059,8 @@ if st.session_state.logged_in:
         "每日健康打卡",
         "趋势分析/健康概览",
         "提醒中心",
-        "医生端管理"
+        "医生端管理",
+        "系统统计/项目展示"
     ])
 
     with tab1:
@@ -1007,5 +1086,8 @@ if st.session_state.logged_in:
 
     with tab8:
         doctor_console_section()
+
+    with tab9:
+        system_dashboard_section()
 else:
     st.info("请先在左侧边栏登录或注册。")

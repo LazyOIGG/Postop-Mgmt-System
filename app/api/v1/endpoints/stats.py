@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict
 from app.core.security import get_current_user
 from app.db.session import db_instance
+from app.services.dashboard_service import dashboard_service
 from datetime import datetime
 
 router = APIRouter()
@@ -80,3 +81,12 @@ async def get_system_stats(user: Dict = Depends(get_current_user)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取系统统计失败: {str(e)}")
+
+
+@router.get("/system-dashboard")
+async def get_system_dashboard(user: Dict = Depends(get_current_user)):
+    data = dashboard_service.get_system_dashboard()
+    return {
+        "success": True,
+        "data": data
+    }
