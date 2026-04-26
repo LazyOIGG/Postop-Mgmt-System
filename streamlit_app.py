@@ -4,6 +4,7 @@ import json
 import time
 import base64
 from io import BytesIO
+import pandas as pd
 
 # FastAPI 后端地址
 API_BASE_URL = "http://localhost:8000/api/v1"
@@ -604,16 +605,118 @@ def daily_checkin_section():
         except Exception as e:
             st.error(f"请求失败: {e}")
 
+# 趋势分析与健康概览
+def overview_section():
+    st.header("趋势分析 / 健康概览")
+
+    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+    days = st.selectbox("选择统计周期", [7, 14, 30], index=0)
+
+    try:
+        response = requests.get(
+            f"{API_BASE_URL}/overview/dashboard",
+            headers=headers,
+            params={"days": days}
+        )
+    except Exception as e:
+        st.error(f"请求失败: {e}")
+        return
+
+    if response.status_code != 200:
+        st.error(response.json().get("detail", "获取健康概览失败"))
+        return
+
+    result = response.json()
+    data = result.get("data", {})
+    overview = data.get("overview", {})
+    trend = data.get("trend", {})
+    abnormal_records = data.get("abnormal_records", [])
+    latest_assessment = data.get("latest_assessment")
+
+    # 1. 概览卡片
+    st.subheader("个人健康概览")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("姓名", overview.get("real_name") or "未填写")
+    col2.metric("健康阶段", overview.get("health_stage") or "未设置")
+    col3.metric("最近风险等级", overview.get("latest_risk_level") or "暂无")
+    col4.metric("近7/14/30天异常次数", overview.get("abnormal_count", 0))
+
+    col5, col6, col7 = st.columns(3)
+    col5.metric("平均体温", overview.get("avg_temperature") if overview.get("avg_temperature") is not None else "暂无")
+    col6.metric("平均心率", overview.get("avg_heart_rate") if overview.get("avg_heart_rate") is not None else "暂无")
+    col7.metric("平均血糖", overview.get("avg_blood_sugar") if overview.get("avg_blood_sugar") is not None else "暂无")
+
+    # 2. 最近一次健康评估
+    st.divider()
+    st.subheader("最近一次健康评估")
+    if latest_assessment:
+        risk_level = latest_assessment.get("risk_level", "未知")
+        if risk_level == "高风险":
+            st.error(f"风险等级：{risk_level}")
+        elif risk_level == "中风险":
+            st.warning(f"风险等级：{risk_level}")
+        else:
+            st.info(f"风险等级：{risk_level}")
+
+        st.write("评估时间：", latest_assessment.get("created_at", ""))
+        st.write("输入来源：", latest_assessment.get("source_type", ""))
+        st.write("输入内容：")
+        st.write(latest_assessment.get("input_text", ""))
+    else:
+        st.info("暂无健康评估记录")
+
+    # 3. 趋势图
+    st.divider()
+    st.subheader("健康趋势图")
+
+    dates = trend.get("dates", [])
+    temperature = trend.get("temperature", [])
+    blood_sugar = trend.get("blood_sugar", [])
+    heart_rate = trend.get("heart_rate", [])
+
+    if dates:
+        df = pd.DataFrame({
+            "日期": dates,
+            "体温": temperature,
+            "血糖": blood_sugar,
+            "心率": heart_rate
+        }).set_index("日期")
+
+        st.write("体温趋势")
+        st.line_chart(df[["体温"]], height=250)
+
+        st.write("血糖趋势")
+        st.line_chart(df[["血糖"]], height=250)
+
+        st.write("心率趋势")
+        st.line_chart(df[["心率"]], height=250)
+    else:
+        st.info("暂无打卡数据，无法生成趋势图")
+
+    # 4. 异常记录
+    st.divider()
+    st.subheader("最近异常记录")
+
+    if abnormal_records:
+        for item in abnormal_records:
+            with st.expander(f"{item['date']} | 异常记录"):
+                st.write("异常原因：", item.get("reason", ""))
+                st.write("相关症状：", item.get("symptoms", ""))
+    else:
+        st.success("最近没有异常记录")
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "与医疗助手对话",
         "病例图片识别",
         "健康评估中心",
         "健康档案",
-        "每日健康打卡"
+        "每日健康打卡",
+        "趋势分析/健康概览"
     ])
 
     with tab1:
@@ -630,5 +733,8 @@ if st.session_state.logged_in:
 
     with tab5:
         daily_checkin_section()
+
+    with tab6:
+        overview_section()
 else:
     st.info("请先在左侧边栏登录或注册。")

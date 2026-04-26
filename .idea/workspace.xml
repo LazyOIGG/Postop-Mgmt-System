@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="新增健康档案功能模块，完善数据库及API接口支持，实现患者信息管理">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/local_db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/local_db_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/init_mysql.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/init_mysql.py" afterDir="false" />
-    </list>
+    <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="新增每日健康打卡功能模块，完善数据库表及API接口支持，实现用户日常健康记录管理" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -232,6 +228,7 @@
       <workItem from="1777192575172" duration="207000" />
       <workItem from="1777194250819" duration="439000" />
       <workItem from="1777195725084" duration="508000" />
+      <workItem from="1777197395772" duration="58000" />
     </task>
     <task id="LOCAL-00001" summary="集成OCR图像识别功能并优化数据库配置">
       <option name="closed" value="true" />
@@ -257,7 +254,15 @@
       <option name="project" value="LOCAL" />
       <updated>1777195768612</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="新增每日健康打卡功能模块，完善数据库表及API接口支持，实现用户日常健康记录管理">
+      <option name="closed" value="true" />
+      <created>1777197441906</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1777197441906</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -295,7 +300,8 @@
     <MESSAGE value="集成OCR图像识别功能并优化数据库配置" />
     <MESSAGE value="新增健康评估功能模块，并完善相关数据库支持，添加了健康评估记录表health_assessments" />
     <MESSAGE value="新增健康档案功能模块，完善数据库及API接口支持，实现患者信息管理" />
-    <option name="LAST_COMMIT_MESSAGE" value="新增健康档案功能模块，完善数据库及API接口支持，实现患者信息管理" />
+    <MESSAGE value="新增每日健康打卡功能模块，完善数据库表及API接口支持，实现用户日常健康记录管理" />
+    <option name="LAST_COMMIT_MESSAGE" value="新增每日健康打卡功能模块，完善数据库表及API接口支持，实现用户日常健康记录管理" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$main.coverage" NAME="main 覆盖结果" MODIFIED="1765257496968" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
