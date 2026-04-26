@@ -17,14 +17,14 @@ class Settings(BaseSettings):
     # Neo4j 配置
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
-    NEO4J_PASSWORD: str = "password"
+    NEO4J_PASSWORD: str = "GX3216379973.qq"
     NEO4J_NAME: str = "neo4j"
     
     # MySQL 配置
     MYSQL_HOST: str = "localhost"
     MYSQL_PORT: int = 3306
     MYSQL_USER: str = "root"
-    MYSQL_PASSWORD: str = ""
+    MYSQL_PASSWORD: str = "GX3216379973.qq"
     MYSQL_DATABASE: str = "RAG"
     
     # 模型路径配置

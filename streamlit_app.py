@@ -128,12 +128,20 @@ def chat_section():
                             result = response.json()
                             print(f"[DEBUG] 识别结果: {result}")
                             prompt = result.get("text", "")
+                            answer = result.get("answer", "")
                             if prompt:
                                 print(f"[DEBUG] 识别文本: {prompt}")
+                                # 添加用户消息
                                 st.session_state.messages.append({"role": "user", "content": prompt})
                                 with st.chat_message("user"):
                                     st.markdown(prompt)
                                     st.audio(audio)
+                                # 如果有回答，添加助手消息
+                                if answer:
+                                    print(f"[DEBUG] 回答内容: {answer}")
+                                    st.session_state.messages.append({"role": "assistant", "content": answer})
+                                    with st.chat_message("assistant"):
+                                        st.markdown(answer)
                                 # 重置状态
                                 st.session_state.show_audio_input = False
                                 st.session_state.audio_data = None
@@ -238,10 +246,68 @@ def chat_section():
             st.error(f"发生错误: {e}")
             st.session_state.messages.append({"role": "assistant", "content": f"抱歉，发生错误: {e}"})
 
+# 图片上传和OCR功能
+def image_ocr_section():
+    st.header("病例图片识别")
+    
+    # 文件上传组件
+    uploaded_file = st.file_uploader("上传病例图片", type=["png", "jpg", "jpeg"])
+    
+    if uploaded_file is not None:
+        # 显示上传的图片
+        st.image(uploaded_file, caption="上传的图片", width=800)
+        
+        # 处理图片上传
+        if st.button("开始识别"):
+            with st.spinner("正在识别中..."):
+                try:
+                    # 准备文件数据
+                    files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    data = {"auto_answer": True}
+                    
+                    # 发送请求到后端
+                    response = requests.post(f"{API_BASE_URL}/multimodal/image/ocr", headers=headers, files=files, data=data)
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        if result.get("success"):
+                            # 显示OCR结果
+                            st.subheader("OCR识别结果")
+                            ocr_text = result.get("ocr_text", "")
+                            st.text_area("识别文本", ocr_text, height=200)
+                            
+                            # 显示AI分析建议
+                            answer = result.get("answer", "")
+                            if answer:
+                                st.subheader("AI分析建议")
+                                st.markdown(answer)
+                            
+                            # 显示结构化数据
+                            structured = result.get("structured", {})
+                            if structured:
+                                st.subheader("结构化数据")
+                                st.json(structured)
+                        else:
+                            st.error("识别失败")
+                    else:
+                        st.error(f"请求失败: {response.json().get('detail', '未知错误')}")
+                except requests.exceptions.ConnectionError:
+                    st.error("无法连接到后端服务，请确保后端已启动。")
+                except Exception as e:
+                    st.error(f"发生错误: {e}")
+
 # 主应用逻辑
 auth_section()
 
 if st.session_state.logged_in:
-    chat_section()
+    # 创建标签页
+    tab1, tab2 = st.tabs(["与医疗助手对话", "病例图片识别"])
+    
+    with tab1:
+        chat_section()
+    
+    with tab2:
+        image_ocr_section()
 else:
     st.info("请先在左侧边栏登录或注册。")

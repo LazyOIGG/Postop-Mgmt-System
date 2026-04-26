@@ -455,3 +455,30 @@ class DatabaseConnector:
         except Error as e:
             logger.error(f"获取数据库统计失败: {e}")
             return {}
+
+    def save_patient_report(self, username: str, file_name: str, file_type: str, 
+                           raw_ocr_text: str, structured_json: str, ocr_score: float) -> bool:
+        """保存患者报告OCR结果"""
+        try:
+            if not self._ensure_connection():
+                return False
+
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO patient_reports
+                (username, file_name, file_type, raw_ocr_text, structured_json, ocr_score)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (
+                username, file_name, file_type, raw_ocr_text, structured_json, ocr_score
+            ))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存病例OCR失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+        
+    

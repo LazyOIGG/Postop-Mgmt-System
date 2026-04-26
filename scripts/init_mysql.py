@@ -3,14 +3,17 @@ from mysql.connector import Error
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# 修复编码问题
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def init_db():
-    host = os.getenv("MYSQL_HOST", "localhost")
-    port = os.getenv("MYSQL_PORT", "3306")
-    user = os.getenv("MYSQL_USER", "root")
-    password = os.getenv("MYSQL_PASSWORD", "")
-    database = os.getenv("MYSQL_DATABASE", "RAG")
+    host = "localhost"
+    port = "3306"
+    user = "root"
+    password = "GX3216379973.qq"
+    database = "RAG"
 
     try:
         # 1. 连接到 MySQL
@@ -31,6 +34,7 @@ def init_db():
             conn.database = database
             
             # 4. 创建表
+            
             # Users 表
             cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -44,6 +48,25 @@ def init_db():
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """)
             print("✅ 表 users 已就绪")
+            
+            # Patient Reports 表
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS patient_reports (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              username VARCHAR(255) NOT NULL,
+              file_name VARCHAR(255) NOT NULL,
+              file_type VARCHAR(50),
+              raw_ocr_text LONGTEXT,
+              structured_json JSON,
+              ocr_score DECIMAL(6,4) DEFAULT 0,
+              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              INDEX idx_username (username),
+              INDEX idx_created_at (created_at),
+              FOREIGN KEY (username) REFERENCES users(username)
+                ON DELETE CASCADE ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """)
+            print("✅ 表 patient_reports 已就绪")
             
             # Chat Sessions 表
             cursor.execute("""
