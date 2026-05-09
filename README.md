@@ -1,8 +1,45 @@
 # 术后管理系统 (Postop-Mgmt-System)
 
-> **核心架构**: 基于 **KG-RAG** (Knowledge Graph Retrieval-Augmented Generation) 模式，集成 **Neo4j 医疗知识图谱**、**BERT/RoBERTa 命名实体识别 (NER)** 与 **DeepSeek 大语言模型**。
+> **核心架构**: 基于 **多智能体编排 (Multi-Agent)** 的 **KG-RAG** (Knowledge Graph Retrieval-Augmented Generation) 模式，集成 **Neo4j 医疗知识图谱**、**BERT/RoBERTa 命名实体识别 (NER)** 与 **DeepSeek 大语言模型**。
 
-本项目是一个模块化设计的专业术后管理与医疗问答系统，旨在通过结构化的医疗知识图谱为大模型提供精准事实，解决大模型在医疗领域的“幻觉”问题。
+本项目是一个模块化设计的专业术后管理与医疗问答系统，采用多智能体协作架构自动路由用户意图到专业 Agent，通过结构化的医疗知识图谱为大模型提供精准事实，解决大模型在医疗领域的"幻觉"问题。
+
+***
+
+## 🤖 多智能体架构 (Multi-Agent)
+
+系统采用 **Coordinator + 专业 Agent** 的编排模式，由 DeepSeek LLM 驱动语义路由，自动将用户问题分发到最合适的专业智能体处理。
+
+### 调度流程
+
+```
+用户输入 → CoordinatorAgent (LLM 意图分析)
+               │
+   ┌───────────┼────────────┬──────────────┐
+   ▼           ▼            ▼              ▼
+MedicalQA  HealthAssessment  Reminder  Psychology
+医学问答    健康风险评估    用药复查提醒  心理辅导缓解
+(KG-RAG)   (规则+LLM)     (LLM)        (LLM)
+```
+
+### Agent 清单
+
+| Agent | 文件 | 触发场景 | 核心技术 |
+|-------|------|---------|---------|
+| **CoordinatorAgent** | `coordinator.py` | 所有用户输入首先经过协调者 | LLM 语义路由 JSON |
+| **MedicalQAAgent** | `medical_qa_agent.py` | 疾病/药品/症状/食物/检查等医学知识问答 | NER + 意图识别 + Neo4j KG + LLM |
+| **HealthAssessmentAgent** | `health_agent.py` | 身体不适、症状变化、术后恢复评估、生命体征异常 | 三级风险关键词 + 体温/血压正则 + LLM |
+| **ReminderAgent** | `reminder_agent.py` | 用药提醒、复查提醒、健康打卡管理 | LLM 对话 |
+| **PsychologyAgent** | `psychology_agent.py` | 术后焦虑、情绪低落、失眠、康复压力、孤独感 | LLM 共情对话 |
+
+### API 端点
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `POST /api/v1/chat` | POST | 多智能体聊天 (支持 SSE 流式) |
+| `GET /api/v1/chat/agent/ws` | WebSocket | 多智能体实时 WebSocket |
+
+回答开头自动标注当前服务的智能体身份 (`> 🤖 **医学知识问答** 智能体为您服务`)。
 
 ***
 
@@ -22,6 +59,7 @@
 ```text
 .
 ├── app/                    # 后端核心代码
+│   ├── agents/             # 多智能体模块 (Coordinator + 4 专业Agent)
 │   ├── api/v1/             # API 路由层 (认证、聊天、会话、图谱、统计、多模态)
 │   ├── core/               # 核心配置 (Settings) 与安全逻辑 (JWT/Auth)
 │   ├── db/                 # 数据库连接与 Session 管理
@@ -33,7 +71,8 @@
 ├── model/                  # 预训练模型权重 (RoBERTa) 与配置文件
 ├── scripts/                # 初始化脚本 (MySQL初始化、图谱构建、测试工具)
 ├── tmp_data/               # 运行过程中的临时缓存文件 (如 tag2idx)
-├── .env                    # 个人配置环境变量 (需根据模板创建)
+├── .env                    # 个人配置环境变量 (需根据 .env.example 模板创建)
+├── .env.example            # 环境变量模板文件 (不含敏感信息，可直接分享)
 ├── requirements.txt        # 项目依赖项
 ├── run.py                  # 项目统一启动入口 (FastAPI + Streamlit)
 └── streamlit_app.py        # Streamlit 前端交互界面
@@ -159,16 +198,33 @@ python run.py
 
 ## 📅 后续工作计划 (Roadmap)
 
-- [ ] **多模态集成**:
-  - 集成语音识别 (STT) 与合成 (TTS) 功能，支持语音问答。
-  - 集成医疗报告 OCR 识别，支持图片化验单分析。
+### ✅ 已完成
+
+- [x] **多智能体架构**: 搭建 Coordinator + 4 专业 Agent (医学问答/健康评估/提醒/心理辅导) 的协作体系。
+- [x] **智能路由**: DeepSeek LLM 驱动语义路由，自动分发用户意图到对应 Agent。
+- [x] **身份标注**: 回答开头自动标注当前服务的智能体身份，用户可见调度结果。
+- [x] **KG-RAG 管线**: NER + 意图识别 + Neo4j 知识图谱增强 + LLM 生成。
+- [x] **健康风险评估**: 三级风险关键词 + 生命体征正则 + LLM 建议。
+- [x] **环境配置模板**: `.env.example` 文件便于合作者快速上手。
+
+### 🚧 进行中
+
+- [ ] **心理辅导 Agent 知识增强**: 引入心理学专业知识库，提升情绪疏导质量。
+- [ ] **多轮对话记忆**: Agent 支持上下文记忆，连续对话中保持角色一致性。
+
+### 📋 计划中
+
+- [ ] **语音交互**:
+  - 完善 TTS 语音合成功能。
+  - 前端集成语音输入/输出。
 - [ ] **知识图谱增强**:
   - 引入更复杂的实体关系，支持多跳推理问答。
   - 优化 Cypher 生成算法，提升图谱检索的准确率。
 - [ ] **模型优化**:
-  - 基于提供的 `lora_data` 对大模型进行垂直领域微调 (SFT)。
+  - 基于 `lora_data` 对大模型进行垂直领域微调 (SFT)。
   - 进一步提升 NER 模型对复杂长句的提取能力。
-- [ ] **性能监控**:
+- [ ] **Agent 工具调用**: Agent 具备调用外部 API 的能力（如创建提醒、查询天气影响恢复等）。
+- [ ] **性能与运维**:
   - 引入 Redis 缓存常用查询结果。
   - 完善系统的日志追踪与性能监控面板。
 
