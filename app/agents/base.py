@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import AsyncGenerator, Callable, Dict, List, Optional, Any
+from typing import AsyncGenerator, Dict, List, Optional, Any
 from app.services.llm_service import llm_service
 
 
@@ -13,15 +13,12 @@ class AgentResponse:
 
 
 class BaseAgent:
-    def __init__(self, name: str, system_prompt: str, model_choice: str = None):
+    def __init__(self, name: str, system_prompt: str, model_choice: str = None, domain: str = ""):
         self.name = name
         self.system_prompt = system_prompt
         self.model_choice = model_choice
-        self._tools: Dict[str, Callable] = {}
+        self.domain = domain
         self._llm = llm_service
-
-    def register_tool(self, name: str, func: Callable):
-        self._tools[name] = func
 
     def _build_messages(self, user_input: str, extra_context: str = "") -> List[Dict]:
         messages = [{"role": "system", "content": self.system_prompt}]
@@ -31,10 +28,21 @@ class BaseAgent:
         return messages
 
     async def run(self, user_input: str, extra_context: str = "", stream: bool = False) -> AgentResponse:
-        raise NotImplementedError
+        messages = self._build_messages(user_input, extra_context)
+        response = await self._call_llm(messages)
+        metadata = {}
+        if self.domain:
+            metadata["domain"] = self.domain
+        return AgentResponse(
+            agent_name=self.name,
+            content=response,
+            metadata=metadata
+        )
 
     async def run_stream(self, user_input: str, extra_context: str = "") -> AsyncGenerator[str, None]:
-        raise NotImplementedError
+        messages = self._build_messages(user_input, extra_context)
+        async for chunk in self._call_llm_stream(messages):
+            yield chunk
 
     async def _call_llm(self, messages: List[Dict]) -> str:
         prompt = "\n".join([f"[{m['role']}]: {m['content']}" for m in messages])

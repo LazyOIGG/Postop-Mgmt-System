@@ -1,5 +1,4 @@
 import json
-from typing import Dict
 from app.agents.base import BaseAgent, AgentResponse
 
 COORDINATOR_SYSTEM_PROMPT = """你是一个术后管理多智能体系统的协调者（Coordinator）。你的任务是分析用户输入，判断应该路由到哪个专业智能体处理。

@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     # 阿里云百炼 Fun-ASR 配置
     DASHSCOPE_API_KEY: Optional[str] = None
 
+    # 智谱AI配置 (用于 finetune_demo)
+    ZHIPUAI_API_KEY: Optional[str] = None
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra='ignore')
 
 settings = Settings()

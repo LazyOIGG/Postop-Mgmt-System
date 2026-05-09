@@ -1,4 +1,4 @@
-from app.agents.base import BaseAgent, AgentResponse
+from app.agents.base import BaseAgent
 
 PSYCHOLOGY_SYSTEM_PROMPT = """你是一个术后心理辅导与情绪缓解助手。你的职责是帮助术后患者应对心理和情绪方面的困扰：
 
@@ -24,20 +24,6 @@ class PsychologyAgent(BaseAgent):
         super().__init__(
             name="Psychology",
             system_prompt=PSYCHOLOGY_SYSTEM_PROMPT,
-            model_choice=model_choice
+            model_choice=model_choice,
+            domain="psychology"
         )
-
-    async def run(self, user_input: str, extra_context: str = "", stream: bool = False) -> AgentResponse:
-        messages = self._build_messages(user_input, extra_context)
-        response = await self._call_llm(messages)
-
-        return AgentResponse(
-            agent_name=self.name,
-            content=response,
-            metadata={"domain": "psychology"}
-        )
-
-    async def run_stream(self, user_input: str, extra_context: str = ""):
-        messages = self._build_messages(user_input, extra_context)
-        async for chunk in self._call_llm_stream(messages):
-            yield chunk

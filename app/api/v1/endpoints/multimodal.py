@@ -2,39 +2,12 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form
 from app.core.security import get_current_user
 from app.services.speech_service import speech_service
 from app.services.image_service import image_service
-from app.services.llm_service import llm_service
-from app.services.ner_service import ner_service
-from app.services.intent_service import intent_service
-from app.services.kg_service import kg_service
+from app.agents.orchestrator import orchestrator
 from app.db.session import db_instance
 from typing import Dict
-import re
 import json
 
 router = APIRouter()
-
-async def _get_chat_response(query: str, model_choice: str = None) -> dict:
-    entities = ner_service.recognize(query)
-    intent_res = await intent_service.recognize(query, model_choice)
-    prompt, yitu, entities, _ = kg_service.generate_enhanced_prompt(intent_res, query, entities)
-
-    full_response = ""
-    async for chunk in llm_service.chat(prompt, model_choice, stream=True):
-        full_response += chunk
-
-    knowledge = "\n".join([
-        f"提示{i+1}: {k}"
-        for i, k in enumerate(re.findall(r'<提示>(.*?)</提示>', prompt))
-        if len(k) >= 3
-    ])
-
-    return {
-        "content": full_response,
-        "entities": str(entities),
-        "intents": yitu,
-        "knowledge": knowledge,
-        "prompt": prompt
-    }
 
 @router.post("/image/analyze")
 async def analyze_image(
@@ -92,26 +65,23 @@ async def image_ocr(
             f"OCR文本如下：\n{ocr_result['text']}"
         )
 
-        chat_response = await _get_chat_response(prompt_text)
+        chat_response = await orchestrator.process(prompt_text, user["username"])
 
         response["answer"] = chat_response["content"]
-        response["entities"] = chat_response["entities"]
-        response["intents"] = chat_response["intents"]
-        response["knowledge"] = chat_response["knowledge"]
+        response["entities"] = str(chat_response.get("metadata", {}).get("entities", ""))
+        response["intents"] = str(chat_response.get("metadata", {}).get("intents", ""))
+        response["knowledge"] = str(chat_response.get("metadata", {}).get("knowledge", ""))
 
-        # 可选：保存到聊天记录
         username = user["username"]
         sid = session_id or db_instance.create_session(username, "病例OCR识别")
         if sid:
             db_instance.save_message(sid, username, "user", f"[上传病例] {file.filename}")
             db_instance.save_message(
-                sid,
-                username,
-                "assistant",
+                sid, username, "assistant",
                 chat_response["content"],
-                chat_response["entities"],
-                chat_response["intents"],
-                chat_response["knowledge"]
+                str(chat_response.get("metadata", {}).get("entities", "")),
+                str(chat_response.get("metadata", {}).get("intents", "")),
+                str(chat_response.get("metadata", {}).get("knowledge", ""))
             )
             response["session_id"] = sid
 
@@ -133,16 +103,15 @@ async def speech_to_text(file: UploadFile = File(...), user: Dict = Depends(get_
     content = await file.read()
     recognized_text = await speech_service.transcribe(content)
     
-    # 如果识别成功，自动生成回答
     if not recognized_text.startswith("语音识别失败") and recognized_text.strip():
-        chat_response = await _get_chat_response(recognized_text)
+        chat_response = await orchestrator.process(recognized_text, user["username"])
         return {
             "success": True,
             "text": recognized_text,
             "answer": chat_response["content"],
-            "entities": chat_response["entities"],
-            "intents": chat_response["intents"],
-            "knowledge": chat_response["knowledge"]
+            "entities": str(chat_response.get("metadata", {}).get("entities", "")),
+            "intents": str(chat_response.get("metadata", {}).get("intents", "")),
+            "knowledge": str(chat_response.get("metadata", {}).get("knowledge", ""))
         }
     else:
         return {"success": True, "text": recognized_text}

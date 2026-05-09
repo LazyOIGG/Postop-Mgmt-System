@@ -1,5 +1,5 @@
 import json
-from typing import AsyncGenerator, Dict, Optional
+from typing import AsyncGenerator, Dict
 from app.agents.base import AgentResponse
 from app.agents.coordinator import CoordinatorAgent
 from app.agents.medical_qa_agent import MedicalQAAgent

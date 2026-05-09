@@ -1,4 +1,4 @@
-from app.agents.base import BaseAgent, AgentResponse
+from app.agents.base import BaseAgent
 
 REMINDER_SYSTEM_PROMPT = """你是一个术后用药和复查提醒助手。你的职责是帮助患者管理：
 1. 用药提醒 — 何时服药、药品名称、剂量
@@ -21,20 +21,6 @@ class ReminderAgent(BaseAgent):
         super().__init__(
             name="Reminder",
             system_prompt=REMINDER_SYSTEM_PROMPT,
-            model_choice=model_choice
+            model_choice=model_choice,
+            domain="reminder"
         )
-
-    async def run(self, user_input: str, extra_context: str = "", stream: bool = False) -> AgentResponse:
-        messages = self._build_messages(user_input, extra_context)
-        response = await self._call_llm(messages)
-
-        return AgentResponse(
-            agent_name=self.name,
-            content=response,
-            metadata={"domain": "reminder"}
-        )
-
-    async def run_stream(self, user_input: str, extra_context: str = ""):
-        messages = self._build_messages(user_input, extra_context)
-        async for chunk in self._call_llm_stream(messages):
-            yield chunk
