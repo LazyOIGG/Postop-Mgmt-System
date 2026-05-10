@@ -9,6 +9,21 @@ import json
 
 router = APIRouter()
 
+
+async def _maybe_create_alert(username: str, risk_level: str, risk_reasons: list, advice: str, source_type: str):
+    if risk_level != "高风险":
+        return
+    profile = db_instance.get_patient_profile(username)
+    real_name = profile.get("real_name", "") if profile else ""
+    db_instance.create_alert_notification(
+        username=username,
+        real_name=real_name,
+        risk_level=risk_level,
+        risk_reasons=json.dumps(risk_reasons, ensure_ascii=False),
+        advice=advice,
+        source_type=source_type
+    )
+
 @router.post("/text")
 async def assess_text(
     text: str = Form(...),
@@ -27,7 +42,9 @@ async def assess_text(
         need_hospital=result["need_hospital"],
         advice=result["advice"]
     )
-    
+
+    await _maybe_create_alert(user["username"], result["risk_level"], result["risk_reasons"], result["advice"], "text")
+
     return {
         "success": True,
         "result": result
@@ -60,7 +77,9 @@ async def assess_speech(
         need_hospital=result["need_hospital"],
         advice=result["advice"]
     )
-    
+
+    await _maybe_create_alert(user["username"], result["risk_level"], result["risk_reasons"], result["advice"], "speech")
+
     return {
         "success": True,
         "recognized_text": recognized_text,
@@ -100,7 +119,9 @@ async def assess_image(
         need_hospital=result["need_hospital"],
         advice=result["advice"]
     )
-    
+
+    await _maybe_create_alert(user["username"], result["risk_level"], result["risk_reasons"], result["advice"], "image")
+
     return {
         "success": True,
         "ocr_text": ocr_text,

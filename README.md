@@ -177,7 +177,7 @@ python scripts/init_mysql.py
 
 ### 3. 构建知识图谱
 
-确保 Neo4j 服务已启动且 APOC 插件已安装，运行脚本导入医疗数据（也要换密码，只要看到Ncy182...就替换为自己密码）：
+确保 Neo4j 服务已启动且 APOC 插件已安装，运行脚本导入医疗数据（请先配置 `.env` 中的 Neo4j 连接信息）：
 
 ```bash
 python scripts/build_up_graph.py

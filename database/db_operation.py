@@ -50,10 +50,14 @@ def create_database_if_not_exists(host=None, user=None, password=None, database=
 def init_database_tables():
     """初始化数据库表结构"""
     try:
-        # 使用DatabaseConnector连接到指定的数据库
-        from db_utils import DatabaseConnector
+        from database.local_db_utils import DatabaseConnector
 
-        db = DatabaseConnector(host='localhost', database='RAG', user='root', password='GX3216379973.qq')
+        host = os.getenv('MYSQL_HOST', 'localhost')
+        user = os.getenv('MYSQL_USER', 'root')
+        password = os.getenv('MYSQL_PASSWORD', '')
+        database = os.getenv('MYSQL_DATABASE', 'RAG')
+
+        db = DatabaseConnector(host=host, database=database, user=user, password=password)
 
         if not db.connect():
             print("数据库连接失败")
@@ -151,6 +155,40 @@ def init_database_tables():
                        ''')
         print("✅ API访问日志表 (api_access_logs) 创建/检查完成")
 
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS alert_notifications (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           real_name VARCHAR(100) DEFAULT '',
+                           risk_level VARCHAR(20) NOT NULL,
+                           risk_reasons TEXT,
+                           advice TEXT,
+                           source_type VARCHAR(20) DEFAULT 'text',
+                           status ENUM('pending', 'processed') DEFAULT 'pending',
+                           processed_at TIMESTAMP NULL,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           INDEX idx_username (username),
+                           INDEX idx_status (status),
+                           INDEX idx_created_at (created_at)
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 告警通知表 (alert_notifications) 创建/检查完成")
+
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS doctor_messages (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           doctor_username VARCHAR(255) NOT NULL,
+                           patient_username VARCHAR(255) NOT NULL,
+                           content TEXT NOT NULL,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           INDEX idx_patient (patient_username),
+                           INDEX idx_doctor (doctor_username),
+                           FOREIGN KEY (doctor_username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE,
+                           FOREIGN KEY (patient_username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 医生消息表 (doctor_messages) 创建/检查完成")
+
         db.connection.commit()
         print("\n" + "="*50)
         print("✅ 所有数据库表创建/检查完成")
@@ -213,7 +251,7 @@ def create_admin_account(db):
 def test_database_connection():
     """测试数据库连接"""
     try:
-        from db_utils import DatabaseConnector
+        from database.local_db_utils import DatabaseConnector
 
         print("正在测试数据库连接...")
         db = DatabaseConnector()
@@ -320,7 +358,7 @@ def init_database():
     print("✅ 数据库初始化完成！")
     print("="*60)
     print("\n系统已就绪，您可以:")
-    print("1. 启动后端服务: python main.py")
+    print("1. 启动后端服务: python run.py")
     print("2. 访问管理界面: http://localhost:8000/docs")
     print("3. 使用管理员账户登录:")
     print("   - 用户名: admin")
@@ -397,7 +435,7 @@ if __name__ == "__main__":
     elif args.action == 'create-admin':
         # 仅创建管理员账户
         try:
-            from local_db_utils import DatabaseConnector
+            from database.local_db_utils import DatabaseConnector
             db = DatabaseConnector()
             if db.connect():
                 create_admin_account(db)

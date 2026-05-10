@@ -1128,3 +1128,148 @@ class DatabaseConnector:
         except Exception as e:
             print(f"获取最近异常打卡失败: {e}")
             return []
+
+    def create_alert_notification(
+        self, username: str, real_name: str, risk_level: str,
+        risk_reasons: str, advice: str, source_type: str = "text"
+    ) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO alert_notifications
+                (username, real_name, risk_level, risk_reasons, advice, source_type)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (username, real_name, risk_level, risk_reasons, advice, source_type))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"创建告警通知失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_alert_notifications(self, status: str = None, limit: int = 50):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            if status:
+                query = """
+                    SELECT id, username, real_name, risk_level, risk_reasons,
+                           advice, source_type, status, processed_at, created_at
+                    FROM alert_notifications
+                    WHERE status = %s
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                """
+                cursor.execute(query, (status, limit))
+            else:
+                query = """
+                    SELECT id, username, real_name, risk_level, risk_reasons,
+                           advice, source_type, status, processed_at, created_at
+                    FROM alert_notifications
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                """
+                cursor.execute(query, (limit,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取告警通知列表失败: {e}")
+            return []
+
+    def process_alert_notification(self, alert_id: int) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                UPDATE alert_notifications
+                SET status = 'processed', processed_at = NOW()
+                WHERE id = %s
+            """
+            cursor.execute(query, (alert_id,))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"处理告警通知失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def save_doctor_message(
+        self, doctor_username: str, patient_username: str, content: str
+    ) -> Optional[int]:
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO doctor_messages (doctor_username, patient_username, content)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (doctor_username, patient_username, content))
+            self.connection.commit()
+            msg_id = cursor.lastrowid
+            cursor.close()
+            return msg_id
+        except Exception as e:
+            print(f"保存医生消息失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return None
+
+    def get_doctor_messages(self, patient_username: str, limit: int = 30):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, doctor_username, patient_username, content, created_at
+                FROM doctor_messages
+                WHERE patient_username = %s
+                ORDER BY created_at DESC
+                LIMIT %s
+            """
+            cursor.execute(query, (patient_username, limit))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取医生消息记录失败: {e}")
+            return []
+
+    def save_admin_message_to_patient(
+        self, doctor_username: str, patient_username: str, content: str
+    ) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO user_conversations (session_id, username, role, content)
+                VALUES (
+                    COALESCE(
+                        (SELECT session_id FROM chat_sessions
+                         WHERE username = %s ORDER BY last_updated DESC LIMIT 1),
+                        (SELECT MAX(session_id) FROM chat_sessions WHERE username = %s)
+                    ),
+                    %s, 'assistant', %s
+                )
+            """
+            cursor.execute(query, (patient_username, patient_username, patient_username, content))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存医生回复到患者对话失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False

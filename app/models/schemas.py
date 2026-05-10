@@ -91,3 +91,12 @@ class ReminderCreateRequest(BaseModel):
 class ReminderStatusUpdateRequest(BaseModel):
     reminder_id: int
     status: str
+
+
+class DoctorMessageRequest(BaseModel):
+    patient_username: str
+    content: str
+
+
+class AlertProcessRequest(BaseModel):
+    alert_id: int
