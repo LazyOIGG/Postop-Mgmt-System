@@ -78,6 +78,16 @@ def auth_section():
     else:
         role_text = "🩺 医生" if st.session_state.is_admin else "👤 患者"
         st.sidebar.success(f"已登录: {st.session_state.username} ({role_text})")
+        if not st.session_state.is_admin:
+            try:
+                headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                resp = requests.get(f"{API_BASE_URL}/doctor/notifications/unread", headers=headers, timeout=3)
+                if resp.status_code == 200:
+                    count = resp.json().get("unread_count", 0)
+                    if count > 0:
+                        st.sidebar.warning(f"📬 医生发来 {count} 条消息")
+            except Exception:
+                pass
         if st.sidebar.button("退出登录"):
             st.session_state.logged_in = False
             st.session_state.is_admin = False
@@ -228,11 +238,10 @@ def chat_section():
                     
                     # 语音播放按钮
                     if st.button("🔊 语音播放"):
-                        # 调用语音合成接口
                         try:
                             tts_response = requests.post(f"{API_BASE_URL}/multimodal/speech/tts", 
                                                        headers=headers, 
-                                                       json={"text": full_response})
+                                                       data={"text": full_response})
                             if tts_response.status_code == 200:
                                 tts_result = tts_response.json()
                                 if tts_result.get("audio"):

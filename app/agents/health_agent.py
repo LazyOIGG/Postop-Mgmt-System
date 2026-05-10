@@ -1,3 +1,4 @@
+from typing import AsyncGenerator
 from app.agents.base import BaseAgent, AgentResponse
 from app.services.health_assessment_service import health_assessment_service
 
@@ -36,6 +37,6 @@ class HealthAssessmentAgent(BaseAgent):
             }
         )
 
-    async def run_stream(self, user_input: str, extra_context: str = ""):
+    async def run_stream(self, user_input: str, extra_context: str = "") -> AsyncGenerator[str, None]:
         result = await self.run(user_input, extra_context)
         yield result.content

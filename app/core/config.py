@@ -35,6 +35,21 @@ class Settings(BaseSettings):
     # 安全配置
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    # 默认管理员账户
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = ""
+
+    # 术后健康监测阈值
+    TEMP_HIGH_RISK: float = 39.0
+    TEMP_MEDIUM_RISK: float = 37.8
+    BP_SYSTOLIC_HIGH_RISK: int = 180
+    BP_DIASTOLIC_HIGH_RISK: int = 120
+    BP_SYSTOLIC_MEDIUM_RISK: int = 140
+    BP_DIASTOLIC_MEDIUM_RISK: int = 90
+    BLOOD_SUGAR_HIGH: float = 11.1
+    HEART_RATE_HIGH: int = 120
+    HEART_RATE_LOW: int = 50
     
     # 预留多模态接口
     SPEECH_API_KEY: Optional[str] = None

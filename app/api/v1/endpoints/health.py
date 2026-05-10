@@ -11,6 +11,21 @@ from app.db.session import db_instance
 router = APIRouter()
 
 
+async def _maybe_create_alert(username: str, risk_level: str, risk_reasons: list, advice: str, source_type: str):
+    if risk_level != "高风险":
+        return
+    profile = db_instance.get_patient_profile(username)
+    real_name = profile.get("real_name", "") if profile else ""
+    db_instance.create_alert_notification(
+        username=username,
+        real_name=real_name,
+        risk_level=risk_level,
+        risk_reasons=json.dumps(risk_reasons, ensure_ascii=False),
+        advice=advice,
+        source_type=source_type
+    )
+
+
 @router.post("/assess/text")
 async def assess_text(
     input_text: str = Form(...),
@@ -49,6 +64,8 @@ async def assess_text(
         advice=result["advice"],
         need_hospital=1 if result["need_hospital"] else 0
     )
+
+    await _maybe_create_alert(username, result["risk_level"], result["risk_reasons"], result["advice"], "text")
 
     return {
         "success": True,
@@ -98,6 +115,8 @@ async def assess_speech(
         advice=result["advice"],
         need_hospital=1 if result["need_hospital"] else 0
     )
+
+    await _maybe_create_alert(username, result["risk_level"], result["risk_reasons"], result["advice"], "speech")
 
     return {
         "success": True,
@@ -165,6 +184,8 @@ async def assess_image(
         advice=result["advice"],
         need_hospital=1 if result["need_hospital"] else 0
     )
+
+    await _maybe_create_alert(username, result["risk_level"], result["risk_reasons"], result["advice"], "image")
 
     return {
         "success": True,

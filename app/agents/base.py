@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import AsyncGenerator, Dict, List, Optional, Any
-from app.services.llm_service import llm_service
+from app.services.llm_service import llm_service, LLMServiceError
 
 
 @dataclass
@@ -46,9 +46,17 @@ class BaseAgent:
 
     async def _call_llm(self, messages: List[Dict]) -> str:
         prompt = "\n".join([f"[{m['role']}]: {m['content']}" for m in messages])
-        return await self._llm.generate_completion(prompt, self.model_choice)
+        try:
+            return await self._llm.generate_completion(prompt, self.model_choice)
+        except LLMServiceError as e:
+            print(f"[ERROR] {self.name} LLM调用失败: {e}")
+            return f"抱歉，AI服务暂时不可用，请稍后重试。"
 
     async def _call_llm_stream(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
         prompt = "\n".join([f"[{m['role']}]: {m['content']}" for m in messages])
-        async for chunk in self._llm.chat(prompt, self.model_choice, stream=True):
-            yield chunk
+        try:
+            async for chunk in self._llm.chat(prompt, self.model_choice, stream=True):
+                yield chunk
+        except LLMServiceError as e:
+            print(f"[ERROR] {self.name} LLM流式调用失败: {e}")
+            yield "抱歉，AI服务暂时不可用，请稍后重试。"

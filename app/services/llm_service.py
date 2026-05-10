@@ -2,6 +2,12 @@ from openai import OpenAI
 from app.core.config import settings
 import traceback
 
+
+class LLMServiceError(Exception):
+    """LLM 调用异常"""
+    pass
+
+
 class LLMService:
     """大语言模型服务"""
     def __init__(self):
@@ -48,6 +54,6 @@ class LLMService:
             return response.choices[0].message.content
         except Exception as e:
             print(f"[ERROR] ❌ LLM生成失败: {str(e)}")
-            return ""
+            raise LLMServiceError(f"LLM调用失败: {str(e)}") from e
 
 llm_service = LLMService()

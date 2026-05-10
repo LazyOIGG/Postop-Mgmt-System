@@ -216,25 +216,29 @@ def init_database_tables():
 def create_admin_account(db):
     """创建默认管理员账户"""
     try:
-        cursor = db.connection.cursor()
+        from app.core.config import settings
 
-        # 检查管理员账户是否已存在
-        cursor.execute("SELECT * FROM users WHERE username = 'admin' AND is_admin = 1")
+        admin_user = settings.ADMIN_USERNAME
+        admin_pwd_raw = settings.ADMIN_PASSWORD
+
+        if not admin_pwd_raw:
+            print("⚠️  未配置 ADMIN_PASSWORD，跳过默认管理员创建。请在 .env 中设置 ADMIN_PASSWORD。")
+            return
+
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = %s AND is_admin = 1", (admin_user,))
 
         if not cursor.fetchone():
-            # 管理员账户不存在，创建它
-            admin_pwd = encrypt_password('123456')
+            admin_pwd = encrypt_password(admin_pwd_raw)
             try:
                 cursor.execute(
                     "INSERT INTO users (username, password, is_admin) VALUES (%s, %s, 1)",
-                    ('admin', admin_pwd)
+                    (admin_user, admin_pwd)
                 )
                 db.connection.commit()
-                print("✅ 管理员账户创建成功")
-                print("   用户名: admin")
-                print("   密码: 123456")
+                print(f"✅ 管理员账户创建成功 (用户名: {admin_user})")
             except mysql.connector.Error as e:
-                if e.errno == 1062:  # Duplicate entry
+                if e.errno == 1062:
                     print("⚠️ 管理员账户已存在")
                 else:
                     raise e
@@ -372,9 +376,7 @@ def init_database():
     print("\n系统已就绪，您可以:")
     print("1. 启动后端服务: python run.py")
     print("2. 访问管理界面: http://localhost:8000/docs")
-    print("3. 使用管理员账户登录:")
-    print("   - 用户名: admin")
-    print("   - 密码: 123456")
+    print("3. 使用已配置的管理员账户登录")
 
     return True
 

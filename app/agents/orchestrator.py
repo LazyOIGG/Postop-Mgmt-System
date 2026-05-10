@@ -31,7 +31,7 @@ class MultiAgentOrchestrator:
             "psychology": PsychologyAgent(model_choice=model_choice),
         }
 
-    def register_agent(self, name: str, agent):
+    def register_agent(self, name: str, agent) -> None:
         self.agents[name] = agent
 
     async def process(self, user_input: str, username: str = None) -> Dict:

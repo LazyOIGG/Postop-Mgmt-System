@@ -1,6 +1,6 @@
 import py2neo
 import random
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from app.core.config import settings
 
 class KGService:
@@ -18,7 +18,7 @@ class KGService:
             print(f"[ERROR] Neo4j连接失败: {e}")
             self.client = None
 
-    def add_shuxing_prompt(self, entity, shuxing):
+    def add_shuxing_prompt(self, entity: str, shuxing: str) -> str:
         """查询疾病属性并生成提示"""
         if self.client is None: return ""
         try:
@@ -27,11 +27,11 @@ class KGService:
             if res:
                 content = "".join(res[0].values())
                 return f"<提示>用户对{entity}有查询{shuxing}需求，知识库内容：{content}</提示>"
-        except Exception as e:
+        except py2neo.errors.ClientError as e:
             print(f"[WARN] 属性查询失败({shuxing}): {e}")
         return ""
 
-    def add_lianxi_prompt(self, entity, lianxi, target):
+    def add_lianxi_prompt(self, entity: str, lianxi: str, target: str) -> str:
         """查询疾病联系并生成提示"""
         if self.client is None: return ""
         try:
@@ -40,11 +40,11 @@ class KGService:
             if res:
                 names = "、".join([list(data.values())[0] for data in res])
                 return f"<提示>用户对{entity}有查询{lianxi}需求，知识库内容：{names}</提示>"
-        except Exception as e:
+        except py2neo.errors.ClientError as e:
             print(f"[WARN] 关系查询失败({lianxi}): {e}")
         return ""
 
-    def generate_enhanced_prompt(self, intent_response: str, query: str, entities: Dict) -> tuple:
+    def generate_enhanced_prompt(self, intent_response: str, query: str, entities: Dict) -> Tuple[str, str, Dict, bool]:
         """根据意图和实体生成增强 Prompt"""
         neo4j_prompt = '<指令>你是一个专业的术后管理助手。回答必须严格基于给定的提示内容，不可自由发挥。如无信息，请回答“根据已知信息无法回答该问题”。</指令>'
         has_kg = False
@@ -58,7 +58,7 @@ class KGService:
                     has_kg = True
                     entities['疾病'] = random.choice(res)
                     neo4j_prompt += f"<提示>基于{entities['疾病症状']}，推测可能是：{'、'.join(res)}。请告知用户这仅为推测。</提示>"
-            except Exception as e:
+            except py2neo.errors.ClientError as e:
                 print(f"[ERROR] 症状推测失败: {e}")
 
         # 意图映射查询
@@ -89,12 +89,12 @@ class KGService:
         
         return prompt, "、".join(yitu_list), entities, has_kg
 
-    def query(self, cypher_query: str):
+    def query(self, cypher_query: str) -> List[Dict]:
         """执行原生 Cypher 查询"""
         if self.client is None: return []
         try:
             return self.client.run(cypher_query).data()
-        except Exception as e:
+        except py2neo.errors.ClientError as e:
             print(f"[ERROR] 图谱查询失败: {e}")
             return []
 

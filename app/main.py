@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.security import _cleanup_expired_tokens
 from app.db.session import db_instance
 from app.services.ner_service import ner_service
 from app.services.kg_service import kg_service
 from datetime import datetime
+import asyncio
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -62,6 +64,7 @@ async def startup_event():
         print("数据库连接失败")
 
     print(f"API 文档地址: http://localhost:8000/docs")
+    asyncio.create_task(_cleanup_expired_tokens())
     print("=" * 50)
 
 @app.on_event("shutdown")

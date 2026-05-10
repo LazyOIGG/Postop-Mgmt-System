@@ -1,15 +1,33 @@
 import hashlib
+import secrets
 import re
 
-def encrypt_password(password: str) -> str:
-    """密码加密（使用SHA-256加盐）"""
-    salt = "medical_qa_system_salt_2024"
-    combined = (password + salt).encode('utf-8')
-    return hashlib.sha256(combined).hexdigest()
 
-def verify_password(input_password: str, stored_hash: str) -> bool:
-    """验证密码"""
-    return encrypt_password(input_password) == stored_hash
+def _generate_salt() -> str:
+    return secrets.token_hex(16)
+
+
+def encrypt_password(password: str) -> str:
+    salt = _generate_salt()
+    combined = (password + salt).encode('utf-8')
+    hashed = hashlib.sha256(combined).hexdigest()
+    return f"1${salt}${hashed}"
+
+
+def verify_password(input_password: str, stored_value: str) -> bool:
+    if not stored_value:
+        return False
+    if "$" not in stored_value:
+        salt = "medical_qa_system_salt_2024"
+        combined = (input_password + salt).encode('utf-8')
+        return hashlib.sha256(combined).hexdigest() == stored_value
+    parts = stored_value.split("$")
+    if len(parts) != 3:
+        return False
+    _, salt, old_hash = parts
+    combined = (input_password + salt).encode('utf-8')
+    return hashlib.sha256(combined).hexdigest() == old_hash
+
 
 def verify_password_strength(password: str):
     """验证密码强度：至少8位，包含大小写字母、数字和特殊字符"""

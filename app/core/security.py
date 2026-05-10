@@ -1,11 +1,22 @@
 import secrets
+import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 from fastapi import Header, HTTPException
 from app.core.config import settings
 
-# 内存令牌存储 (生产环境建议使用 Redis)
 user_tokens: Dict[str, Dict] = {}
+
+
+async def _cleanup_expired_tokens():
+    while True:
+        await asyncio.sleep(300)
+        now = datetime.now()
+        expired = [t for t, d in list(user_tokens.items()) if now > d.get("expires_at", now)]
+        for t in expired:
+            user_tokens.pop(t, None)
+        if expired:
+            print(f"[INFO] 已清理 {len(expired)} 个过期令牌")
 
 def generate_token(username: str, is_admin: bool = False) -> str:
     """生成用户访问令牌"""

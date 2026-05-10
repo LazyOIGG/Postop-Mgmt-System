@@ -66,6 +66,26 @@ async def doctor_get_messages(
     return {"success": True, "messages": data}
 
 
+@router.get("/notifications/unread")
+async def doctor_notifications_unread(user: Dict = Depends(get_current_user)):
+    count = doctor_service.get_unread_count(user["username"])
+    return {"success": True, "unread_count": count}
+
+
+@router.post("/message/from-patient")
+async def patient_send_message(
+    request: DoctorMessageRequest,
+    user: Dict = Depends(get_current_user)
+):
+    if not request.content.strip():
+        raise HTTPException(status_code=400, detail="消息内容不能为空")
+    result = doctor_service.send_message_from_patient(
+        patient_username=user["username"],
+        content=request.content.strip()
+    )
+    return {"success": True, "message": result}
+
+
 @router.post("/message")
 async def doctor_send_message(
     request: DoctorMessageRequest,

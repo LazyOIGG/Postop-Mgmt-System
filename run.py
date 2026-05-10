@@ -80,15 +80,36 @@ def start_streamlit():
     webbrowser.open(url)
     return process
 
+def start_doctor_streamlit():
+    """启动医生端 Streamlit"""
+    port = 8502
+    print(f"[INFO] 检查端口 {port} 是否被占用...")
+    if check_port(port):
+        print(f"[INFO] 端口 {port} 被占用，正在清理...")
+        kill_process_on_port(port)
+        time.sleep(2)
+    print("[INFO] 启动医生端 Streamlit 应用...")
+    
+    url = "http://localhost:8502"
+    process = subprocess.Popen(
+        [sys.executable, "-m", "streamlit", "run", "doctor_app.py", "--server.port", "8502", "--server.headless", "true"],
+        env=os.environ.copy()
+    )
+    
+    print(f"[SUCCESS] 医生端访问地址: {url}")
+    return process
+
 if __name__ == "__main__":
-    f_proc = None; s_proc = None
+    f_proc = None; s_proc = None; d_proc = None
     try:
         f_proc = start_fastapi()
         s_proc = start_streamlit()
+        d_proc = start_doctor_streamlit()
         while True: time.sleep(1)
     except KeyboardInterrupt:
         print("\n[INFO] 检测到中断，正在关闭服务...")
     finally:
         if s_proc: s_proc.terminate()
+        if d_proc: d_proc.terminate()
         if f_proc: f_proc.terminate()
         print("[SUCCESS] 所有服务已关闭")

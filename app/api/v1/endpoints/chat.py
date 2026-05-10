@@ -8,19 +8,6 @@ import json
 
 router = APIRouter()
 
-class ConnectionManager:
-    """WebSocket 连接管理"""
-    def __init__(self):
-        self.active_connections = []
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-
-manager = ConnectionManager()
-
 @router.post("")
 async def chat_endpoint(request: ChatRequest, user: dict = Depends(get_current_user)):
     """处理聊天问答 — 多智能体编排"""
@@ -60,7 +47,7 @@ async def chat_endpoint(request: ChatRequest, user: dict = Depends(get_current_u
 @router.websocket("/agent/ws")
 async def agent_websocket_chat(websocket: WebSocket, token: str = None):
     """多智能体 WebSocket 实时聊天"""
-    await manager.connect(websocket)
+    await websocket.accept()
     try:
         user = validate_token(token) if token else None
         if not user:
@@ -74,15 +61,15 @@ async def agent_websocket_chat(websocket: WebSocket, token: str = None):
                 async for line in orchestrator.process_stream(query, user["username"]):
                     await websocket.send_text(line.strip())
                 await websocket.send_text(json.dumps({"type": "done"}))
-    except WebSocketDisconnect: manager.disconnect(websocket)
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
         print(f"[ERROR] ❌ 多智能体 WebSocket 异常: {e}")
-        manager.disconnect(websocket)
 
 @router.websocket("/ws")
 async def websocket_chat(websocket: WebSocket, token: str = None):
     """WebSocket 实时聊天 — 多智能体编排"""
-    await manager.connect(websocket)
+    await websocket.accept()
     try:
         user = validate_token(token) if token else None
         if not user:
@@ -96,7 +83,7 @@ async def websocket_chat(websocket: WebSocket, token: str = None):
                 async for line in orchestrator.process_stream(query, user["username"]):
                     await websocket.send_text(line.strip())
                 await websocket.send_text(json.dumps({"type": "done"}))
-    except WebSocketDisconnect: manager.disconnect(websocket)
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
         print(f"[ERROR] ❌ WebSocket 异常: {e}")
-        manager.disconnect(websocket)

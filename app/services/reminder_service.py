@@ -1,15 +1,15 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 from app.db.session import db_instance
 
 
 class ReminderService:
-    def get_all_reminders(self, username: str):
+    def get_all_reminders(self, username: str) -> List[Dict]:
         return db_instance.get_reminders(username)
 
-    def get_today_stats(self, username: str):
+    def get_today_stats(self, username: str) -> Dict[str, int]:
         return db_instance.get_today_reminder_stats(username)
 
-    def create_default_checkin_reminder(self, username: str, reminder_date: str):
+    def create_default_checkin_reminder(self, username: str, reminder_date: str) -> bool:
         return db_instance.save_reminder(
             username=username,
             reminder_type="打卡提醒",

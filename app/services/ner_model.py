@@ -252,12 +252,7 @@ class Bert_Model(nn.Module):
                 print("成功加载模型")
             except Exception as e2:
                 print(f"模型加载失败: {str(e2)}")
-                print("警告：使用简化的BERT层替代，这可能会影响模型性能")
-                # 创建一个简单的替代层作为最后的备选方案
-                self.bert = nn.Sequential(
-                    nn.Embedding(30000, 768),  # 简单的嵌入层替代
-                    nn.LayerNorm(768)
-                )
+                raise RuntimeError(f"BERT 模型加载失败，NER 将降级到规则匹配: {e2}")
         
         self.gru = nn.RNN(input_size=768,hidden_size=hidden_size,num_layers=2,batch_first=True,bidirectional=bi)
         if bi:

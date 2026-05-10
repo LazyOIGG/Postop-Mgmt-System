@@ -117,7 +117,7 @@ async def speech_to_text(file: UploadFile = File(...), user: Dict = Depends(get_
         return {"success": True, "text": recognized_text}
 
 @router.post("/speech/tts")
-async def text_to_speech(text: str, user: Dict = Depends(get_current_user)):
+async def text_to_speech(text: str = Form(...), user: Dict = Depends(get_current_user)):
     """语音合成"""
     result = await speech_service.synthesize(text)
     return {"success": True, "audio": result}

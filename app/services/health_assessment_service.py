@@ -1,6 +1,7 @@
 from typing import Dict, List
 import re
-from app.services.llm_service import llm_service
+from app.services.llm_service import llm_service, LLMServiceError
+from app.core.config import settings
 
 
 class HealthAssessmentService:
@@ -50,22 +51,22 @@ class HealthAssessmentService:
 
         temp = self._detect_temperature(text)
         if temp is not None:
-            if temp >= 39.0:
+            if temp >= settings.TEMP_HIGH_RISK:
                 risk_level = "高风险"
                 reasons.append(f"体温较高（{temp}℃）")
                 need_hospital = True
-            elif temp >= 37.8:
+            elif temp >= settings.TEMP_MEDIUM_RISK:
                 risk_level = "中风险"
                 reasons.append(f"体温升高（{temp}℃）")
 
         bp = self._detect_blood_pressure(text)
         if bp:
             systolic, diastolic = bp
-            if systolic >= 180 or diastolic >= 120:
+            if systolic >= settings.BP_SYSTOLIC_HIGH_RISK or diastolic >= settings.BP_DIASTOLIC_HIGH_RISK:
                 risk_level = "高风险"
                 reasons.append(f"血压严重异常（{systolic}/{diastolic}）")
                 need_hospital = True
-            elif systolic >= 140 or diastolic >= 90:
+            elif systolic >= settings.BP_SYSTOLIC_MEDIUM_RISK or diastolic >= settings.BP_DIASTOLIC_MEDIUM_RISK:
                 if risk_level != "高风险":
                     risk_level = "中风险"
                 reasons.append(f"血压偏高（{systolic}/{diastolic}）")
@@ -113,7 +114,11 @@ class HealthAssessmentService:
 - 不要过度诊断
 - 高风险时明确建议尽快就医
 """
-        return await llm_service.generate_completion(prompt)
+        try:
+            return await llm_service.generate_completion(prompt)
+        except LLMServiceError as e:
+            print(f"[ERROR] 健康建议生成失败: {e}")
+            return "AI服务暂时不可用，请根据风险等级自行判断。高风险请立即就医，中低风险请持续观察症状变化。"
 
     async def assess(self, text: str, source_type: str = "text") -> Dict:
         risk_result = self.rule_based_assess(text)
