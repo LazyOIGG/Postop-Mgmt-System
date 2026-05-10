@@ -1,6 +1,6 @@
-neo4j-community-5.18.1/
-model/chinese-roberta-wwm-ext/
-model/best_roberta_rnn_model_ent_aug.pt
 .env
-__pycache__/
 .idea/
+.trae/
+model/
+__pycache__/
+neo4j-community-5.18.1/

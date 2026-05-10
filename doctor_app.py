@@ -79,7 +79,11 @@ def auth_section():
 def doctor_console():
     st.header("医生端管理")
     headers = {"Authorization": f"Bearer {st.session_state.token}"}
-    tab_a, tab_b, tab_c, tab_d, tab_e = st.tabs(["患者列表", "告警通知", "高风险记录", "异常打卡", "患者交互"])
+
+    col_main, col_chat = st.columns([8, 2])
+
+    with col_main:
+        tab_a, tab_b, tab_c, tab_d = st.tabs(["患者列表", "告警通知", "高风险记录", "异常打卡"])
 
     with tab_a:
         st.subheader("患者列表")
@@ -190,82 +194,78 @@ def doctor_console():
         except Exception as e:
             st.error(f"请求失败: {e}")
 
-    with tab_e:
-        st.subheader("患者交互")
+    with col_chat:
+        st.subheader("💬 患者交互")
         query_username = st.text_input("输入患者用户名", key="doctor_chat_username")
         if not query_username.strip():
-            st.info("请输入患者用户名后开始交互")
+            st.info("输入患者用户名后开始对话")
             return
 
-        col_left, col_right = st.columns([2, 3])
-        with col_left:
-            st.caption("患者信息")
-            try:
-                detail_resp = requests.get(
-                    f"{API_BASE_URL}/doctor/patient-detail",
-                    headers=headers,
-                    params={"username": query_username}
-                )
-                if detail_resp.status_code == 200:
-                    data = detail_resp.json().get("data", {})
-                    profile = data.get("profile", {})
-                    latest = data.get("latest_assessment")
-                    if profile:
-                        st.metric("姓名", profile.get("real_name") or "未填写")
-                        st.metric("阶段", profile.get("health_stage") or "-")
-                    if latest:
-                        risk = latest.get("risk_level", "未知")
-                        if risk == "高风险":
-                            st.error(f"风险：{risk}")
-                        elif risk == "中风险":
-                            st.warning(f"风险：{risk}")
-                        else:
-                            st.info(f"风险：{risk}")
-            except Exception as e:
-                st.error(f"请求失败: {e}")
-
-        with col_right:
-            st.caption("消息记录")
-            try:
-                msg_resp = requests.get(
-                    f"{API_BASE_URL}/doctor/messages",
-                    headers=headers,
-                    params={"patient_username": query_username}
-                )
-                if msg_resp.status_code == 200:
-                    messages = msg_resp.json().get("messages", [])
-                    if messages:
-                        for msg in messages[:30]:
-                            with st.chat_message("assistant"):
-                                st.markdown(msg.get("content", ""))
-                                st.caption(msg.get("created_at", ""))
+        st.caption("患者信息")
+        try:
+            detail_resp = requests.get(
+                f"{API_BASE_URL}/doctor/patient-detail",
+                headers=headers,
+                params={"username": query_username}
+            )
+            if detail_resp.status_code == 200:
+                data = detail_resp.json().get("data", {})
+                profile = data.get("profile", {})
+                latest = data.get("latest_assessment")
+                if profile:
+                    st.metric("姓名", profile.get("real_name") or "未填写")
+                    st.metric("阶段", profile.get("health_stage") or "-")
+                if latest:
+                    risk = latest.get("risk_level", "未知")
+                    if risk == "高风险":
+                        st.error(f"风险：{risk}")
+                    elif risk == "中风险":
+                        st.warning(f"风险：{risk}")
                     else:
-                        st.info("暂无消息记录")
-            except Exception as e:
-                st.error(f"获取消息失败: {e}")
+                        st.info(f"风险：{risk}")
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+        st.caption("消息记录")
+        try:
+            msg_resp = requests.get(
+                f"{API_BASE_URL}/doctor/messages",
+                headers=headers,
+                params={"patient_username": query_username}
+            )
+            if msg_resp.status_code == 200:
+                messages = msg_resp.json().get("messages", [])
+                if messages:
+                    for msg in messages[-20:]:
+                        is_doctor = msg.get("doctor_username") != query_username or msg.get("doctor_username") == st.session_state.username
+                        with st.chat_message("assistant" if is_doctor else "user"):
+                            st.markdown(msg.get("content", ""))
+                            st.caption(msg.get("created_at", "")[:19])
+                else:
+                    st.info("暂无消息记录")
+        except Exception as e:
+            st.error(f"获取消息失败: {e}")
 
         st.divider()
-        st.subheader("发送消息")
         with st.form(key="doctor_chat_form", clear_on_submit=True):
-            msg_content = st.text_area("消息内容", height=100, placeholder="输入给患者的消息...")
-            submitted = st.form_submit_button("发送")
-        if submitted:
-            if not msg_content.strip():
-                st.warning("请输入消息内容")
-            else:
-                try:
-                    send_resp = requests.post(
-                        f"{API_BASE_URL}/doctor/message",
-                        headers=headers,
-                        json={"patient_username": query_username, "content": msg_content.strip()}
-                    )
-                    if send_resp.status_code == 200:
-                        st.success("消息已发送")
-                        st.rerun()
-                    else:
-                        st.error(send_resp.json().get("detail", "发送失败"))
-                except Exception as e:
-                    st.error(f"请求失败: {e}")
+            msg_content = st.text_area("消息内容", height=80, placeholder="输入给患者的消息...")
+            if st.form_submit_button("发送"):
+                if not msg_content.strip():
+                    st.warning("请输入消息内容")
+                else:
+                    try:
+                        send_resp = requests.post(
+                            f"{API_BASE_URL}/doctor/message",
+                            headers=headers,
+                            json={"patient_username": query_username, "content": msg_content.strip()}
+                        )
+                        if send_resp.status_code == 200:
+                            st.success("消息已发送")
+                            st.rerun()
+                        else:
+                            st.error(send_resp.json().get("detail", "发送失败"))
+                    except Exception as e:
+                        st.error(f"请求失败: {e}")
 
 
 auth_section()

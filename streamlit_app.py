@@ -30,6 +30,8 @@ if "audio_data" not in st.session_state:
     st.session_state.audio_data = None
 if "show_audio_input" not in st.session_state:
     st.session_state.show_audio_input = False
+if "seen_message_count" not in st.session_state:
+    st.session_state.seen_message_count = 0
 
 # 登录/注册界面
 def auth_section():
@@ -84,13 +86,14 @@ def auth_section():
                 resp = requests.get(f"{API_BASE_URL}/doctor/notifications/unread", headers=headers, timeout=3)
                 if resp.status_code == 200:
                     count = resp.json().get("unread_count", 0)
-                    if count > 0:
+                    if count > 0 and count != st.session_state.get("seen_message_count", 0):
                         st.sidebar.warning(f"📬 医生发来 {count} 条消息")
             except Exception:
                 pass
         if st.sidebar.button("退出登录"):
             st.session_state.logged_in = False
             st.session_state.is_admin = False
+            st.session_state.seen_message_count = 0
             st.session_state.username = ""
             st.session_state.token = ""
             st.session_state.session_id = None
@@ -1152,29 +1155,76 @@ if st.session_state.logged_in:
     if st.session_state.is_admin:
         doctor_console_section()
     else:
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-            "与医疗助手对话",
-            "病例图片识别",
-            "健康评估中心",
-            "健康档案",
-            "每日健康打卡",
-            "趋势分析/健康概览",
-            "提醒中心",
-        ])
+        col_main, col_chat = st.columns([8, 2])
 
-        with tab1:
-            chat_section()
-        with tab2:
-            image_ocr_section()
-        with tab3:
-            health_assessment_section()
-        with tab4:
-            profile_section()
-        with tab5:
-            daily_checkin_section()
-        with tab6:
-            overview_section()
-        with tab7:
-            reminder_center_section()
+        with col_main:
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+                "与医疗助手对话",
+                "病例图片识别",
+                "健康评估中心",
+                "健康档案",
+                "每日健康打卡",
+                "趋势分析/健康概览",
+                "提醒中心",
+            ])
+
+            with tab1:
+                chat_section()
+            with tab2:
+                image_ocr_section()
+            with tab3:
+                health_assessment_section()
+            with tab4:
+                profile_section()
+            with tab5:
+                daily_checkin_section()
+            with tab6:
+                overview_section()
+            with tab7:
+                reminder_center_section()
+
+        with col_chat:
+            st.subheader("💬 医生消息")
+            st.caption("与医生沟通的对话记录")
+
+            headers = {"Authorization": f"Bearer {st.session_state.token}"}
+            try:
+                resp = requests.get(
+                    f"{API_BASE_URL}/doctor/messages",
+                    headers=headers,
+                    params={"patient_username": st.session_state.username},
+                    timeout=5
+                )
+                if resp.status_code == 200:
+                     messages = resp.json().get("messages", [])
+                     st.session_state.seen_message_count = len(messages)
+                     for msg in messages[-20:]:
+                        with st.chat_message("user" if msg.get("doctor_username") == st.session_state.username else "assistant"):
+                            st.markdown(msg.get("content", ""))
+                            st.caption(msg.get("created_at", "")[:19])
+                else:
+                    st.info("暂无消息")
+            except Exception:
+                st.info("消息加载中...")
+
+            with st.form(key="patient_doctor_chat", clear_on_submit=True):
+                reply = st.text_area("回复医生", height=80, placeholder="输入消息...")
+                if st.form_submit_button("发送"):
+                    if reply.strip():
+                        try:
+                            send_resp = requests.post(
+                                f"{API_BASE_URL}/doctor/message/from-patient",
+                                headers=headers,
+                                json={"patient_username": st.session_state.username, "content": reply.strip()}
+                            )
+                            if send_resp.status_code == 200:
+                                st.success("已发送")
+                                st.rerun()
+                            else:
+                                st.error("发送失败")
+                        except Exception as e:
+                            st.error(f"请求失败: {e}")
+                    else:
+                        st.warning("请输入内容")
 else:
     st.info("请先在左侧边栏登录或注册。")
