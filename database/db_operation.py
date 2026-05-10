@@ -256,39 +256,51 @@ def test_database_connection():
         print("正在测试数据库连接...")
         db = DatabaseConnector()
 
-        if db.connect():
-            print("✅ 数据库连接测试成功")
-
-            # 测试表结构
-            cursor = db.connection.cursor()
-
-            # 检查用户表
-            cursor.execute("SHOW TABLES LIKE 'users'")
-            if cursor.fetchone():
-                print("✅ 用户表存在")
-            else:
-                print("❌ 用户表不存在")
-
-            # 检查会话表
-            cursor.execute("SHOW TABLES LIKE 'chat_sessions'")
-            if cursor.fetchone():
-                print("✅ 会话表存在")
-            else:
-                print("❌ 会话表不存在")
-
-            # 检查消息表
-            cursor.execute("SHOW TABLES LIKE 'user_conversations'")
-            if cursor.fetchone():
-                print("✅ 消息表存在")
-            else:
-                print("❌ 消息表不存在")
-
-            cursor.close()
-            db.close()
-            return True
-        else:
+        if not db.connect():
             print("❌ 数据库连接测试失败")
             return False
+
+        print("✅ 数据库连接测试成功")
+        print()
+
+        cursor = db.connection.cursor()
+
+        expected_tables = [
+            "users",
+            "chat_sessions",
+            "user_conversations",
+            "system_logs",
+            "api_access_logs",
+            "alert_notifications",
+            "doctor_messages",
+            "patient_reports",
+            "health_assessments",
+            "patient_profiles",
+            "daily_checkins",
+            "reminders",
+        ]
+
+        existing = set()
+        for table in expected_tables:
+            cursor.execute(f"SHOW TABLES LIKE '{table}'")
+            if cursor.fetchone():
+                print(f"  ✅ {table}")
+                existing.add(table)
+            else:
+                print(f"  ❌ {table}")
+
+        missing = [t for t in expected_tables if t not in existing]
+        print()
+
+        if missing:
+            print(f"⚠️  缺少 {len(missing)} 张表: {', '.join(missing)}")
+            print("   请运行 python scripts/init_mysql.py 初始化")
+        else:
+            print(f"✅ 全部 {len(expected_tables)} 张表检查通过")
+
+        cursor.close()
+        db.close()
+        return len(missing) == 0
 
     except Exception as e:
         print(f"❌ 数据库连接测试异常: {e}")

@@ -25,5 +25,8 @@ class DoctorService:
         db_instance.save_admin_message_to_patient(doctor_username, patient_username, content)
         return {"content": content, "patient_username": patient_username}
 
+    def get_messages(self, patient_username: str):
+        return db_instance.get_doctor_messages(patient_username=patient_username, limit=50)
+
 
 doctor_service = DoctorService()

@@ -25,7 +25,7 @@ async def login(request: LoginRequest):
             print(f"[WARN] 登录失败: 用户 {request.username} 凭据无效")
             raise HTTPException(status_code=401, detail="用户名或密码错误")
 
-        token = generate_token(user['username'])
+        token = generate_token(user['username'], user.get('is_admin', 0) == 1)
         print(f"[SUCCESS] 用户 {request.username} 登录成功")
         return {
             "success": True, "username": user['username'],
@@ -58,7 +58,11 @@ async def register(request: RegisterRequest):
         encrypted_pwd = encrypt_password(request.password)
         cursor = db_instance.connection.cursor()
         try:
-            cursor.execute("INSERT INTO users (username, password, is_admin) VALUES (%s, %s, 0)", (request.username, encrypted_pwd))
+            is_admin_val = 1 if request.is_admin else 0
+            cursor.execute(
+                "INSERT INTO users (username, password, is_admin) VALUES (%s, %s, %s)",
+                (request.username, encrypted_pwd, is_admin_val)
+            )
             db_instance.connection.commit()
         finally:
             cursor.close()

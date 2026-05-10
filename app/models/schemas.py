@@ -16,6 +16,7 @@ class RegisterRequest(BaseModel):
     username: str
     password: str
     confirm_password: str
+    is_admin: bool = False
 
 class SessionCreateRequest(BaseModel):
     username: str

@@ -57,6 +57,15 @@ async def doctor_process_alert(
     return {"success": True, "message": "告警已处理"}
 
 
+@router.get("/messages")
+async def doctor_get_messages(
+    patient_username: str = Query(...),
+    user: Dict = Depends(get_current_user)
+):
+    data = doctor_service.get_messages(patient_username)
+    return {"success": True, "messages": data}
+
+
 @router.post("/message")
 async def doctor_send_message(
     request: DoctorMessageRequest,

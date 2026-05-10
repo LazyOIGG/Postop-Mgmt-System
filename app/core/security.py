@@ -7,11 +7,12 @@ from app.core.config import settings
 # 内存令牌存储 (生产环境建议使用 Redis)
 user_tokens: Dict[str, Dict] = {}
 
-def generate_token(username: str) -> str:
+def generate_token(username: str, is_admin: bool = False) -> str:
     """生成用户访问令牌"""
     token = secrets.token_urlsafe(32)
     user_tokens[token] = {
         "username": username,
+        "is_admin": is_admin,
         "created_at": datetime.now(),
         "expires_at": datetime.now() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     }

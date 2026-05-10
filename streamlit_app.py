@@ -24,6 +24,8 @@ if "session_id" not in st.session_state:
     st.session_state.session_id = None
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+if "is_admin" not in st.session_state:
+    st.session_state.is_admin = False
 if "audio_data" not in st.session_state:
     st.session_state.audio_data = None
 if "show_audio_input" not in st.session_state:
@@ -45,8 +47,10 @@ def auth_section():
                         data = response.json()
                         st.session_state.username = data["username"]
                         st.session_state.token = data["token"]
+                        st.session_state.is_admin = data.get("is_admin", False)
                         st.session_state.logged_in = True
-                        st.sidebar.success(f"欢迎回来, {st.session_state.username}!")
+                        role_text = "医生" if st.session_state.is_admin else "患者"
+                        st.sidebar.success(f"欢迎回来, {st.session_state.username} ({role_text})!")
                         st.rerun()
                     else:
                         st.sidebar.error(f"登录失败: {response.json().get('detail', '未知错误')}")
@@ -58,9 +62,11 @@ def auth_section():
             username = st.sidebar.text_input("用户名", key="register_username")
             password = st.sidebar.text_input("密码", type="password", key="register_password")
             confirm_password = st.sidebar.text_input("确认密码", type="password", key="register_confirm_password")
+            is_doctor = st.sidebar.checkbox("注册为医生", key="register_is_doctor")
             if st.sidebar.button("注册"):
                 try:
-                    response = requests.post(f"{API_BASE_URL}/auth/register", json={"username": username, "password": password, "confirm_password": confirm_password})
+                    payload = {"username": username, "password": password, "confirm_password": confirm_password, "is_admin": is_doctor}
+                    response = requests.post(f"{API_BASE_URL}/auth/register", json=payload)
                     if response.status_code == 200:
                         st.sidebar.success("注册成功，请登录。")
                     else:
@@ -70,9 +76,11 @@ def auth_section():
                 except Exception as e:
                     st.sidebar.error(f"发生错误: {e}")
     else:
-        st.sidebar.success(f"已登录: {st.session_state.username}")
+        role_text = "🩺 医生" if st.session_state.is_admin else "👤 患者"
+        st.sidebar.success(f"已登录: {st.session_state.username} ({role_text})")
         if st.sidebar.button("退出登录"):
             st.session_state.logged_in = False
+            st.session_state.is_admin = False
             st.session_state.username = ""
             st.session_state.token = ""
             st.session_state.session_id = None
@@ -825,13 +833,12 @@ def reminder_center_section():
                     else:
                         st.error(resp.json().get("detail", "删除失败"))
 
-# 医生端管理（最小版）
+# 医生端管理
 def doctor_console_section():
-    st.header("医生端管理（最小版）")
+    st.header("医生端管理")
 
     headers = {"Authorization": f"Bearer {st.session_state.token}"}
-
-    tab_a, tab_b, tab_c, tab_d = st.tabs(["患者列表", "高风险记录", "异常打卡", "患者详情"])
+    tab_a, tab_b, tab_c, tab_d, tab_e = st.tabs(["患者列表", "告警通知", "高风险记录", "异常打卡", "患者交互"])
 
     # 1. 患者列表
     with tab_a:
@@ -850,8 +857,65 @@ def doctor_console_section():
         except Exception as e:
             st.error(f"请求失败: {e}")
 
-    # 2. 高风险记录
+    # 2. 告警通知
     with tab_b:
+        st.subheader("待处理告警")
+        st.caption("高风险评估自动触发，需医生确认处理")
+
+        try:
+            alerts_response = requests.get(f"{API_BASE_URL}/doctor/alerts", headers=headers, params={"status": "pending"})
+            if alerts_response.status_code == 200:
+                alerts = alerts_response.json().get("alerts", [])
+                if not alerts:
+                    st.success("暂无待处理告警")
+                else:
+                    for alert in alerts:
+                        name_text = alert.get("real_name") or alert.get("username")
+                        with st.expander(f"{alert['created_at']} | {name_text} | {alert.get('source_type', '')}"):
+                            st.write("患者用户名：", alert.get("username", ""))
+                            st.markdown(f"**风险等级**：🛑 {alert.get('risk_level', '')}")
+                            st.write("风险原因：")
+                            st.write(alert.get("risk_reasons", ""))
+                            st.write("系统建议：")
+                            st.write(alert.get("advice", ""))
+
+                            c1, c2 = st.columns(2)
+                            with c1:
+                                if st.button("标记已处理", key=f"alert_process_{alert['id']}"):
+                                    proc_resp = requests.post(
+                                        f"{API_BASE_URL}/doctor/alerts/process",
+                                        headers=headers,
+                                        json={"alert_id": alert["id"]}
+                                    )
+                                    if proc_resp.status_code == 200:
+                                        st.success("已标记处理")
+                                        st.rerun()
+                                    else:
+                                        st.error("标记失败")
+                            with c2:
+                                st.caption(f"患者: {alert.get('username', '')}")
+            else:
+                st.error(alerts_response.json().get("detail", "获取告警失败"))
+        except Exception as e:
+            st.error(f"请求失败: {e}")
+
+        st.divider()
+        st.subheader("已处理告警")
+        if st.button("查看已处理", key="show_processed"):
+            try:
+                processed_resp = requests.get(f"{API_BASE_URL}/doctor/alerts", headers=headers, params={"status": "processed"})
+                if processed_resp.status_code == 200:
+                    processed = processed_resp.json().get("alerts", [])
+                    if processed:
+                        df_processed = pd.DataFrame(processed)
+                        st.dataframe(df_processed, width='stretch')
+                    else:
+                        st.info("暂无已处理告警")
+            except Exception as e:
+                st.error(f"请求失败: {e}")
+
+    # 3. 高风险记录
+    with tab_c:
         st.subheader("高风险健康评估记录")
         try:
             response = requests.get(f"{API_BASE_URL}/doctor/high-risk", headers=headers)
@@ -878,8 +942,8 @@ def doctor_console_section():
         except Exception as e:
             st.error(f"请求失败: {e}")
 
-    # 3. 异常打卡
-    with tab_c:
+    # 4. 异常打卡
+    with tab_d:
         st.subheader("异常打卡记录")
         try:
             response = requests.get(f"{API_BASE_URL}/doctor/abnormal-checkins", headers=headers)
@@ -904,68 +968,93 @@ def doctor_console_section():
         except Exception as e:
             st.error(f"请求失败: {e}")
 
-    # 4. 患者详情
-    with tab_d:
-        st.subheader("患者详情查看")
-        query_username = st.text_input("请输入患者用户名", key="doctor_query_username")
+    # 5. 患者交互聊天
+    with tab_e:
+        st.subheader("患者交互")
+        query_username = st.text_input("输入患者用户名", key="doctor_chat_username")
 
-        if st.button("查询患者详情", key="doctor_query_btn"):
-            if not query_username.strip():
-                st.warning("请输入患者用户名")
+        if not query_username.strip():
+            st.info("请输入患者用户名后开始交互")
+            return
+
+        col_left, col_right = st.columns([2, 3])
+
+        with col_left:
+            st.caption("患者信息")
+            try:
+                detail_resp = requests.get(
+                    f"{API_BASE_URL}/doctor/patient-detail",
+                    headers=headers,
+                    params={"username": query_username}
+                )
+                if detail_resp.status_code == 200:
+                    data = detail_resp.json().get("data", {})
+                    profile = data.get("profile", {})
+                    latest = data.get("latest_assessment")
+
+                    if profile:
+                        st.metric("姓名", profile.get("real_name") or "未填写")
+                        st.metric("性别", profile.get("gender") or "-")
+                        st.metric("年龄", profile.get("age") or "-")
+                        st.metric("阶段", profile.get("health_stage") or "-")
+                    else:
+                        st.warning("该患者暂无健康档案")
+
+                    if latest:
+                        risk = latest.get("risk_level", "未知")
+                        color = "error" if risk == "高风险" else ("warning" if risk == "中风险" else "info")
+                        if color == "error":
+                            st.error(f"最近风险：{risk}")
+                        elif color == "warning":
+                            st.warning(f"最近风险：{risk}")
+                        else:
+                            st.info(f"最近风险：{risk}")
+                else:
+                    st.warning("无法获取患者信息")
+            except Exception as e:
+                st.error(f"请求失败: {e}")
+
+        with col_right:
+            st.caption("消息记录")
+            try:
+                msg_resp = requests.get(
+                    f"{API_BASE_URL}/doctor/messages",
+                    headers=headers,
+                    params={"patient_username": query_username}
+                )
+                if msg_resp.status_code == 200:
+                    messages = msg_resp.json().get("messages", [])
+                    if messages:
+                        for msg in messages[:30]:
+                            with st.chat_message("assistant"):
+                                st.markdown(msg.get("content", ""))
+                                st.caption(f"{msg.get('created_at', '')}")
+                    else:
+                        st.info("暂无消息记录")
+            except Exception as e:
+                st.error(f"获取消息失败: {e}")
+
+        st.divider()
+        st.subheader("发送消息")
+        with st.form(key="doctor_chat_form", clear_on_submit=True):
+            msg_content = st.text_area("消息内容", height=100, placeholder="输入给患者的消息...")
+            submitted = st.form_submit_button("发送")
+
+        if submitted:
+            if not msg_content.strip():
+                st.warning("请输入消息内容")
             else:
                 try:
-                    response = requests.get(
-                        f"{API_BASE_URL}/doctor/patient-detail",
+                    send_resp = requests.post(
+                        f"{API_BASE_URL}/doctor/message",
                         headers=headers,
-                        params={"username": query_username}
+                        json={"patient_username": query_username, "content": msg_content.strip()}
                     )
-                    if response.status_code == 200:
-                        data = response.json().get("data", {})
-                        profile = data.get("profile")
-                        latest_assessment = data.get("latest_assessment")
-                        recent_checkins = data.get("recent_checkins", [])
-                        recent_reminders = data.get("recent_reminders", [])
-
-                        st.subheader("健康档案")
-                        if profile:
-                            st.json(profile)
-                        else:
-                            st.info("该患者暂无健康档案")
-
-                        st.subheader("最近一次健康评估")
-                        if latest_assessment:
-                            risk_level = latest_assessment.get("risk_level", "未知")
-                            if risk_level == "高风险":
-                                st.error(f"风险等级：{risk_level}")
-                            elif risk_level == "中风险":
-                                st.warning(f"风险等级：{risk_level}")
-                            else:
-                                st.info(f"风险等级：{risk_level}")
-
-                            st.write("评估时间：", latest_assessment.get("created_at", ""))
-                            st.write("输入来源：", latest_assessment.get("source_type", ""))
-                            st.write("输入内容：")
-                            st.write(latest_assessment.get("input_text", ""))
-                            st.write("风险原因：")
-                            st.write(latest_assessment.get("risk_reasons", ""))
-                        else:
-                            st.info("该患者暂无健康评估记录")
-
-                        st.subheader("最近 7 条打卡记录")
-                        if recent_checkins:
-                            checkin_df = pd.DataFrame(recent_checkins)
-                            st.dataframe(checkin_df, width='stretch')
-                        else:
-                            st.info("该患者暂无打卡记录")
-
-                        st.subheader("最近提醒")
-                        if recent_reminders:
-                            reminder_df = pd.DataFrame(recent_reminders)
-                            st.dataframe(reminder_df, width='stretch')
-                        else:
-                            st.info("该患者暂无提醒记录")
+                    if send_resp.status_code == 200:
+                        st.success("消息已发送")
+                        st.rerun()
                     else:
-                        st.error(response.json().get("detail", "查询患者详情失败"))
+                        st.error(send_resp.json().get("detail", "发送失败"))
                 except Exception as e:
                     st.error(f"请求失败: {e}")
 
@@ -1033,12 +1122,12 @@ def system_dashboard_section():
     st.subheader("项目展示说明")
     st.markdown("""
 **本系统当前已完成的核心模块：**
-- 健康评估
+- 多智能体协作 (医学问答 / 健康评估 / 用药提醒 / 心理辅导)
 - 健康档案
 - 每日健康打卡
 - 趋势分析 / 健康概览
 - 提醒中心
-- 医生端最小版
+- 医生端管理 (告警通知 / 患者交互 / 高风险监控)
 
 **系统价值：**
 - 支持患者全周期健康管理
@@ -1051,43 +1140,32 @@ def system_dashboard_section():
 auth_section()
 
 if st.session_state.logged_in:
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
-        "与医疗助手对话",
-        "病例图片识别",
-        "健康评估中心",
-        "健康档案",
-        "每日健康打卡",
-        "趋势分析/健康概览",
-        "提醒中心",
-        "医生端管理",
-        "系统统计/项目展示"
-    ])
-
-    with tab1:
-        chat_section()
-
-    with tab2:
-        image_ocr_section()
-
-    with tab3:
-        health_assessment_section()
-
-    with tab4:
-        profile_section()
-
-    with tab5:
-        daily_checkin_section()
-
-    with tab6:
-        overview_section()
-
-    with tab7:
-        reminder_center_section()
-
-    with tab8:
+    if st.session_state.is_admin:
         doctor_console_section()
+    else:
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            "与医疗助手对话",
+            "病例图片识别",
+            "健康评估中心",
+            "健康档案",
+            "每日健康打卡",
+            "趋势分析/健康概览",
+            "提醒中心",
+        ])
 
-    with tab9:
-        system_dashboard_section()
+        with tab1:
+            chat_section()
+        with tab2:
+            image_ocr_section()
+        with tab3:
+            health_assessment_section()
+        with tab4:
+            profile_section()
+        with tab5:
+            daily_checkin_section()
+        with tab6:
+            overview_section()
+        with tab7:
+            reminder_center_section()
 else:
     st.info("请先在左侧边栏登录或注册。")
