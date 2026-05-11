@@ -1,5 +1,5 @@
 .env
-.idea/
+.claude/
 .trae/
 model/
 __pycache__/

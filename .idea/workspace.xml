@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="小补丁" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="GEXING" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;LazyOIGG&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:LazyOIGG/Postop-Mgmt-System.git&quot;,
+    &quot;accountId&quot;: &quot;4f8d586d-676d-4874-b654-4008708231a3&quot;
+  }
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="36HWyTpJn2IucnRdvO3E7avqtCW" />
+  <component name="ProjectLevelVcsManager">
+    <OptionsSetting value="false" id="Update" />
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_MARK_IGNORED_FILES_AS_EXCLUDED&quot;: &quot;true&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python 测试.Python 测试 (db_operation.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.Python 测试 (test_mysql.py 内).executor&quot;: &quot;Run&quot;,
+    &quot;Python 测试.database.db_operation.test_database_connection 的 Python 测试.executor&quot;: &quot;Run&quot;,
+    &quot;Python.build_up_graph.executor&quot;: &quot;Run&quot;,
+    &quot;Python.db_operation.executor&quot;: &quot;Run&quot;,
+    &quot;Python.init_database.executor&quot;: &quot;Run&quot;,
+    &quot;Python.init_mysql.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.run.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;E:/Code/Python/Postop-Mgmt-System&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;,
+      &quot;mysql_aurora&quot;
+    ]
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="E:\Code\Python\Postop-Mgmt-System" />
+      <recent name="E:\Code\Python\KG_LLM_Medical_QA_System" />
+      <recent name="E:\Code\Python\KG_LLM_Medical_QA_System\model" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\Code\Python\Postop-Mgmt-System\scripts" />
+      <recent name="E:\Code\Python\KG_LLM_Medical_QA_System\database" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.init_mysql">
+    <configuration name="build_up_graph" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Postop-Mgmt-System" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/build_up_graph.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="init_mysql" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Postop-Mgmt-System" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scripts" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/init_mysql.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Postop-Mgmt-System" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python 测试 (db_operation.py 内)" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="Postop-Mgmt-System" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/database/db_operation.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="database.db_operation.test_database_connection 的 Python 测试" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="Postop-Mgmt-System" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;database.db_operation.test_database_connection&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.init_mysql" />
+        <item itemvalue="Python.run" />
+        <item itemvalue="Python.build_up_graph" />
+        <item itemvalue="Python 测试.Python 测试 (db_operation.py 内)" />
+        <item itemvalue="Python 测试.database.db_operation.test_database_connection 的 Python 测试" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PY-261.23567.174" />
+        <option value="bundled-python-sdk-024ed6589d45-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.23567.174" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="bbfdb40e-31ad-4797-90fe-4b8e651ee7ed" name="更改" comment="" />
+      <created>1764664231681</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1764664231681</updated>
+      <workItem from="1777187225819" duration="518000" />
+      <workItem from="1777192352961" duration="67000" />
+      <workItem from="1777192575172" duration="207000" />
+      <workItem from="1777194250819" duration="439000" />
+      <workItem from="1777195725084" duration="508000" />
+      <workItem from="1777197395772" duration="58000" />
+      <workItem from="1777197776176" duration="39000" />
+      <workItem from="1777198421529" duration="53000" />
+      <workItem from="1777199511825" duration="46000" />
+      <workItem from="1777256799179" duration="615000" />
+      <workItem from="1778113656228" duration="26000" />
+      <workItem from="1778333207538" duration="647000" />
+      <workItem from="1778356364443" duration="386000" />
+      <workItem from="1778393404238" duration="1630000" />
+      <workItem from="1778409469844" duration="1067000" />
+      <workItem from="1778413884809" duration="1140000" />
+    </task>
+    <task id="LOCAL-00001" summary="集成OCR图像识别功能并优化数据库配置">
+      <option name="closed" value="true" />
+      <created>1777187630180</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1777187630180</updated>
+    </task>
+    <task id="LOCAL-00002" summary="新增健康评估功能模块，并完善相关数据库支持，添加了健康评估记录表health_assessments">
+      <option name="closed" value="true" />
+      <created>1777194408733</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1777194408733</updated>
+    </task>
+    <task id="LOCAL-00003" summary="新增健康档案功能模块，完善数据库及API接口支持，实现患者信息管理">
+      <option name="closed" value="true" />
+      <created>1777195768612</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1777195768612</updated>
+    </task>
+    <task id="LOCAL-00004" summary="新增每日健康打卡功能模块，完善数据库表及API接口支持，实现用户日常健康记录管理">
+      <option name="closed" value="true" />
+      <created>1777197441906</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1777197441906</updated>
+    </task>
+    <task id="LOCAL-00005" summary="新增趋势分析与健康概览功能模块，完善API接口及前端展示，实现健康数据可视化与异常记录查看">
+      <option name="closed" value="true" />
+      <created>1777197805738</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1777197805738</updated>
+    </task>
+    <task id="LOCAL-00006" summary="新增提醒中心功能模块，完善数据库表及API接口支持，实现用户健康提醒管理">
+      <option name="closed" value="true" />
+      <created>1777198462276</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1777198462276</updated>
+    </task>
+    <task id="LOCAL-00007" summary="新增医生端管理（最小版）功能模块，完善数据库查询方法及API接口支持，实现患者列表、高风险记录、异常打卡及患者详情查看">
+      <option name="closed" value="true" />
+      <created>1777199540194</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1777199540194</updated>
+    </task>
+    <task id="LOCAL-00008" summary="搭建多智能体架构，新增4个专业Agent并集成到聊天端点">
+      <option name="closed" value="true" />
+      <created>1778333834460</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1778333834461</updated>
+    </task>
+    <task id="LOCAL-00009" summary="清理死代码与冗余——删除legacy目录、统一聊天管线走编排器、修复health-assessment路由注册、提取Agent默认实现，净减120+行">
+      <option name="closed" value="true" />
+      <created>1778356468941</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1778356468941</updated>
+    </task>
+    <task id="LOCAL-00010" summary="修正提交">
+      <option name="closed" value="true" />
+      <created>1778356626673</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1778356626673</updated>
+    </task>
+    <task id="LOCAL-00011" summary="新增高风险自动预警，修改数据库新增表，完成医患问答，修改数据库初始化脚本逻辑">
+      <option name="closed" value="true" />
+      <created>1778393509880</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1778393509880</updated>
+    </task>
+    <task id="LOCAL-00012" summary="优化注册逻辑，医生患者端面板分离">
+      <option name="closed" value="true" />
+      <created>1778410246547</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1778410246547</updated>
+    </task>
+    <task id="LOCAL-00013" summary="优化项目整体架构">
+      <option name="closed" value="true" />
+      <created>1778414388817</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1778414388817</updated>
+    </task>
+    <task id="LOCAL-00014" summary="小补丁">
+      <option name="closed" value="true" />
+      <created>1778415038095</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1778415038095</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/model/chinese-roberta-wwm-ext" />
+    </ignored-roots>
+    <MESSAGE value="重命名" />
+    <MESSAGE value="最小可运行可连接版本" />
+    <MESSAGE value="小型优化" />
+    <MESSAGE value="使用DeepSeek" />
+    <MESSAGE value="术后管理系统&#10;重构后初版" />
+    <MESSAGE value="集成OCR图像识别功能并优化数据库配置" />
+    <MESSAGE value="新增健康评估功能模块，并完善相关数据库支持，添加了健康评估记录表health_assessments" />
+    <MESSAGE value="新增健康档案功能模块，完善数据库及API接口支持，实现患者信息管理" />
+    <MESSAGE value="新增每日健康打卡功能模块，完善数据库表及API接口支持，实现用户日常健康记录管理" />
+    <MESSAGE value="新增趋势分析与健康概览功能模块，完善API接口及前端展示，实现健康数据可视化与异常记录查看" />
+    <MESSAGE value="新增提醒中心功能模块，完善数据库表及API接口支持，实现用户健康提醒管理" />
+    <MESSAGE value="新增医生端管理（最小版）功能模块，完善数据库查询方法及API接口支持，实现患者列表、高风险记录、异常打卡及患者详情查看" />
+    <MESSAGE value="搭建多智能体架构，新增4个专业Agent并集成到聊天端点" />
+    <MESSAGE value="清理死代码与冗余——删除legacy目录、统一聊天管线走编排器、修复health-assessment路由注册、提取Agent默认实现，净减120+行" />
+    <MESSAGE value="修正提交" />
+    <MESSAGE value="新增高风险自动预警，修改数据库新增表，完成医患问答，修改数据库初始化脚本逻辑" />
+    <MESSAGE value="优化注册逻辑，医生患者端面板分离" />
+    <MESSAGE value="优化项目整体架构" />
+    <MESSAGE value="小补丁" />
+    <option name="LAST_COMMIT_MESSAGE" value="小补丁" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$build_up_graph.coverage" NAME="build_up_graph 覆盖结果" MODIFIED="1776062670804" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$.coverage" NAME=" 覆盖结果" MODIFIED="1765257278505" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$main.coverage" NAME="main 覆盖结果" MODIFIED="1765257496968" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$db_operation.coverage" NAME="db_operation 覆盖结果" MODIFIED="1765255916261" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/database" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$test_agent_selection__1_.coverage" NAME="test_agent_selection (1) 覆盖结果" MODIFIED="1777213947998" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$run.coverage" NAME="run 覆盖结果" MODIFIED="1776061346340" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$test_agent_selection.coverage" NAME="test_agent_selection 覆盖结果" MODIFIED="1777213075500" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$init_database.coverage" NAME="init_database 覆盖结果" MODIFIED="1765250765471" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/database" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$run.coverage" NAME="run 覆盖结果" MODIFIED="1777213734065" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KG_LLM_Medical_QA_System$build_up_graph.coverage" NAME="build_up_graph 覆盖结果" MODIFIED="1776049086689" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$init_mysql.coverage" NAME="init_mysql 覆盖结果" MODIFIED="1778408330919" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$test_agent_orchestrator__1_.coverage" NAME="test_agent_orchestrator (1) 覆盖结果" MODIFIED="1777213189539" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
+    <SUITE FILE_PATH="coverage/Postop_Mgmt_System$test_agent_orchestrator.coverage" NAME="test_agent_orchestrator 覆盖结果" MODIFIED="1777212951469" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
