@@ -50,6 +50,10 @@ class DatabaseConnector:
 
     def connect(self) -> bool:
         try:
+            # 如果已有有效连接，直接复用，避免从连接池重复取连接导致池耗尽
+            if self.connection and self.connection.is_connected():
+                return True
+
             if self.connection_pool:
                 self.connection = self.connection_pool.get_connection()
             else:
