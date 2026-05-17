@@ -6,6 +6,7 @@ from app.agents.medical_qa_agent import MedicalQAAgent
 from app.agents.health_agent import HealthAssessmentAgent
 from app.agents.reminder_agent import ReminderAgent
 from app.agents.psychology_agent import PsychologyAgent
+from app.agents.rehab_plan_agent import RehabPlanAgent
 from app.core.config import settings
 from app.db.session import db_instance
 
@@ -14,6 +15,7 @@ AGENT_DISPLAY_NAMES = {
     "HealthAssessment": "健康风险评估",
     "Reminder": "用药复查提醒",
     "Psychology": "心理辅导缓解",
+    "RehabPlan": "康复计划管理",
 }
 
 
@@ -36,6 +38,7 @@ class MultiAgentOrchestrator:
             "health_assessment": HealthAssessmentAgent(model_choice=model_choice),
             "reminder": ReminderAgent(model_choice=model_choice),
             "psychology": PsychologyAgent(model_choice=model_choice),
+            "rehab_plan": RehabPlanAgent(model_choice=model_choice),
         }
 
     def register_agent(self, name: str, agent) -> None:

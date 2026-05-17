@@ -101,3 +101,17 @@ class DoctorMessageRequest(BaseModel):
 
 class AlertProcessRequest(BaseModel):
     alert_id: int
+
+
+class RehabPlanGenerateRequest(BaseModel):
+    surgery_type: str
+    plan_title: Optional[str] = ""
+
+
+class RehabPlanTaskCompleteRequest(BaseModel):
+    task_id: int
+
+
+class RehabPlanUpdatePhaseRequest(BaseModel):
+    plan_id: int
+    current_phase: str

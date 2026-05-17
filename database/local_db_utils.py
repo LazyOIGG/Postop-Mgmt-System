@@ -769,10 +769,10 @@ class DatabaseConnector:
         description: str,
         reminder_date: str,
         reminder_time: str = None
-    ) -> bool:
+    ):
         try:
             if not self._ensure_connection():
-                return False
+                return None
 
             cursor = self.connection.cursor()
             query = """
@@ -785,13 +785,14 @@ class DatabaseConnector:
                 reminder_date, reminder_time
             ))
             self.connection.commit()
+            new_id = cursor.lastrowid
             cursor.close()
-            return True
+            return new_id
         except Exception as e:
             print(f"保存提醒失败: {e}")
             if self.connection:
                 self.connection.rollback()
-            return False
+            return None
 
     def get_reminders(self, username: str, limit: int = 50):
         try:
@@ -1274,6 +1275,255 @@ class DatabaseConnector:
             return True
         except Exception as e:
             print(f"保存医生回复到患者对话失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    # ── 康复计划相关方法 ────────────────────────────────────────────
+
+    def save_rehab_plan(
+        self, username: str, surgery_type: str, plan_title: str, generated_plan: str = None
+    ):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO rehab_plans (username, surgery_type, plan_title, generated_plan)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (username, surgery_type, plan_title, generated_plan))
+            self.connection.commit()
+            new_id = cursor.lastrowid
+            cursor.close()
+            return new_id
+        except Exception as e:
+            print(f"保存康复计划失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return None
+
+    def get_rehab_plans(self, username: str, status: str = None):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            if status:
+                query = """
+                    SELECT id, username, surgery_type, plan_title, current_phase,
+                           status, generated_plan, created_at, updated_at
+                    FROM rehab_plans WHERE username = %s AND status = %s
+                    ORDER BY created_at DESC
+                """
+                cursor.execute(query, (username, status))
+            else:
+                query = """
+                    SELECT id, username, surgery_type, plan_title, current_phase,
+                           status, generated_plan, created_at, updated_at
+                    FROM rehab_plans WHERE username = %s
+                    ORDER BY created_at DESC
+                """
+                cursor.execute(query, (username,))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取康复计划列表失败: {e}")
+            return []
+
+    def get_rehab_plan(self, plan_id: int):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, username, surgery_type, plan_title, current_phase,
+                       status, generated_plan, created_at, updated_at
+                FROM rehab_plans WHERE id = %s
+            """
+            cursor.execute(query, (plan_id,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"获取康复计划失败: {e}")
+            return None
+
+    def update_rehab_plan_phase(self, plan_id: int, current_phase: str) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = "UPDATE rehab_plans SET current_phase = %s WHERE id = %s"
+            cursor.execute(query, (current_phase, plan_id))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"更新康复计划阶段失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def update_rehab_plan_status(self, plan_id: int, status: str) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = "UPDATE rehab_plans SET status = %s WHERE id = %s"
+            cursor.execute(query, (status, plan_id))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"更新康复计划状态失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def save_rehab_plan_task(
+        self, plan_id: int, username: str, phase: str, task_day: int,
+        task_date: str, task_type: str, task_content: str, reminder_id: int = None
+    ) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO rehab_plan_tasks
+                (plan_id, username, phase, task_day, task_date, task_type, task_content, reminder_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (
+                plan_id, username, phase, task_day, task_date, task_type, task_content, reminder_id
+            ))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"保存康复计划任务失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_rehab_plan_tasks(self, plan_id: int, phase: str = None, task_date: str = None):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            conditions = ["plan_id = %s"]
+            params = [plan_id]
+            if phase:
+                conditions.append("phase = %s")
+                params.append(phase)
+            if task_date:
+                conditions.append("task_date = %s")
+                params.append(task_date)
+            where = " AND ".join(conditions)
+            query = f"""
+                SELECT id, plan_id, username, phase, task_day, task_date,
+                       task_type, task_content, reminder_id, status, created_at, updated_at
+                FROM rehab_plan_tasks WHERE {where}
+                ORDER BY task_day ASC, task_type ASC
+            """
+            cursor.execute(query, tuple(params))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取康复计划任务失败: {e}")
+            return []
+
+    def get_today_rehab_tasks(self, username: str, task_date: str):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT t.id, t.plan_id, t.username, t.phase, t.task_day, t.task_date,
+                       t.task_type, t.task_content, t.reminder_id, t.status,
+                       p.plan_title, p.surgery_type
+                FROM rehab_plan_tasks t
+                JOIN rehab_plans p ON t.plan_id = p.id
+                WHERE t.username = %s AND t.task_date = %s AND p.status = 'active'
+                ORDER BY t.task_type ASC
+            """
+            cursor.execute(query, (username, task_date))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取今日康复任务失败: {e}")
+            return []
+
+    def update_rehab_task_status(self, task_id: int, status: str) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = "UPDATE rehab_plan_tasks SET status = %s WHERE id = %s"
+            cursor.execute(query, (status, task_id))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"更新康复任务状态失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_rehab_plan_task(self, task_id: int):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT id, plan_id, username, phase, task_day, task_date,
+                       task_type, task_content, reminder_id, status, created_at, updated_at
+                FROM rehab_plan_tasks WHERE id = %s
+            """
+            cursor.execute(query, (task_id,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"获取康复任务失败: {e}")
+            return None
+
+    def get_rehab_plan_phase_task_stats(self, plan_id: int, phase: str):
+        try:
+            if not self._ensure_connection():
+                return {"total": 0, "completed": 0}
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT COUNT(*) as total,
+                       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+                FROM rehab_plan_tasks WHERE plan_id = %s AND phase = %s
+            """
+            cursor.execute(query, (plan_id, phase))
+            result = cursor.fetchone()
+            cursor.close()
+            return result or {"total": 0, "completed": 0}
+        except Exception as e:
+            print(f"获取康复阶段任务统计失败: {e}")
+            return {"total": 0, "completed": 0}
+
+    def delete_rehab_plan(self, plan_id: int) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            # ON DELETE CASCADE will handle rehab_plan_tasks
+            cursor.execute("DELETE FROM rehab_plans WHERE id = %s", (plan_id,))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"删除康复计划失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False

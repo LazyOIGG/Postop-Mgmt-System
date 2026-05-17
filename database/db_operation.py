@@ -189,6 +189,52 @@ def init_database_tables():
                        ''')
         print("✅ 医生消息表 (doctor_messages) 创建/检查完成")
 
+        # 8. 创建康复计划表（rehab_plans）
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS rehab_plans (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           surgery_type VARCHAR(255) NOT NULL DEFAULT '',
+                           plan_title VARCHAR(255) NOT NULL DEFAULT '康复计划',
+                           current_phase ENUM('急性期','恢复期','巩固期') DEFAULT '急性期',
+                           status ENUM('active','completed','cancelled') DEFAULT 'active',
+                           generated_plan TEXT,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           INDEX idx_username (username),
+                           INDEX idx_status (status),
+                           FOREIGN KEY (username) REFERENCES users(username)
+                               ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 康复计划表 (rehab_plans) 创建/检查完成")
+
+        # 9. 创建康复计划任务表（rehab_plan_tasks）
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS rehab_plan_tasks (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           plan_id INT NOT NULL,
+                           username VARCHAR(255) NOT NULL,
+                           phase ENUM('急性期','恢复期','巩固期') NOT NULL,
+                           task_day INT NOT NULL,
+                           task_date DATE NOT NULL,
+                           task_type ENUM('medication','exercise','diet','review','other') NOT NULL DEFAULT 'other',
+                           task_content TEXT NOT NULL,
+                           reminder_id INT DEFAULT NULL,
+                           status ENUM('pending','completed','skipped') DEFAULT 'pending',
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           INDEX idx_plan_id (plan_id),
+                           INDEX idx_username_task_date (username, task_date),
+                           INDEX idx_phase (phase),
+                           FOREIGN KEY (plan_id) REFERENCES rehab_plans(id)
+                               ON DELETE CASCADE ON UPDATE CASCADE,
+                           FOREIGN KEY (username) REFERENCES users(username)
+                               ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 康复计划任务表 (rehab_plan_tasks) 创建/检查完成")
+
         db.connection.commit()
         print("\n" + "="*50)
         print("✅ 所有数据库表创建/检查完成")
@@ -282,6 +328,8 @@ def test_database_connection():
             "patient_profiles",
             "daily_checkins",
             "reminders",
+            "rehab_plans",
+            "rehab_plan_tasks",
         ]
 
         existing = set()
