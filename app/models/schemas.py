@@ -104,7 +104,7 @@ class AlertProcessRequest(BaseModel):
 
 
 class RehabPlanGenerateRequest(BaseModel):
-    surgery_type: str
+    surgery_type: Optional[str] = ""
     plan_title: Optional[str] = ""
 
 

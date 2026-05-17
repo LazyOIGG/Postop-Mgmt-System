@@ -1,7 +1,7 @@
 from typing import List, Dict
 from app.agents.base import BaseAgent
 
-REMINDER_SYSTEM_PROMPT = """你是一个术后用药和复查提醒助手。你的职责是帮助患者管理：
+REMINDER_SYSTEM_PROMPT = """你是一个用药和复查提醒助手。你的职责是帮助用户管理：
 1. 用药提醒 — 何时服药、药品名称、剂量
 2. 复查提醒 — 复查日期、检查项目
 3. 每日健康打卡提醒

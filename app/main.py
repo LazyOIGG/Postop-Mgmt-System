@@ -12,7 +12,7 @@ import asyncio
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="模块化设计的术后管理系统，集成知识图谱与 DeepSeek 大模型",
+    description="全周期健康管理系统，集成知识图谱与 DeepSeek 大模型",
     version=settings.VERSION,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -33,7 +33,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 async def root():
     return {
-        "message": "术后管理系统 API 服务运行中 (Modular Version)",
+        "message": "健康管理系统 API 服务运行中 (Modular Version)",
         "version": settings.VERSION,
         "status": "healthy",
         "api_docs": "/docs"

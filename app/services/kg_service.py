@@ -46,7 +46,7 @@ class KGService:
 
     def generate_enhanced_prompt(self, intent_response: str, query: str, entities: Dict) -> Tuple[str, str, Dict, bool]:
         """根据意图和实体生成增强 Prompt"""
-        neo4j_prompt = '<指令>你是一个专业的术后管理助手。回答必须严格基于给定的提示内容，不可自由发挥。如无信息，请回答“根据已知信息无法回答该问题”。</指令>'
+        neo4j_prompt = '<指令>你是一个专业的健康管理助手。回答必须严格基于给定的提示内容，不可自由发挥。如无信息，请回答”根据已知信息无法回答该问题”。</指令>'
         has_kg = False
         
         # 症状推测逻辑
@@ -85,7 +85,7 @@ class KGService:
         if has_kg:
             prompt = f"{neo4j_prompt}\n<用户问题>{query}</用户问题>\n<注意>请将提示知识整理成结构清晰、专业的回答，并在末尾标注“(本回答基于知识图谱生成)”。</注意>"
         else:
-            prompt = f"<指令>你是一个术后管理机器人。请直接回答用户问题，并确保准确专业。</指令>\n<用户问题>{query}</用户问题>\n<注意>末尾请标注“(本回答由大语言模型生成)”。</注意>"
+            prompt = f"<指令>你是一个健康管理助手。请直接回答用户问题，并确保准确专业。</指令>\n<用户问题>{query}</用户问题>\n<注意>末尾请标注“(本回答由大语言模型生成)”。</注意>"
         
         return prompt, "、".join(yitu_list), entities, has_kg
 

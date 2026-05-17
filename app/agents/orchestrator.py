@@ -95,7 +95,7 @@ class MultiAgentOrchestrator:
             from app.services.llm_service import llm_service
             return await llm_service.generate_completion(summary_prompt, self.model_choice)
         except Exception:
-            return f"对话历史包含 {len(history)} 条消息，主要涉及术后管理相关咨询。"
+            return f"对话历史包含 {len(history)} 条消息，主要涉及健康管理相关咨询。"
 
     # ── Tool resolution ────────────────────────────────────────────
 

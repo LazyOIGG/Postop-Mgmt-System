@@ -361,7 +361,7 @@ def test_database_connection():
 def init_database():
     """主初始化函数"""
     print("="*60)
-    print("术后管理系统 - 数据库初始化")
+    print("健康管理系统 - 数据库初始化")
     print("="*60)
 
     # 获取MySQL连接参数
@@ -480,7 +480,7 @@ if __name__ == "__main__":
     # 解析命令行参数
     import argparse
 
-    parser = argparse.ArgumentParser(description='术后管理系统数据库管理工具')
+    parser = argparse.ArgumentParser(description='健康管理系统数据库管理工具')
     parser.add_argument('action', choices=['init', 'test', 'drop', 'reset', 'create-admin'],
                         nargs='?', default='init', help='执行的操作')
 

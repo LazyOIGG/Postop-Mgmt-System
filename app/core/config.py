@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = ""
 
-    # 术后健康监测阈值
+    # 健康监测阈值
     TEMP_HIGH_RISK: float = 39.0
     TEMP_MEDIUM_RISK: float = 37.8
     BP_SYSTOLIC_HIGH_RISK: int = 180
