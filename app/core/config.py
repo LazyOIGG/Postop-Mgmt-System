@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     # 智谱AI配置 (用于 finetune_demo)
     ZHIPUAI_API_KEY: Optional[str] = None
 
+    # ── 会话记忆配置 ──
+    MAX_CONVERSATION_HISTORY_TURNS: int = 10
+    CONVERSATION_SUMMARY_THRESHOLD_CHARS: int = 3000
+
+    # ── 工具调用配置 ──
+    MAX_TOOL_CALL_ROUNDS: int = 3
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra='ignore')
 
 settings = Settings()

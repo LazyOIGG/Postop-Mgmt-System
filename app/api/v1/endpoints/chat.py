@@ -8,6 +8,7 @@ import json
 
 router = APIRouter()
 
+
 @router.post("")
 async def chat_endpoint(request: ChatRequest, user: dict = Depends(get_current_user)):
     """处理聊天问答 — 多智能体编排"""
@@ -21,7 +22,7 @@ async def chat_endpoint(request: ChatRequest, user: dict = Depends(get_current_u
         async def generate():
             yield json.dumps({"type": "start", "session_id": session_id}) + "\n"
             full_res = ""
-            async for line in orchestrator.process_stream(request.message, username):
+            async for line in orchestrator.process_stream(request.message, username, session_id=session_id):
                 yield line
                 try:
                     data = json.loads(line)
@@ -33,7 +34,7 @@ async def chat_endpoint(request: ChatRequest, user: dict = Depends(get_current_u
             db_instance.save_message(session_id, username, "assistant", full_res)
         return StreamingResponse(generate(), media_type="text/event-stream")
 
-    result = await orchestrator.process(request.message, username)
+    result = await orchestrator.process(request.message, username, session_id=session_id)
     db_instance.save_message(
         session_id, username, "assistant",
         result["content"],
@@ -52,19 +53,38 @@ async def agent_websocket_chat(websocket: WebSocket, token: str = None):
         user = validate_token(token) if token else None
         if not user:
             await websocket.send_text(json.dumps({"type": "error", "message": "未授权"})); await websocket.close(); return
-        print(f"[INFO] ℹ️ 多智能体 WebSocket 用户 {user['username']} 已连接")
+        print(f"[INFO] 多智能体 WebSocket 用户 {user['username']} 已连接")
+
+        username = user["username"]
+        session_id = None
+
         while True:
             data = json.loads(await websocket.receive_text())
             if data.get("type") == "chat":
                 query = data.get("message", "")
-                if not query: continue
-                async for line in orchestrator.process_stream(query, user["username"]):
+                if not query:
+                    continue
+                ws_session_id = data.get("session_id") or session_id
+                if not ws_session_id:
+                    ws_session_id = db_instance.create_session(username, query[:30] + "...")
+                session_id = ws_session_id
+                db_instance.save_message(session_id, username, "user", query)
+                full_res = ""
+                async for line in orchestrator.process_stream(query, username, session_id=session_id):
                     await websocket.send_text(line.strip())
-                await websocket.send_text(json.dumps({"type": "done"}))
+                    try:
+                        d = json.loads(line)
+                        if d.get("type") == "chunk":
+                            full_res += d.get("content", "")
+                    except json.JSONDecodeError:
+                        pass
+                db_instance.save_message(session_id, username, "assistant", full_res)
+                await websocket.send_text(json.dumps({"type": "done", "session_id": session_id}))
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        print(f"[ERROR] ❌ 多智能体 WebSocket 异常: {e}")
+        print(f"[ERROR] 多智能体 WebSocket 异常: {e}")
+
 
 @router.websocket("/ws")
 async def websocket_chat(websocket: WebSocket, token: str = None):
@@ -74,16 +94,34 @@ async def websocket_chat(websocket: WebSocket, token: str = None):
         user = validate_token(token) if token else None
         if not user:
             await websocket.send_text(json.dumps({"type": "error", "message": "未授权"})); await websocket.close(); return
-        print(f"[INFO] ℹ️ WebSocket 用户 {user['username']} 已连接")
+        print(f"[INFO] WebSocket 用户 {user['username']} 已连接")
+
+        username = user["username"]
+        session_id = None
+
         while True:
             data = json.loads(await websocket.receive_text())
             if data.get("type") == "chat":
                 query = data.get("message", "")
-                if not query: continue
-                async for line in orchestrator.process_stream(query, user["username"]):
+                if not query:
+                    continue
+                ws_session_id = data.get("session_id") or session_id
+                if not ws_session_id:
+                    ws_session_id = db_instance.create_session(username, query[:30] + "...")
+                session_id = ws_session_id
+                db_instance.save_message(session_id, username, "user", query)
+                full_res = ""
+                async for line in orchestrator.process_stream(query, username, session_id=session_id):
                     await websocket.send_text(line.strip())
-                await websocket.send_text(json.dumps({"type": "done"}))
+                    try:
+                        d = json.loads(line)
+                        if d.get("type") == "chunk":
+                            full_res += d.get("content", "")
+                    except json.JSONDecodeError:
+                        pass
+                db_instance.save_message(session_id, username, "assistant", full_res)
+                await websocket.send_text(json.dumps({"type": "done", "session_id": session_id}))
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        print(f"[ERROR] ❌ WebSocket 异常: {e}")
+        print(f"[ERROR] WebSocket 异常: {e}")
