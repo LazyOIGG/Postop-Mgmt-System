@@ -131,11 +131,34 @@ class SpeechService:
             if temp_file_path and os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
 
-    async def synthesize(self, text: str) -> Optional[bytes]:
-        """
-        文本转语音 (TTS) - 预留接口
-        """
-        return None
+    async def synthesize(self, text: str, voice: str = None) -> Optional[bytes]:
+        """文本转语音 (TTS) — 对接 DashScope CosyVoice"""
+        if not self.enabled:
+            print("[WARN] TTS 服务未启用")
+            return None
+        try:
+            from dashscope.audio.tts import SpeechSynthesizer
+            result = SpeechSynthesizer.call(
+                model='cosyvoice-v1',
+                voice=voice or settings.TTS_VOICE,
+                text=text,
+                format='mp3'
+            )
+            audio_data = result.get_audio_data()
+            if audio_data is not None:
+                print(f"[INFO] TTS 合成成功，音频大小: {len(audio_data)} bytes")
+                return audio_data
+            else:
+                print(f"[ERROR] TTS 合成失败: {result.get_response()}")
+                return None
+        except Exception as e:
+            print(f"[ERROR] TTS 合成异常: {e}")
+            traceback.print_exc()
+            return None
+
+    @property
+    def tts_enabled(self) -> bool:
+        return self.enabled and settings.TTS_ENABLED
 
 
 speech_service = SpeechService()

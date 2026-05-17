@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict
-from app.models.schemas import KnowledgeGraphQuery
+from app.models.schemas import KnowledgeGraphQuery, VisualizeRequest, SchemaResponse
 from app.core.security import get_current_user
 from app.services.kg_service import kg_service
 
 router = APIRouter()
+
 
 @router.post("/query")
 async def kg_query(request: KnowledgeGraphQuery, user: Dict = Depends(get_current_user)):
@@ -22,6 +23,7 @@ async def kg_query(request: KnowledgeGraphQuery, user: Dict = Depends(get_curren
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
+
 
 @router.get("/diseases")
 async def get_diseases(user: Dict = Depends(get_current_user)):
@@ -51,3 +53,36 @@ async def get_diseases(user: Dict = Depends(get_current_user)):
             "count": 0,
             "message": f"获取失败: {str(e)}"
         }
+
+
+@router.post("/visualize")
+async def kg_visualize(request: VisualizeRequest, user: Dict = Depends(get_current_user)):
+    """获取知识图谱子图用于前端可视化"""
+    try:
+        if kg_service.client is None:
+            raise HTTPException(status_code=500, detail="Neo4j连接不可用")
+
+        result = kg_service.multi_hop_query(request.entity_name, request.max_hops)
+        return {
+            "success": True,
+            "entity": request.entity_name,
+            "data": result[0] if result else {"nodes": [], "edges": []}
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"可视化查询失败: {str(e)}")
+
+
+@router.get("/schema")
+async def kg_schema(user: Dict = Depends(get_current_user)):
+    """获取知识图谱 Schema（节点类型和关系类型）"""
+    try:
+        if kg_service.client is None:
+            raise HTTPException(status_code=500, detail="Neo4j连接不可用")
+
+        schema = kg_service.get_schema()
+        return {
+            "success": True,
+            **schema
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取Schema失败: {str(e)}")

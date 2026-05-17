@@ -39,6 +39,75 @@ def create_all_relationship(client,all_relationship):
     for type1, name1,relation, type2,name2  in tqdm(all_relationship):
         create_relationship(client,type1, name1,relation, type2,name2)
 
+def _add_augmented_relationships(client, all_entity):
+    """添加增强关系：药物禁忌、术后并发症、药物相互作用"""
+    print("正在导入增强关系类型...")
+
+    drugs = all_entity.get("药品", [])
+    diseases = [d['名称'] for d in all_entity.get("疾病", [])]
+
+    # 1. 药物禁忌 — 基于关键词匹配
+    contraindication_rules = [
+        ("阿莫西林", "青霉素过敏患者禁用的抗生素"),
+        ("头孢", "与酒精同服可能引发双硫仑样反应"),
+        ("布洛芬", "胃溃疡患者慎用"),
+        ("阿司匹林", "术后出血风险患者禁用"),
+        ("华法林", "与多种药物存在相互作用"),
+    ]
+    for drug, note in contraindication_rules:
+        matched = [d for d in drugs if drug in d]
+        for m in matched:
+            try:
+                client.run("""
+                    MATCH (d:药品{名称:$drug})
+                    MERGE (c:药物禁忌{名称:$contra})
+                    MERGE (d)-[r:药物禁忌]->(c)
+                    SET c.描述 = $note
+                """, drug=m, contra=f"{drug}禁忌", note=note)
+            except Exception as e:
+                print(f"[WARN] 创建药物禁忌失败({m}): {e}")
+
+    # 2. 术后并发症 — 基于疾病名称匹配
+    complication_rules = [
+        ("手术", "术后感染"), ("手术", "术后出血"), ("手术", "深静脉血栓"),
+        ("手术", "术后粘连"), ("手术", "切口疝"),
+        ("骨折", "骨不连"), ("骨折", "内固定物松动"),
+    ]
+    for trigger, complication in complication_rules:
+        for disease in diseases:
+            if trigger in disease:
+                try:
+                    client.run("""
+                        MATCH (d:疾病{名称:$disease})
+                        MERGE (c:疾病{名称:$comp})
+                        MERGE (d)-[r:术后并发症]->(c)
+                    """, disease=disease, comp=complication)
+                except Exception as e:
+                    print(f"[WARN] 创建术后并发症失败({disease}): {e}")
+
+    # 3. 药物相互作用
+    interaction_rules = [
+        ("阿莫西林", "布洛芬", "可能增加出血风险"),
+        ("阿司匹林", "布洛芬", "增加胃肠道出血风险"),
+        ("头孢", "华法林", "可能增强抗凝作用"),
+    ]
+    for drug_a, drug_b, effect in interaction_rules:
+        matched_a = [d for d in drugs if drug_a in d]
+        matched_b = [d for d in drugs if drug_b in d]
+        for ma in matched_a:
+            for mb in matched_b:
+                if ma != mb:
+                    try:
+                        client.run("""
+                            MATCH (a:药品{名称:$drug_a}), (b:药品{名称:$drug_b})
+                            MERGE (a)-[r:药物相互作用]->(b)
+                            SET r.效果 = $effect
+                        """, drug_a=ma, drug_b=mb, effect=effect)
+                    except Exception as e:
+                        print(f"[WARN] 创建药物相互作用失败({ma}-{mb}): {e}")
+
+    print("增强关系类型导入完成")
+
 if __name__ == "__main__":
     load_dotenv()
     #连接数据库的一些参数
@@ -47,10 +116,33 @@ if __name__ == "__main__":
     parser.add_argument('--user', type=str, default=os.getenv('NEO4J_USER', 'neo4j'), help='neo4j的用户名')
     parser.add_argument('--password', type=str, default=os.getenv('NEO4J_PASSWORD', ''), help='neo4j的密码')
     parser.add_argument('--dbname', type=str, default=os.getenv('NEO4J_NAME', 'neo4j'), help='基于知识图谱的术后管理系统')
+    parser.add_argument('--augment-only', action='store_true', help='仅导入增强关系（药物禁忌、术后并发症、药物相互作用）')
     args = parser.parse_args()
 
     #连接...
     client = py2neo.Graph(args.website, user=args.user, password=args.password, name=args.dbname)
+
+    if args.augment_only:
+        # 从 Neo4j 中读取已有的药品和疾病实体
+        print("仅导入增强关系...")
+        all_entity = {"药品": [], "疾病": []}
+        try:
+            result = client.run("MATCH (d:药品) RETURN d.名称 AS name").data()
+            all_entity["药品"] = [r['name'] for r in result if r.get('name')]
+            print(f"  找到 {len(all_entity['药品'])} 种药品")
+        except Exception as e:
+            print(f"[WARN] 读取药品失败: {e}")
+
+        try:
+            result = client.run("MATCH (d:疾病) RETURN d.名称 AS name").data()
+            all_entity["疾病"] = [{'名称': r['name']} for r in result if r.get('name')]
+            print(f"  找到 {len(all_entity['疾病'])} 种疾病")
+        except Exception as e:
+            print(f"[WARN] 读取疾病失败: {e}")
+
+        _add_augmented_relationships(client, all_entity)
+        print("增强关系导入完成")
+        exit(0)
 
     #将数据库中的内容删光
     is_delete = input('注意:是否删除neo4j上的所有实体 (y/n):')
@@ -175,3 +267,8 @@ if __name__ == "__main__":
             
             import_disease_data(client,k,all_entity[k])
     create_all_relationship(client,relationship)
+
+    # ── P3.13: 新增关系类型 ──
+    _add_augmented_relationships(client, all_entity)
+
+

@@ -1251,6 +1251,116 @@ class DatabaseConnector:
             print(f"获取医生消息记录失败: {e}")
             return []
 
+    # ── P3.15 推送通知 DB 方法 ──
+
+    def create_notification(
+        self, username: str, notif_type: str, title: str,
+        content: str = "", related_id: int = None
+    ) -> Optional[int]:
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO notifications (username, type, title, content, related_id)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(query, (username, notif_type, title, content, related_id))
+            self.connection.commit()
+            nid = cursor.lastrowid
+            cursor.close()
+            return nid
+        except Exception as e:
+            print(f"创建通知失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return None
+
+    def get_notifications(self, username: str, unread_only: bool = False, limit: int = 50):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            if unread_only:
+                query = """
+                    SELECT id, username, type, title, content, related_id, is_read, created_at
+                    FROM notifications
+                    WHERE username = %s AND is_read = FALSE
+                    ORDER BY created_at DESC LIMIT %s
+                """
+            else:
+                query = """
+                    SELECT id, username, type, title, content, related_id, is_read, created_at
+                    FROM notifications
+                    WHERE username = %s
+                    ORDER BY created_at DESC LIMIT %s
+                """
+            cursor.execute(query, (username, limit))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取通知列表失败: {e}")
+            return []
+
+    def get_unread_notification_count(self, username: str) -> int:
+        try:
+            if not self._ensure_connection():
+                return 0
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT COUNT(*) AS cnt FROM notifications
+                WHERE username = %s AND is_read = FALSE
+            """
+            cursor.execute(query, (username,))
+            result = cursor.fetchone()
+            cursor.close()
+            return int(result['cnt']) if result else 0
+        except Exception as e:
+            print(f"获取未读通知数失败: {e}")
+            return 0
+
+    def mark_notification_read(self, notification_id: int, username: str) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                UPDATE notifications SET is_read = TRUE
+                WHERE id = %s AND username = %s
+            """
+            cursor.execute(query, (notification_id, username))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"标记通知已读失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def mark_all_notifications_read(self, username: str) -> bool:
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                UPDATE notifications SET is_read = TRUE
+                WHERE username = %s AND is_read = FALSE
+            """
+            cursor.execute(query, (username,))
+            self.connection.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            print(f"全部已读失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    # ── 原有方法 ──
+
     def save_admin_message_to_patient(
         self, doctor_username: str, patient_username: str, content: str
     ) -> bool:

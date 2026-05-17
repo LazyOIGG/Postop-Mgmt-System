@@ -68,6 +68,17 @@ class Settings(BaseSettings):
     # ── 工具调用配置 ──
     MAX_TOOL_CALL_ROUNDS: int = 3
 
+    # ── 知识图谱增强配置 ──
+    KG_MAX_HOPS: int = 3
+    KG_VISUALIZE_MAX_NODES: int = 50
+
+    # ── 推送通知配置 ──
+    NOTIFICATION_CHECK_INTERVAL: int = 60
+
+    # ── 语音交互配置 ──
+    TTS_VOICE: str = "longxiaochun"  # CosyVoice 音色
+    TTS_ENABLED: bool = True
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra='ignore')
 
 settings = Settings()

@@ -4,9 +4,35 @@ from app.models.schemas import ChatRequest
 from app.core.security import get_current_user, validate_token
 from app.db.session import db_instance
 from app.agents.orchestrator import orchestrator
+from typing import Dict
 import json
 
 router = APIRouter()
+
+
+class ConnectionManager:
+    """WebSocket 连接管理器（P3.15）"""
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+
+    async def connect(self, username: str, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections[username] = websocket
+        print(f"[INFO] WebSocket 用户 {username} 已连接 (通知)")
+
+    def disconnect(self, username: str):
+        self.active_connections.pop(username, None)
+
+    async def send_notification(self, username: str, data: dict):
+        ws = self.active_connections.get(username)
+        if ws:
+            try:
+                await ws.send_text(json.dumps(data))
+            except Exception:
+                self.disconnect(username)
+
+
+ws_manager = ConnectionManager()
 
 
 @router.post("")
@@ -125,3 +151,24 @@ async def websocket_chat(websocket: WebSocket, token: str = None):
         pass
     except Exception as e:
         print(f"[ERROR] WebSocket 异常: {e}")
+
+
+@router.websocket("/notifications/ws")
+async def notification_websocket(websocket: WebSocket, token: str = None):
+    """WebSocket 通知推送（P3.15）"""
+    try:
+        user = validate_token(token) if token else None
+        if not user:
+            await websocket.close(code=4001)
+            return
+        username = user["username"]
+        await ws_manager.connect(username, websocket)
+        try:
+            while True:
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            pass
+        finally:
+            ws_manager.disconnect(username)
+    except Exception as e:
+        print(f"[ERROR] 通知 WebSocket 异常: {e}")
