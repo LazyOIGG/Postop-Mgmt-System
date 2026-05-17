@@ -79,7 +79,7 @@ async def patient_send_message(
 ):
     if not request.content.strip():
         raise HTTPException(status_code=400, detail="消息内容不能为空")
-    result = doctor_service.send_message_from_patient(
+    result = await doctor_service.send_message_from_patient(
         patient_username=user["username"],
         content=request.content.strip()
     )
@@ -93,7 +93,7 @@ async def doctor_send_message(
 ):
     if not request.content.strip():
         raise HTTPException(status_code=400, detail="消息内容不能为空")
-    result = doctor_service.send_message(
+    result = await doctor_service.send_message(
         doctor_username=user["username"],
         patient_username=request.patient_username,
         content=request.content.strip()

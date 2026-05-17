@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi.responses import Response
 from app.core.security import get_current_user
 from app.services.speech_service import speech_service
 from app.services.image_service import image_service
 from app.agents.orchestrator import orchestrator
 from app.db.session import db_instance
+from app.models.schemas import TTSRequest
 from typing import Dict
 import json
 
@@ -117,7 +119,9 @@ async def speech_to_text(file: UploadFile = File(...), user: Dict = Depends(get_
         return {"success": True, "text": recognized_text}
 
 @router.post("/speech/tts")
-async def text_to_speech(text: str = Form(...), user: Dict = Depends(get_current_user)):
-    """语音合成"""
-    result = await speech_service.synthesize(text)
-    return {"success": True, "audio": result}
+async def text_to_speech(request: TTSRequest, user: Dict = Depends(get_current_user)):
+    """语音合成 — 返回 MP3 音频流"""
+    result = await speech_service.synthesize(request.text, request.voice)
+    if result:
+        return Response(content=result, media_type="audio/mpeg")
+    return {"success": False, "message": "TTS合成失败或服务不可用"}

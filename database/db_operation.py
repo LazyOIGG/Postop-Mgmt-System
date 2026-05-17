@@ -189,6 +189,24 @@ def init_database_tables():
                        ''')
         print("✅ 医生消息表 (doctor_messages) 创建/检查完成")
 
+        # 6. 创建通知表 (notifications) — P3.15
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS notifications (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           type ENUM('doctor_message','alert','reminder','system') NOT NULL,
+                           title VARCHAR(255) NOT NULL,
+                           content TEXT,
+                           related_id INT,
+                           is_read BOOLEAN DEFAULT FALSE,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           INDEX idx_username_read (username, is_read),
+                           INDEX idx_created_at (created_at),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 通知表 (notifications) 创建/检查完成")
+
         db.connection.commit()
         print("\n" + "="*50)
         print("✅ 所有数据库表创建/检查完成")
@@ -282,6 +300,7 @@ def test_database_connection():
             "patient_profiles",
             "daily_checkins",
             "reminders",
+            "notifications",
         ]
 
         existing = set()

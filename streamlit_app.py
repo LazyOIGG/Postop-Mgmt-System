@@ -11,6 +11,23 @@ API_BASE_URL = "http://localhost:8000/api/v1"
 
 st.set_page_config(page_title="术后管理系统", page_icon="⚕️")
 
+
+from typing import Optional
+
+def fetch_tts_audio(text: str, token: str) -> Optional[bytes]:
+    """调用后端 TTS 接口获取音频"""
+    try:
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        resp = requests.post(
+            f"{API_BASE_URL}/multimodal/speech/tts",
+            headers=headers, json={"text": text}, timeout=30
+        )
+        if resp.status_code == 200 and resp.headers.get("content-type") == "audio/mpeg":
+            return resp.content
+    except Exception:
+        pass
+    return None
+
 st.title("⚕️ 智能术后管理系统")
 
 # 初始化会话状态
@@ -83,11 +100,26 @@ def auth_section():
         if not st.session_state.is_admin:
             try:
                 headers = {"Authorization": f"Bearer {st.session_state.token}"}
-                resp = requests.get(f"{API_BASE_URL}/doctor/notifications/unread", headers=headers, timeout=3)
+                resp = requests.get(f"{API_BASE_URL}/notifications/unread-count", headers=headers, timeout=3)
                 if resp.status_code == 200:
-                    count = resp.json().get("unread_count", 0)
-                    if count > 0 and count != st.session_state.get("seen_message_count", 0):
-                        st.sidebar.warning(f"📬 医生发来 {count} 条消息")
+                    count = resp.json().get("count", 0)
+                    if count > 0:
+                        st.sidebar.warning(f"📬 您有 {count} 条未读通知")
+                        with st.sidebar.expander("查看通知"):
+                            notif_resp = requests.get(
+                                f"{API_BASE_URL}/notifications/?unread_only=true&limit=10",
+                                headers=headers, timeout=5
+                            )
+                            if notif_resp.status_code == 200:
+                                for n in notif_resp.json().get("notifications", []):
+                                    st.markdown(f"**{n['title']}**")
+                                    st.caption(n.get('content', ''))
+                                    if st.button("标记已读", key=f"read_{n['id']}"):
+                                        requests.post(
+                                            f"{API_BASE_URL}/notifications/{n['id']}/read",
+                                            headers=headers, timeout=5
+                                        )
+                                        st.rerun()
             except Exception:
                 pass
         if st.sidebar.button("退出登录"):
@@ -105,9 +137,16 @@ def chat_section():
     st.header("与医疗助手对话")
 
     # 显示历史消息
-    for message in st.session_state.messages:
+    for i, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+            if message["role"] == "assistant":
+                if st.button("🔊 朗读", key=f"tts_{i}"):
+                    audio_bytes = fetch_tts_audio(message["content"], st.session_state.token)
+                    if audio_bytes:
+                        st.audio(audio_bytes, format="audio/mp3")
+                    else:
+                        st.caption("TTS 服务暂不可用")
 
     # 语音输入按钮
     col1, col2 = st.columns([3, 1])
@@ -240,22 +279,12 @@ def chat_section():
                     st.session_state.messages.append({"role": "assistant", "content": full_response})
                     
                     # 语音播放按钮
-                    if st.button("🔊 语音播放"):
-                        try:
-                            tts_response = requests.post(f"{API_BASE_URL}/multimodal/speech/tts", 
-                                                       headers=headers, 
-                                                       data={"text": full_response})
-                            if tts_response.status_code == 200:
-                                tts_result = tts_response.json()
-                                if tts_result.get("audio"):
-                                    # 处理音频数据
-                                    st.audio(tts_result["audio"])
-                                else:
-                                    st.info("语音合成功能尚未完全实现")
-                            else:
-                                st.error(f"语音合成失败: {tts_response.json().get('detail', '未知错误')}")
-                        except Exception as e:
-                            st.error(f"语音合成请求失败: {e}")
+                    if st.button("🔊 朗读回复"):
+                        audio_bytes = fetch_tts_audio(full_response, st.session_state.token)
+                        if audio_bytes:
+                            st.audio(audio_bytes, format="audio/mp3")
+                        else:
+                            st.info("TTS服务暂不可用")
                 else:
                     error_msg = response.json().get('detail', '未知错误')
                     st.error(f"后端请求失败: {error_msg}")
@@ -1148,6 +1177,60 @@ def system_dashboard_section():
 - 支持多模块业务闭环展示
 """)
 
+# 知识图谱可视化（P3.13）
+def kg_visualization_section():
+    st.header("知识图谱可视化")
+    st.caption("探索疾病相关的知识图谱关系")
+
+    disease = st.text_input("输入疾病名称进行图谱查询", placeholder="例如：感冒、高血压")
+
+    if disease:
+        headers = {"Authorization": f"Bearer {st.session_state.token}"}
+        try:
+            with st.spinner("正在查询知识图谱..."):
+                resp = requests.post(
+                    f"{API_BASE_URL}/kg/visualize",
+                    headers=headers,
+                    json={"entity_name": disease, "max_hops": 2, "max_nodes": 50},
+                    timeout=15
+                )
+            if resp.status_code == 200:
+                result = resp.json()
+                data = result.get("data", {})
+                nodes = data.get("nodes", [])
+                edges = data.get("edges", [])
+                if nodes:
+                    st.success(f"找到 {len(nodes)} 个节点, {len(edges)} 条关系")
+                    try:
+                        from pyvis.network import Network
+                        net = Network(height="500px", width="100%", directed=True)
+                        for node in nodes:
+                            label = node.get("name", str(node["id"]))
+                            title = ", ".join(node.get("labels", []))
+                            net.add_node(node["id"], label=label, title=title)
+                        for edge in edges:
+                            net.add_edge(edge["source"], edge["target"], title=edge.get("type", ""))
+                        net.save_graph("kg_graph.html")
+                        with open("kg_graph.html", "r", encoding="utf-8") as f:
+                            st.components.v1.html(f.read(), height=550)
+                    except ImportError:
+                        st.info("安装 pyvis 以启用交互式图谱: `pip install pyvis`")
+                        for node in nodes[:20]:
+                            st.markdown(f"- **{node.get('name', node['id'])}** ({', '.join(node.get('labels', []))})")
+                        if edges:
+                            st.markdown("---")
+                            for edge in edges[:20]:
+                                st.caption(f"{edge.get('type', '→')}")
+                else:
+                    st.info(f"未找到与「{disease}」相关的图谱数据")
+            else:
+                st.error(f"查询失败: {resp.json().get('detail', '未知错误')}")
+        except requests.exceptions.ConnectionError:
+            st.error("无法连接到后端服务")
+        except Exception as e:
+            st.error(f"查询异常: {e}")
+
+
 # 主应用逻辑
 auth_section()
 
@@ -1158,7 +1241,7 @@ if st.session_state.logged_in:
         col_main, col_chat = st.columns([8, 2])
 
         with col_main:
-            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
                 "与医疗助手对话",
                 "病例图片识别",
                 "健康评估中心",
@@ -1166,6 +1249,7 @@ if st.session_state.logged_in:
                 "每日健康打卡",
                 "趋势分析/健康概览",
                 "提醒中心",
+                "知识图谱",
             ])
 
             with tab1:
@@ -1182,6 +1266,8 @@ if st.session_state.logged_in:
                 overview_section()
             with tab7:
                 reminder_center_section()
+            with tab8:
+                kg_visualization_section()
 
         with col_chat:
             st.subheader("💬 医生消息")

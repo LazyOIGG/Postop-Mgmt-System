@@ -101,3 +101,37 @@ class DoctorMessageRequest(BaseModel):
 
 class AlertProcessRequest(BaseModel):
     alert_id: int
+
+
+# ── P3.13 知识图谱增强 ──
+class VisualizeRequest(BaseModel):
+    entity_name: str
+    max_hops: int = 3
+    max_nodes: int = 50
+
+
+class SchemaResponse(BaseModel):
+    node_types: List[Dict[str, Any]] = []
+    relationship_types: List[str] = []
+
+
+# ── P3.15 推送通知系统 ──
+class NotificationResponse(BaseModel):
+    id: int
+    username: str
+    type: str
+    title: str
+    content: Optional[str] = ""
+    related_id: Optional[int] = None
+    is_read: bool = False
+    created_at: Optional[datetime] = None
+
+
+class UnreadCountResponse(BaseModel):
+    count: int
+
+
+# ── P3.16 语音交互 ──
+class TTSRequest(BaseModel):
+    text: str
+    voice: Optional[str] = None

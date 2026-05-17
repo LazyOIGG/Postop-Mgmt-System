@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 from app.db.session import db_instance
+from app.services.notification_service import notification_service
 
 
 class DoctorService:
@@ -21,9 +22,12 @@ class DoctorService:
     def process_alert(self, alert_id: int) -> bool:
         return db_instance.process_alert_notification(alert_id)
 
-    def send_message(self, doctor_username: str, patient_username: str, content: str) -> Dict:
-        db_instance.save_doctor_message(doctor_username, patient_username, content)
+    async def send_message(self, doctor_username: str, patient_username: str, content: str) -> Dict:
+        msg_id = db_instance.save_doctor_message(doctor_username, patient_username, content)
         db_instance.save_admin_message_to_patient(doctor_username, patient_username, content)
+        await notification_service.notify_doctor_message(
+            patient_username, doctor_username, content, msg_id
+        )
         return {"content": content, "patient_username": patient_username}
 
     def get_messages(self, patient_username: str) -> List[Dict]:
@@ -33,7 +37,7 @@ class DoctorService:
         messages = db_instance.get_doctor_messages(patient_username=patient_username, limit=50)
         return len(messages)
 
-    def send_message_from_patient(self, patient_username: str, content: str) -> Dict:
+    async def send_message_from_patient(self, patient_username: str, content: str) -> Dict:
         db_instance.save_doctor_message(patient_username, patient_username, content)
         return {"content": content, "patient_username": patient_username}
 
