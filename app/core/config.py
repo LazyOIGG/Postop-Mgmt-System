@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     # 安全配置
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # 默认管理员账户
     ADMIN_USERNAME: str = "admin"

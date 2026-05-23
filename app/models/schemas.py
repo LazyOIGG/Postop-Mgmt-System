@@ -23,6 +23,12 @@ class RegisterRequest(BaseModel):
     confirm_password: str
     is_admin: bool = False
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+class LogoutRequest(BaseModel):
+    refresh_token: Optional[str] = None
+
 class SessionCreateRequest(BaseModel):
     username: str
     session_title: Optional[str] = "新对话"
