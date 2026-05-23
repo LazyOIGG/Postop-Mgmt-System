@@ -92,7 +92,7 @@ def start_doctor_streamlit():
     
     url = "http://localhost:8502"
     process = subprocess.Popen(
-        [sys.executable, "-m", "streamlit", "run", "doctor_app.py", "--server.port", "8502", "--server.headless", "true"],
+        [sys.executable, "-m", "streamlit", "run", "streamlit_doctor_app.py", "--server.port", "8502", "--server.headless", "true"],
         env=os.environ.copy()
     )
     

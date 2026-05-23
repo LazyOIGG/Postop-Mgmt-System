@@ -12,7 +12,7 @@ async def debug_audio_format():
     调试音频格式问题
     """
     # 读取测试音频文件
-    audio_file_path = os.path.join(os.path.dirname(__file__), '标准录音 3(1)_mono_16k.wav')
+    audio_file_path = os.path.join(os.path.dirname(__file__), '标准录音_mono_16k.wav')
 
     with open(audio_file_path, 'rb') as f:
         audio_data = f.read()

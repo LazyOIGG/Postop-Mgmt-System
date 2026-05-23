@@ -48,7 +48,7 @@ async def test_mic_audio():
     # 测试正常音频
     print("\n" + "="*50)
     print("测试正常音频:")
-    audio_file_path = os.path.join(os.path.dirname(__file__), '标准录音 3(1)_mono_16k.wav')
+    audio_file_path = os.path.join(os.path.dirname(__file__), '标准录音_mono_16k.wav')
     with open(audio_file_path, 'rb') as f:
         audio_data = f.read()
     print(f"音频大小: {len(audio_data)} bytes")

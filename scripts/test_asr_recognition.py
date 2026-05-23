@@ -16,7 +16,7 @@ recognition = Recognition(model='fun-asr-realtime-2026-02-28',
                           language_hints=['zh', 'en'],
                           callback=None)
 import os
-result = recognition.call(os.path.join(os.path.dirname(__file__), '标准录音 3(1)_mono_16k.wav'))
+result = recognition.call(os.path.join(os.path.dirname(__file__), '标准录音_mono_16k.wav'))
 if result.status_code == HTTPStatus.OK:
     print('识别结果：')
     print(result.get_sentence())
