@@ -49,6 +49,7 @@ async def get_system_stats(user: Dict = Depends(get_current_user)):
 
         stats = {
             "total_users": 0,
+            "total_doctors": 0,
             "total_sessions": 0,
             "total_messages": 0,
             "active_today": 0
@@ -58,6 +59,8 @@ async def get_system_stats(user: Dict = Depends(get_current_user)):
             cursor = db_instance.connection.cursor(dictionary=True)
             cursor.execute("SELECT COUNT(*) as count FROM users")
             stats["total_users"] = cursor.fetchone()['count']
+            cursor.execute("SELECT COUNT(*) as count FROM users WHERE is_admin = 1")
+            stats["total_doctors"] = cursor.fetchone()['count']
             cursor.execute("SELECT COUNT(*) as count FROM chat_sessions")
             stats["total_sessions"] = cursor.fetchone()['count']
             cursor.execute("SELECT COUNT(*) as count FROM user_conversations")

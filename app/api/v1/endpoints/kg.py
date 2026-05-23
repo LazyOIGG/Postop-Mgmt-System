@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict
-from app.models.schemas import KnowledgeGraphQuery, VisualizeRequest, SchemaResponse
+from app.models.schemas import KnowledgeGraphQuery, VisualizeRequest
 from app.core.security import get_current_user
 from app.services.kg_service import kg_service
 

@@ -8,6 +8,11 @@ class ChatRequest(BaseModel):
     session_id: Optional[int] = None
     stream: bool = False
 
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = "zh_female"
+
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -92,6 +97,11 @@ class ReminderCreateRequest(BaseModel):
 class ReminderStatusUpdateRequest(BaseModel):
     reminder_id: int
     status: str
+
+
+class VisualizeRequest(BaseModel):
+    entity_name: str
+    max_hops: int = 3
 
 
 class DoctorMessageRequest(BaseModel):
