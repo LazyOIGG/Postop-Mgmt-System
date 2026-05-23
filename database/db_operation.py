@@ -155,6 +155,7 @@ def init_database_tables():
                        ''')
         print("✅ API访问日志表 (api_access_logs) 创建/检查完成")
 
+        # 6. 创建告警通知表 (alert_notifications)
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS alert_notifications (
                            id INT AUTO_INCREMENT PRIMARY KEY,
@@ -174,6 +175,7 @@ def init_database_tables():
                        ''')
         print("✅ 告警通知表 (alert_notifications) 创建/检查完成")
 
+        # 7. 创建医生消息表 (doctor_messages)
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS doctor_messages (
                            id INT AUTO_INCREMENT PRIMARY KEY,
@@ -189,7 +191,139 @@ def init_database_tables():
                        ''')
         print("✅ 医生消息表 (doctor_messages) 创建/检查完成")
 
-        # 8. 创建康复计划表（rehab_plans）
+        # 8. 创建通知表 (notifications)
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS notifications (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           type ENUM('doctor_message','alert','reminder','system') NOT NULL,
+                           title VARCHAR(255) NOT NULL,
+                           content TEXT,
+                           related_id INT,
+                           is_read BOOLEAN DEFAULT FALSE,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           INDEX idx_username_read (username, is_read),
+                           INDEX idx_created_at (created_at),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 通知表 (notifications) 创建/检查完成")
+
+        # 9. 创建病例报告表 (patient_reports)
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS patient_reports (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           file_name VARCHAR(255) NOT NULL,
+                           file_type VARCHAR(50) NOT NULL,
+                           raw_ocr_text TEXT,
+                           structured_json TEXT,
+                           ocr_score FLOAT DEFAULT 0,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           INDEX idx_username (username),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 病例报告表 (patient_reports) 创建/检查完成")
+
+        # 10. 创建健康评估表 (health_assessments)
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS health_assessments (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           session_id INT,
+                           source_type VARCHAR(20) DEFAULT 'text',
+                           input_text TEXT,
+                           risk_level VARCHAR(20) NOT NULL,
+                           risk_reasons TEXT,
+                           advice TEXT,
+                           need_hospital INT DEFAULT 0,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           INDEX idx_username (username),
+                           INDEX idx_risk_level (risk_level),
+                           INDEX idx_created_at (created_at),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 健康评估表 (health_assessments) 创建/检查完成")
+
+        # 11. 创建健康档案表 (patient_profiles)
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS patient_profiles (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL UNIQUE,
+                           real_name VARCHAR(100) DEFAULT '',
+                           gender VARCHAR(10) DEFAULT '',
+                           age INT DEFAULT NULL,
+                           phone VARCHAR(20) DEFAULT '',
+                           height FLOAT DEFAULT NULL,
+                           weight FLOAT DEFAULT NULL,
+                           blood_type VARCHAR(10) DEFAULT '',
+                           medical_history TEXT,
+                           allergy_history TEXT,
+                           current_medications TEXT,
+                           emergency_contact VARCHAR(100) DEFAULT '',
+                           emergency_phone VARCHAR(20) DEFAULT '',
+                           health_stage VARCHAR(50) DEFAULT '长期管理',
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           INDEX idx_username (username),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 健康档案表 (patient_profiles) 创建/检查完成")
+
+        # 12. 创建每日打卡表 (daily_checkins)
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS daily_checkins (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           checkin_date DATE NOT NULL,
+                           symptoms TEXT,
+                           temperature FLOAT DEFAULT NULL,
+                           blood_pressure VARCHAR(20) DEFAULT '',
+                           blood_sugar FLOAT DEFAULT NULL,
+                           heart_rate INT DEFAULT NULL,
+                           sleep_status VARCHAR(50) DEFAULT '',
+                           diet_status VARCHAR(50) DEFAULT '',
+                           exercise_status VARCHAR(50) DEFAULT '',
+                           medication_taken INT DEFAULT 0,
+                           note TEXT,
+                           abnormal_flag INT DEFAULT 0,
+                           abnormal_reason TEXT,
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           UNIQUE KEY uk_username_date (username, checkin_date),
+                           INDEX idx_username (username),
+                           INDEX idx_checkin_date (checkin_date),
+                           INDEX idx_abnormal_flag (abnormal_flag),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 每日打卡表 (daily_checkins) 创建/检查完成")
+
+        # 13. 创建提醒表 (reminders)
+        cursor.execute('''
+                       CREATE TABLE IF NOT EXISTS reminders (
+                           id INT AUTO_INCREMENT PRIMARY KEY,
+                           username VARCHAR(255) NOT NULL,
+                           reminder_type VARCHAR(50) NOT NULL,
+                           title VARCHAR(255) NOT NULL,
+                           description TEXT,
+                           reminder_date DATE NOT NULL,
+                           reminder_time TIME DEFAULT NULL,
+                           status VARCHAR(20) DEFAULT 'pending',
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                           INDEX idx_username (username),
+                           INDEX idx_reminder_date (reminder_date),
+                           INDEX idx_status (status),
+                           FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE ON UPDATE CASCADE
+                       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                       ''')
+        print("✅ 提醒表 (reminders) 创建/检查完成")
+
+        # 14. 创建康复计划表 (rehab_plans)
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS rehab_plans (
                            id INT AUTO_INCREMENT PRIMARY KEY,
@@ -209,7 +343,7 @@ def init_database_tables():
                        ''')
         print("✅ 康复计划表 (rehab_plans) 创建/检查完成")
 
-        # 9. 创建康复计划任务表（rehab_plan_tasks）
+        # 15. 创建康复计划任务表 (rehab_plan_tasks)
         cursor.execute('''
                        CREATE TABLE IF NOT EXISTS rehab_plan_tasks (
                            id INT AUTO_INCREMENT PRIMARY KEY,
@@ -323,6 +457,7 @@ def test_database_connection():
             "api_access_logs",
             "alert_notifications",
             "doctor_messages",
+            "notifications",
             "patient_reports",
             "health_assessments",
             "patient_profiles",
