@@ -25,6 +25,11 @@ class DoctorService:
     async def send_message(self, doctor_username: str, patient_username: str, content: str) -> Dict:
         msg_id = db_instance.save_doctor_message(doctor_username, patient_username, content)
         db_instance.save_admin_message_to_patient(doctor_username, patient_username, content)
+        db_instance.create_notification(
+            patient_username, 'doctor_message',
+            f'医生 {doctor_username} 发来新消息',
+            content, msg_id,
+        )
         await notification_service.notify_doctor_message(
             patient_username, doctor_username, content, msg_id
         )
@@ -38,7 +43,15 @@ class DoctorService:
         return len(messages)
 
     async def send_message_from_patient(self, patient_username: str, content: str) -> Dict:
-        db_instance.save_doctor_message(patient_username, patient_username, content)
+        msg_id = db_instance.save_doctor_message(patient_username, patient_username, content)
+        # Notify all doctors
+        admins = db_instance.get_admin_usernames()
+        for admin in admins:
+            db_instance.create_notification(
+                admin, 'doctor_message',
+                f'患者 {patient_username} 发来新消息',
+                content, msg_id,
+            )
         return {"content": content, "patient_username": patient_username}
 
 

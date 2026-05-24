@@ -1359,6 +1359,19 @@ class DatabaseConnector:
                 self.connection.rollback()
             return False
 
+    def get_admin_usernames(self) -> List[str]:
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT username FROM users WHERE is_admin = 1")
+            result = [row['username'] for row in cursor.fetchall()]
+            cursor.close()
+            return result
+        except Exception as e:
+            print(f"获取管理员列表失败: {e}")
+            return []
+
     # ── 原有方法 ──
 
     def save_admin_message_to_patient(
