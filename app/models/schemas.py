@@ -113,6 +113,8 @@ class VisualizeRequest(BaseModel):
 class DoctorMessageRequest(BaseModel):
     patient_username: str
     content: str
+    message_type: str = "text"
+    media_url: Optional[str] = None
 
 
 class AlertProcessRequest(BaseModel):

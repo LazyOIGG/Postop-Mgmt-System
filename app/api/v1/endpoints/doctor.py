@@ -81,7 +81,9 @@ async def patient_send_message(
         raise HTTPException(status_code=400, detail="消息内容不能为空")
     result = await doctor_service.send_message_from_patient(
         patient_username=user["username"],
-        content=request.content.strip()
+        content=request.content.strip(),
+        message_type=request.message_type,
+        media_url=request.media_url,
     )
     return {"success": True, "message": result}
 
@@ -96,6 +98,8 @@ async def doctor_send_message(
     result = await doctor_service.send_message(
         doctor_username=user["username"],
         patient_username=request.patient_username,
-        content=request.content.strip()
+        content=request.content.strip(),
+        message_type=request.message_type,
+        media_url=request.media_url,
     )
     return {"success": True, "message": result}

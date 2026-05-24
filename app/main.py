@@ -2,10 +2,13 @@ import asyncio
 import logging
 from datetime import datetime
 
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -33,6 +36,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 挂载静态文件目录
+static_dir = os.path.join(os.path.dirname(__file__), '..', 'static')
+os.makedirs(os.path.join(static_dir, 'uploads'), exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # 包含 API 路由
 app.include_router(api_router, prefix=settings.API_V1_STR)

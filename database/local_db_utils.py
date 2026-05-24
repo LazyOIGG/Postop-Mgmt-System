@@ -1210,17 +1210,18 @@ class DatabaseConnector:
             return False
 
     def save_doctor_message(
-        self, doctor_username: str, patient_username: str, content: str
+        self, doctor_username: str, patient_username: str, content: str,
+        message_type: str = 'text', media_url: str = None,
     ) -> Optional[int]:
         try:
             if not self._ensure_connection():
                 return None
             cursor = self.connection.cursor()
             query = """
-                INSERT INTO doctor_messages (doctor_username, patient_username, content)
-                VALUES (%s, %s, %s)
+                INSERT INTO doctor_messages (doctor_username, patient_username, content, message_type, media_url)
+                VALUES (%s, %s, %s, %s, %s)
             """
-            cursor.execute(query, (doctor_username, patient_username, content))
+            cursor.execute(query, (doctor_username, patient_username, content, message_type, media_url))
             self.connection.commit()
             msg_id = cursor.lastrowid
             cursor.close()
@@ -1237,7 +1238,7 @@ class DatabaseConnector:
                 return []
             cursor = self.connection.cursor(dictionary=True)
             query = """
-                SELECT id, doctor_username, patient_username, content, created_at
+                SELECT id, doctor_username, patient_username, content, message_type, media_url, created_at
                 FROM doctor_messages
                 WHERE patient_username = %s
                 ORDER BY created_at DESC

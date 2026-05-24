@@ -182,6 +182,8 @@ def init_database_tables():
                            doctor_username VARCHAR(255) NOT NULL,
                            patient_username VARCHAR(255) NOT NULL,
                            content TEXT NOT NULL,
+                           message_type VARCHAR(20) DEFAULT 'text',
+                           media_url VARCHAR(500) DEFAULT NULL,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                            INDEX idx_patient (patient_username),
                            INDEX idx_doctor (doctor_username),
