@@ -98,4 +98,52 @@ class KGService:
             print(f"[ERROR] 图谱查询失败: {e}")
             return []
 
+    def multi_hop_query(self, entity_name: str, max_hops: int = 3):
+        """多跳查询，返回子图用于前端可视化"""
+        if self.client is None:
+            return {"nodes": [], "edges": []}
+        try:
+            query = f"""
+                MATCH path = (n)-[*1..{max_hops}]-(m)
+                WHERE n.名称 = '{entity_name}'
+                RETURN path LIMIT 100
+            """
+            result = self.client.run(query).data()
+            nodes = {}
+            edges = []
+
+            for record in result:
+                path = record.get('path')
+                if not path:
+                    continue
+                for node in path.nodes:
+                    node_id = str(node.identity)
+                    if node_id not in nodes:
+                        label = list(node.labels)[0] if node.labels else 'Unknown'
+                        name = node.get('名称', node_id)
+                        nodes[node_id] = {"id": node_id, "name": name, "labels": [label]}
+                for rel in path.relationships:
+                    src = str(rel.start_node.identity)
+                    tgt = str(rel.end_node.identity)
+                    edges.append({"source": src, "target": tgt, "type": type(rel).__name__})
+
+            return {"nodes": list(nodes.values()), "edges": edges}
+        except Exception as e:
+            print(f"[ERROR] 多跳查询失败: {e}")
+            return {"nodes": [], "edges": []}
+
+    def get_schema(self) -> dict:
+        """获取知识图谱 Schema"""
+        if self.client is None:
+            return {"node_types": [], "relationship_types": []}
+        try:
+            node_query = "CALL db.labels()"
+            rel_query = "CALL db.relationshipTypes()"
+            node_types = [r['label'] for r in self.client.run(node_query).data()]
+            rel_types = [r['relationshipType'] for r in self.client.run(rel_query).data()]
+            return {"node_types": node_types, "relationship_types": rel_types}
+        except Exception as e:
+            print(f"[ERROR] 获取Schema失败: {e}")
+            return {"node_types": [], "relationship_types": []}
+
 kg_service = KGService()

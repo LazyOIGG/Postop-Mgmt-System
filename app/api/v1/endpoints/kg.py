@@ -66,7 +66,7 @@ async def kg_visualize(request: VisualizeRequest, user: Dict = Depends(get_curre
         return {
             "success": True,
             "entity": request.entity_name,
-            "data": result[0] if result else {"nodes": [], "edges": []}
+            "data": result if result else {"nodes": [], "edges": []}
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"可视化查询失败: {str(e)}")
