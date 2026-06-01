@@ -1,126 +1,125 @@
 # 全周期健康管理系统 — 后续功能更新计划
 
-> 基于代码深度审查（2026-05-23），结合已有功能与新发现的改进方向，
-> 按优先级分层推进，聚焦 **Vue3 前端对接** 和 **系统可靠性提升**。
+> **修订版**: 基于 2026-06-01 深度代码审查，全面更新了项目现状快照和各项完成状态。
+>
+> **分工说明**: 剩余工作平等分为 **A / B / C 三条并行开发线**，各线独立推进、互不阻塞。
 >
 > **前端说明**: 前端已确定采用 **Vue3 + Vite + Element Plus** 方案，正在开发中，
 > 将完全替代 Streamlit。本计划中所有 API 设计均面向 Vue3 对接。
+>
+> **排除范围**: 康复计划模块（`rehab_plan_agent.py`、`rehab_plan_service.py`、`rehab_plan.py`、
+> `rehab_plan_tools.py` 及相关数据库操作）已有其他开发者负责，**三条线均不涉及**。
 
 ---
 
-## 项目现状快照
+## 项目现状快照 (2026-06-01 更新)
 
 | 维度       | 当前状态                                               | 关键缺口                                                      |
 |----------|----------------------------------------------------|-----------------------------------------------------------|
-| **认证系统** | 自定义 in-memory token（`secrets.token_urlsafe`），非 JWT | 重启丢失全部 token；Vue3 无法持久化；无刷新机制                             |
-| **多智能体** | 5 Agent + Coordinator + 10 个工具                     | 工具集偏少；Coordinator 纯 LLM 路由无兜底；无可观测性                       |
-| **对话记忆** | orchestrator 层 MySQL 加载 + LLM 摘要压缩                 | 仅进程内缓存；无 Redis；摘要丢失上下文                                    |
-| **知识图谱** | 单跳 Cypher，14 种硬编码意图映射                              | 无 text2cypher；无多跳推理；Cypher 字符串拼接存在注入风险                    |
-| **通知系统** | notifications 表已建；WebSocket 基础框架已有                 | 无 REST API 端点；ConnectionManager 仅支持单连接；无心跳                |
-| **语音交互** | ASR 可用 (Fun-ASR)；TTS 接口存在                          | TTS 未在前端集成；无流式语音                                          |
-| **前端**   | Streamlit 过渡中；**Vue3 + Element Plus 开发中**          | 后端 API 响应格式不统一；缺管理后台 API                                  |
-| **测试**   | 零正式测试覆盖；仅 5 个手动连接测试脚本                              | 无 pytest、无 mock、无 CI                                      |
-| **部署**   | 手动 `run.py` 启动                                     | 无 Docker、无 CI/CD                                          |
-| **安全**   | SHA-256+盐值加密；CORS 全开                               | 33+ bare except；盐值在 password_utils 中硬编码生成；admin 密码 123456 |
-| **运维**   | print 输出日志                                         | 无结构化日志、无监控、无健康检查深度                                        |
+| **认证系统** | ✅ JWT 认证已实现 (`PyJWT`)，支持 access + refresh token | ⚠️ 黑名单/refresh token 存内存，重启丢失；无 Redis 持久化；CORS 全开 `*`；无 `require_admin` 依赖注入 |
+| **多智能体** | ✅ 6 Agent (Coordinator + MedicalQA + Health + Reminder + Psychology + RehabPlan) + 12 个工具 | ⚠️ Coordinator 纯 LLM 路由无兜底重试；无路由可观测性指标 |
+| **对话记忆** | ✅ orchestrator 层 MySQL 加载 + LLM 摘要压缩              | ⚠️ 仅进程内缓存；无 Redis；摘要丢失上下文；压缩策略简单 |
+| **知识图谱** | ✅ Neo4j 连接正常，14 种意图映射 + 多跳查询 + schema API + 可视化 API | ⚠️ Cypher 字符串拼接存在注入风险；无 text2cypher；无参数化查询 |
+| **通知系统** | ✅ notifications 表已建；REST API (列表/未读计数/标记已读)；WebSocket 基础推送 | ⚠️ ConnectionManager 仅支持单连接/用户；无心跳；无消息队列 |
+| **健康评估** | ✅ 三级风险关键词 + 体温/血压正则 + LLM 建议生成              | ⚠️ 无时序异常检测；无滑动窗口/Z-score 分析 |
+| **康复计划** | ✅ RehabPlan Agent + Service + API 全链路              | ⚠️ **已有其他开发者负责，本计划不涉及** |
+| **医生端**   | ✅ 患者列表、告警、医患消息、通知推送                          | ⚠️ 无风险排序；分页不完善 |
+| **文件上传** | ✅ 图片/语音上传 API (`/api/v1/upload`)                  | ⚠️ 无头像裁剪/压缩；无文件大小限制配置 |
+| **语音交互** | ✅ ASR 可用 (Fun-ASR)；TTS 接口存在 (`CosyVoice`)       | ⚠️ TTS 未在前端集成；无流式语音对话 |
+| **统一响应** | ✅ `ApiResponse` 类已实现 (ok/fail/paginated)           | ⚠️ 部分端点仍直接返回 dict 而非统一格式 |
+| **全局异常** | ✅ HTTPException + RequestValidationError + Exception 处理器 | ⚠️ 请求级 trace_id 未实现 |
+| **数据库**   | ✅ MySQL 连接池 + 完整 CRUD 操作                          | ⚠️ 全局单例 `db_instance` 无线程安全保障；连接复用逻辑需审查 |
+| **前端**   | Streamlit 过渡中；**Vue3 + Element Plus 开发中**          | 后端部分 API 响应格式待统一；缺管理后台 API                                  |
+| **测试**   | ❌ 零正式测试覆盖；仅 4 个手动连接测试脚本 (scripts/)               | 无 pytest、无 mock、无 CI                                      |
+| **部署**   | ❌ 手动 `run.py` 启动                                     | 无 Docker、无 CI/CD                                          |
+| **安全**   | ⚠️ SHA-256+盐值加密；CORS 全开 `*`                         | bare except 残留；盐值在 password_utils 中硬编码生成；SECRET_KEY 可能弱密码 |
+| **运维**   | ⚠️ print 输出日志 + 基础 `logging`                         | 无结构化日志、无监控、无 Prometheus 指标                                        |
 
 ---
 
-## P0 — 认证系统重构 + API 规范化（1.5 周）
+## ✅ 已完成
 
-> Vue3 前端的首要阻塞项。当前 in-memory token 在服务器重启后全部失效，
-> Vue3 无法可靠持久化会话。必须在所有 API 对接前完成。
+> 以下功能在 2026-05-25 的 "JWT认证重构 + ApiResponse统一响应 + 全局异常处理" 提交中已完成。
 
-### 1. JWT 认证替换
+- [x] **JWT 认证替换**: `app/core/security.py` 使用 PyJWT 实现 access/refresh token 签发与验证
+- [x] **统一响应格式**: `app/core/response.py` 提供 `ApiResponse.ok()`, `ApiResponse.fail()`, `ApiResponse.paginated()`
+- [x] **全局异常处理**: `app/main.py` 包含 HTTPException, RequestValidationError, Exception 三级处理器
+- [x] **多智能体架构**: 6 Agent + Coordinator + 12 个工具，编排完整
+- [x] **通知 REST API**: `app/api/v1/endpoints/notifications.py` 已实现基本 CRUD
+- [x] **知识图谱 API**: schema、可视化、多跳查询端点已有
+- [x] **康复计划**: Agent + Service + API 全链路（**已有其他开发者负责**）
+- [x] **文件上传**: `app/api/v1/endpoints/upload.py` 已实现
+- [x] **医生端**: 患者列表、消息、告警端点已有
+
+---
+
+# 🅰️ A 线 — 基础设施与实时通信
+
+> **负责人**: ___ | **预计工时**: ~6 周 | **关键词**: Redis、WebSocket、Docker、测试
+
+> 本线聚焦 "地基"：让认证持久化、WebSocket 可靠、项目可容器化部署、有测试保障。
+> 与其他两线**零文件冲突**，可完全并行。
+
+---
+
+## A1 — JWT 认证持久化 + CORS 收紧（0.5 周）
+
+> JWT 本身已实现，但 token 黑名单和 refresh token 存内存，重启全部丢失。
+> CORS 全开存在安全隐患。
+
+### 1. JWT 黑名单 & Refresh Token 迁移到 Redis
 
 **改动文件**:
-- `app/core/security.py` — 替换 in-memory token 为 JWT
-- `app/core/config.py` — 新增 `JWT_SECRET_KEY`, `JWT_ALGORITHM=HS256`, `JWT_ACCESS_TOKEN_EXPIRE_MINUTES`, `JWT_REFRESH_TOKEN_EXPIRE_DAYS`
-- `app/api/v1/endpoints/auth.py` — 登录返回 access_token + refresh_token
-- `requirements.txt` — 新增 `python-jose[cryptography]`
+- `app/core/security.py` — `_token_blacklist` 和 `_refresh_tokens` 迁移到 Redis
+- `app/core/config.py` — 新增 `REDIS_URL` 配置
+- `app/db/session.py` — 新增 Redis 连接管理（单例，带连接池）
 
 **核心设计**:
 ```python
-# Token 结构
-access_token:  { sub: username, is_admin: bool, exp: 30min, iat, jti }
-refresh_token: { sub: username, type: "refresh", exp: 7d }
+# Redis key 设计
+jti:blacklist:{jti} → TTL = token 剩余过期时间
+refresh:token:{jti} → username, TTL = REFRESH_TOKEN_EXPIRE_DAYS
 
-# API 端点
-POST /api/v1/auth/login       → { access_token, refresh_token, token_type: "bearer" }
-POST /api/v1/auth/register    → { access_token, refresh_token }
-POST /api/v1/auth/refresh     → { access_token }  # 用 refresh_token 换新 access_token
-POST /api/v1/auth/logout      → 将 jti 加入黑名单（Redis/内存）
-GET  /api/v1/auth/me           → { username, is_admin, created_at }
+# 回退机制: REDIS_URL 为空时降级为内存存储（开发环境兼容）
 ```
 
-**向后兼容**: 旧的 `user_tokens` 内存字典保留 1 个版本作为 fallback，打印 deprecation warning。
+### 2. CORS 收紧
 
-**Vue3 对接**:
-- Axios 请求拦截器自动附加 `Authorization: Bearer <token>`
-- 响应拦截器捕获 401 → 自动调用 `/auth/refresh` → 重放请求
-- refresh_token 存 `httpOnly cookie` 或 `localStorage`
-
-### 2. 统一响应格式
-
-**新建文件**: `app/core/response.py`
+**改动文件**: `app/main.py`, `app/core/config.py`
 
 ```python
-class ApiResponse:
-    @staticmethod
-    def success(data=None, message="操作成功"):
-        return {"code": 200, "message": message, "data": data}
-
-    @staticmethod
-    def error(code=400, message="操作失败", data=None):
-        return {"code": code, "message": message, "data": data}
-
-    @staticmethod
-    def paginated(items, total, page, size):
-        return {
-            "code": 200, "message": "success",
-            "data": {"items": items, "total": total, "page": page, "size": size,
-                     "pages": (total + size - 1) // size}
-        }
+# 新增配置项
+CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000"]
+# 开发: 允许 Vue3 Vite 端口
+# 生产: 从环境变量读取
 ```
 
-**改动文件**: 所有 `app/api/v1/endpoints/*.py` — 统一使用 `ApiResponse`
+### 3. Admin 权限依赖注入
 
-### 3. 全局异常处理中间件
-
-**改动文件**: `app/main.py`
+**改动文件**: `app/core/security.py`
 
 ```python
-@app.middleware("http")
-async def request_logging_middleware(request, call_call):
-    trace_id = str(uuid.uuid4())
-    request.state.trace_id = trace_id
-    # ... 记录请求日志 ...
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    trace_id = getattr(request.state, "trace_id", "unknown")
-    return JSONResponse(
-        status_code=500,
-        content=ApiResponse.error(500, "服务器内部错误", {"trace_id": trace_id})
-    )
+def require_admin(user: dict = Depends(get_current_user)) -> dict:
+    if not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="需要管理员权限")
+    return user
 ```
 
 **验收标准**:
-- [ ] Vue3 登录后 token 在页面刷新后仍有效
-- [ ] access_token 过期后自动 refresh，用户无感
-- [ ] 所有 API 返回 `{"code", "message", "data"}` 统一格式
-- [ ] 未捕获异常返回 500 + trace_id，不暴露堆栈
+- [ ] 服务器重启后，已登录用户的 refresh token 仍有效
+- [ ] CORS 仅允许配置的域名
 
 ---
 
-## P1 — WebSocket 实时通信层（1.5 周）
+## A2 — WebSocket 重构（1.5 周）
 
 > Vue3 需要 WebSocket 实现实时通知推送和聊天流式回复。
-> 当前 WebSocket 实现存在多个问题需修复。
+> 当前 ConnectionManager 仅支持单连接，无心跳机制。
 
 ### 1. ConnectionManager 重构
 
-**改动文件**: `app/api/v1/endpoints/chat.py` → 拆分为 `app/core/ws_manager.py`
+**新建文件**: `app/core/ws_manager.py`
+**改动文件**: `app/api/v1/endpoints/chat.py` — 导入新的 ws_manager
 
 **当前问题**:
 - `active_connections: Dict[str, WebSocket]` 仅支持单连接，多标签页会覆盖
@@ -147,7 +146,7 @@ class ConnectionManager:
             self.active_connections.pop(username, None)
 
     async def send_to_user(self, username: str, data: dict):
-        """发送到用户所有连接"""
+        """发送到用户所有连接，自动清理死连接"""
         conns = self.active_connections.get(username, [])
         dead = []
         for ws in conns:
@@ -161,7 +160,6 @@ class ConnectionManager:
     async def send_to_all_doctors(self, data: dict):
         """广播到所有在线医生"""
         for username, conns in self.active_connections.items():
-            # 需要查询用户角色，或维护一个 doctors 集合
             await self.send_to_user(username, data)
 
     async def heartbeat_loop(self, interval=30):
@@ -176,23 +174,7 @@ class ConnectionManager:
                         self.disconnect(username, ws)
 ```
 
-### 2. 通知 REST API
-
-**新建文件**: `app/api/v1/endpoints/notifications.py`
-
-```
-GET    /api/v1/notifications/               — 通知列表 (?unread_only=true&page=1&size=20)
-GET    /api/v1/notifications/unread-count    — 未读计数
-POST   /api/v1/notifications/{id}/read      — 标记已读
-POST   /api/v1/notifications/read-all       — 全部已读
-DELETE /api/v1/notifications/{id}           — 删除通知
-```
-
-**改动文件**:
-- `app/api/v1/api.py` — 注册 notifications 路由
-- `database/local_db_utils.py` — 新增通知 CRUD 方法（notifications 表已存在于 `db_operation.py`）
-
-### 3. WebSocket 消息协议
+### 2. WebSocket 消息协议标准化
 
 ```json
 // ── 通知推送 ──
@@ -211,6 +193,20 @@ DELETE /api/v1/notifications/{id}           — 删除通知
 {"type": "pong"}  // 客户端回复
 ```
 
+### 3. 通知 API 补全
+
+**改动文件**: `app/api/v1/endpoints/notifications.py`
+
+现有端点:
+- `GET /notifications/unread-count` ✅
+- `GET /notifications` ✅
+- `PUT /notifications/{id}/read` ✅
+- `PUT /notifications/read-all` ✅
+
+需补全:
+- `DELETE /notifications/{id}` — 删除通知
+- 分页支持 (`?page=1&size=20`)
+
 **验收标准**:
 - [ ] Vue3 建立 WebSocket 连接后，医生发消息 → 患者端实时收到通知
 - [ ] 高风险告警 → 所有在线医生端实时收到推送
@@ -220,115 +216,7 @@ DELETE /api/v1/notifications/{id}           — 删除通知
 
 ---
 
-## P2 — 知识图谱增强（2 周）
-
-> 当前仅支持硬编码意图映射的单跳查询，无法处理复杂医疗问题。
-> Cypher 查询使用字符串拼接，存在注入风险。
-
-### 1. Cypher 注入修复（安全优先）
-
-**改动文件**: `app/services/kg_service.py`
-
-**当前问题**:
-```python
-# 危险：字符串拼接
-sql_q = "match (a:疾病{名称:'%s'}) return a.%s" % (entity, shuxing)
-```
-
-**修复方案**: 全部改为参数化查询
-```python
-# 安全：参数化
-result = self.client.run(
-    "MATCH (a:疾病 {名称: $name}) RETURN a." + validated_property,
-    name=entity
-)
-```
-
-属性名白名单校验：
-```python
-ALLOWED_PROPERTIES = {"疾病简介", "疾病病因", "预防措施", "治疗周期", ...}
-if shuxing not in ALLOWED_PROPERTIES:
-    raise ValueError(f"非法属性: {shuxing}")
-```
-
-### 2. Text2Cypher 模块
-
-**新建文件**: `app/services/text2cypher_service.py`
-
-**核心流程**:
-```
-用户查询 → NER + Intent
-             │
-             ├─ 已知意图 (14种) → 现有硬编码映射 (快速路径，保留)
-             └─ 未知/复杂意图 → text2cypher (LLM 生成 Cypher)
-                                    │
-                                    ├─ 安全校验 (仅允许 MATCH/RETURN/WHERE/WITH)
-                                    ├─ 参数化提取实体值
-                                    └─ Neo4j 执行 → 结果注入 Prompt
-```
-
-**安全校验**:
-```python
-def validate_cypher(cypher: str) -> bool:
-    """仅允许只读操作"""
-    forbidden = ["CREATE", "DELETE", "DETACH", "SET", "REMOVE", "MERGE", "DROP"]
-    upper = cypher.upper()
-    return not any(kw in upper for kw in forbidden)
-```
-
-### 3. 多跳推理
-
-支持形如 "XX 药物对做完 YY 手术的病人有什么风险？" 的复合查询：
-
-```cypher
-MATCH path = (d:疾病 {名称: $disease})-[*1..3]->(r)
-WHERE r:药物 OR r:症状 OR r:并发症
-RETURN nodes(path), relationships(path)
-LIMIT 50
-```
-
-**改动文件**:
-- `app/services/kg_service.py` — 新增 `text_to_cypher()` 和 `multi_hop_query()`
-- `app/agents/medical_qa_agent.py` — 集成 text2cypher 路径
-- `app/core/config.py` — 新增 `KG_MAX_HOPS=3`, `KG_TEXT2CYPHER_ENABLED=True`
-
-### 4. 知识图谱可视化 API（面向 Vue3）
-
-**改动文件**: `app/api/v1/endpoints/kg.py`
-
-```
-POST /api/v1/kg/visualize      — 查询子图，返回 nodes + edges JSON
-GET  /api/v1/kg/schema          — 返回图谱 schema（实体类型、关系类型）
-GET  /api/v1/kg/search?q=      — 实体模糊搜索（用于 Vue3 搜索框自动补全）
-GET  /api/v1/kg/diseases        — 疾病列表（已有，补充分页）
-```
-
-**响应格式**（适配 vis-network / D3.js）:
-```json
-{
-  "nodes": [
-    {"id": "n1", "label": "阿莫西林", "group": "药物", "properties": {...}},
-    {"id": "n2", "label": "头痛", "group": "症状"}
-  ],
-  "edges": [
-    {"from": "n1", "to": "n2", "label": "副作用", "type": "副作用"}
-  ]
-}
-```
-
-**Vue3 可视化方案**: 使用 `@vue-flow/core` 或 `vis-network` 渲染交互式图谱。
-
-**验收标准**:
-- [ ] "感冒用什么药" → 命中现有快速路径，响应 < 1s
-- [ ] "吃了阿莫西林后头痛加重" → 触发 text2cypher，返回多跳结果
-- [ ] 输入 `'; DROP TABLE; //` → 被安全过滤器拦截
-- [ ] Vue3 端可渲染查询涉及的子图，支持拖拽/缩放/点击节点
-
----
-
-## P3 — 基础设施补齐（2 周）
-
-> 为后续功能扩展打地基：缓存、测试、容器化。
+## A3 — 基础设施补齐（2 周）
 
 ### 1. Redis 集成
 
@@ -336,10 +224,10 @@ GET  /api/v1/kg/diseases        — 疾病列表（已有，补充分页）
 - `requirements.txt` — 新增 `redis[hiredis]`
 - `app/core/config.py` — 新增 `REDIS_URL` 配置
 - `app/db/session.py` — 新增 Redis 连接管理（单例，带连接池）
-- `app/core/security.py` — JWT 黑名单存 Redis（`SETEX jti:blacklist <exp> 1`）
+- `app/core/security.py` — JWT 黑名单存 Redis（已在 A1 完成）
 - `app/agents/orchestrator.py` — 对话摘要缓存到 Redis
 
-**提供回退**: 开发环境无 Redis 时自动降级为内存存储（`app/core/config.py` 中 `REDIS_URL` 为空时触发）。
+**提供回退**: 开发环境无 Redis 时自动降级为内存存储。
 
 ### 2. 测试体系建设
 
@@ -436,235 +324,7 @@ volumes:
 
 ---
 
-## P4 — 安全加固（1 周）
-
-> 消除已知安全风险，为生产部署做准备。
-
-### 1. 密码安全
-
-**改动文件**:
-- `database/password_utils.py` — 确认盐值为每用户随机生成（当前已是随机盐值，需审查是否所有用户都有独立盐值）
-- `database/db_operation.py` — `users` 表确认 `salt` 字段存在
-- `scripts/seed_users.py` — 测试脚本密码从 `.env` 读取，不硬编码
-
-### 2. 异常处理精细化
-
-**改动文件**: 按优先级逐文件修复（33+ bare except）
-
-| 优先级 | 文件                              | 问题                           |
-|-----|---------------------------------|------------------------------|
-| P0  | `app/services/kg_service.py`    | Neo4j 连接失败时 bare except 静默吞错 |
-| P0  | `app/services/llm_service.py`   | LLM 调用失败影响所有 Agent           |
-| P0  | `app/agents/orchestrator.py`    | 历史加载/摘要失败 bare except        |
-| P1  | `app/api/v1/endpoints/chat.py`  | WebSocket 异常处理               |
-| P1  | `app/services/image_service.py` | OCR 失败静默                     |
-| P2  | 其余文件                            | 逐个修复                         |
-
-**规则**:
-- 每个 `except` 改为具体异常类型 + `logger.error()` 记录
-- 添加请求级 `trace_id`（UUID），贯穿日志全链路
-
-### 3. CORS 收紧
-
-**改动文件**: `app/main.py`
-
-```python
-# 从 .env 读取，开发环境默认允许 Vite 端口
-CORS_ORIGINS = settings.CORS_ORIGINS  # 新增配置项
-# 开发: ["http://localhost:5173", "http://localhost:3000"]
-# 生产: 从环境变量读取
-```
-
-### 4. Cypher 注入修复
-
-见 P2 第 1 节。
-
-**验收标准**:
-- [ ] 无 bare except 残留
-- [ ] 日志中每条请求可追溯到 trace_id
-- [ ] CORS 仅允许配置的域名
-- [ ] Vue3 开发服务器正常跨域请求后端
-
----
-
-## P5 — 后端 API 完善（面向 Vue3）（2 周）
-
-> Streamlit 时代前端逻辑与后端耦合在同一个 Python 进程中。
-> Vue3 是纯前端 SPA，需要后端提供完整、规范的 RESTful API。
-
-### 1. 补齐 Vue3 页面所需 API
-
-| Vue3 页面 | 所需 API                                    | 当前状态   | 改动                    |
-|---------|-------------------------------------------|--------|-----------------------|
-| 登录/注册   | `POST /auth/login`, `POST /auth/register` | 已有     | P0 重构为 JWT            |
-| 聊天      | `POST /chat` (SSE), `WS /agent/ws`        | 已有     | 统一响应；WebSocket 重构见 P1 |
-| 会话列表    | CRUD + 分页                                 | 已有     | 补充分页参数                |
-| 健康打卡    | `POST /checkin`, `GET /checkin`           | 已有     | 补充日期范围查询 + 分页         |
-| 健康概览    | `GET /overview/dashboard`                 | 已有     | 补充图表数据格式              |
-| 提醒中心    | CRUD + 分页                                 | 已有     | 补充分页+筛选（按类型、状态）       |
-| 康复计划    | CRUD + 任务管理                               | 已有     | 补充进度百分比计算             |
-| 健康档案    | `GET /profile`, `POST /profile`           | 已有     | 补充头像上传                |
-| 知识图谱    | `POST /kg/visualize`, `GET /kg/schema`    | 需新建    | P2 中实现                |
-| 通知      | `GET /notifications/...`                  | 需新建    | P1 中实现                |
-| 医生面板    | 患者列表、告警、消息                                | 已有     | 补充风险排序+分页             |
-| 管理后台    | 用户管理、系统统计                                 | **缺失** | **本阶段新建**             |
-
-### 2. 管理后台 API（新建）
-
-**新建文件**: `app/api/v1/endpoints/admin.py`
-
-```
-GET    /api/v1/admin/users                     — 用户列表（分页+搜索+角色筛选）
-PUT    /api/v1/admin/users/{username}/status    — 启用/禁用用户
-POST   /api/v1/admin/users/{username}/reset-password — 重置密码
-DELETE /api/v1/admin/users/{username}           — 删除用户
-GET    /api/v1/admin/stats/overview             — 系统统计概览
-GET    /api/v1/admin/stats/agent-usage          — Agent 路由使用统计
-GET    /api/v1/admin/stats/daily-active         — 日活用户趋势
-GET    /api/v1/admin/logs                       — 系统日志（分页+级别筛选）
-```
-
-**改动文件**:
-- `app/api/v1/api.py` — 注册 admin 路由
-- `app/core/security.py` — 新增 `require_admin` 依赖注入
-- `database/local_db_utils.py` — 新增管理查询方法
-
-### 3. 数据导出 API
-
-**新建文件**: `app/services/report_service.py`
-
-```
-GET /api/v1/reports/health-summary/{username}   — 个人健康周报/月报（PDF）
-GET /api/v1/reports/doctor-patient-list          — 医生端患者数据导出（CSV）
-```
-
-### 4. SSE 流式聊天优化（Vue3 对接）
-
-**改动文件**: `app/api/v1/endpoints/chat.py`
-
-Vue3 使用 `EventSource` 或 `fetch + ReadableStream` 消费 SSE，需确保：
-- SSE 格式严格遵循 `data: {...}\n\n`
-- 流结束时发送 `data: [DONE]\n\n`
-- 错误时发送 `data: {"type":"error","error":"..."}\n\n`
-- 设置正确的 `Content-Type: text/event-stream` 和 `Cache-Control: no-cache`
-- 添加 `X-Accel-Buffering: no` 防止 Nginx 缓冲
-
-### 5. 文件上传 API
-
-**新建文件**: `app/api/v1/endpoints/upload.py`
-
-```
-POST /api/v1/upload/image       — 图片上传（头像、报告图片）
-POST /api/v1/upload/avatar      — 头像上传（裁剪+压缩）
-```
-
-**改动文件**:
-- `app/core/config.py` — 新增 `UPLOAD_DIR`, `MAX_FILE_SIZE`
-- `app/main.py` — 静态文件服务（`/uploads/`）
-
-**验收标准**:
-- [ ] Vue3 所有页面均有对应 API 端点
-- [ ] 所有列表 API 支持分页（`?page=1&size=20`）
-- [ ] 管理后台 API 可用（用户管理+系统统计+日志查看）
-- [ ] SSE 流式聊天在 Vue3 中正常工作
-- [ ] API 响应格式 100% 统一
-
----
-
-## P6 — 智能预警与决策支持（3 周）
-
-> 从被动问答升级为主动健康管理。
-
-### 1. 时序异常检测
-
-**新建文件**: `app/services/anomaly_service.py`
-
-**核心逻辑**:
-- 分析患者近 7 天打卡数据的体征趋势（体温、血压、血糖、心率）
-- 基于滑动窗口 + Z-score 检测异常波动
-- 异常触发自动告警 → 写入 notifications 表 → WebSocket 推送到医生端
-
-**改动文件**:
-- `app/agents/health_agent.py` — 集成异常检测结果
-- `app/api/v1/endpoints/overview.py` — 新增趋势异常标注 API
-- `app/services/checkin_service.py` — 打卡后触发异步异常检测
-
-### 2. 高危患者自动置顶
-
-**改动文件**:
-- `app/services/doctor_service.py` — 患者列表按风险等级排序
-- API 返回中增加 `risk_level` 字段，Vue3 前端据此排序+颜色标记
-
-### 3. 康复进度追踪
-
-**改动文件**:
-- `app/api/v1/endpoints/rehab_plan.py` — 新增进度 API
-- `app/services/rehab_plan_service.py` — 康复进度计算逻辑（已完成任务数/总任务数）
-
-**Vue3 前端展示**: Element Plus `ElProgress` 进度条 + `ElTimeline` 里程碑。
-
-### 4. Agent 路由可观测性
-
-**新建文件**: `app/services/agent_metrics.py`
-
-记录每次路由决策的 agent、confidence、耗时，用于：
-- 低置信度路由告警（confidence < 0.5 时记录日志）
-- Agent 使用频率统计（供管理后台展示）
-- 路由准确性人工标注接口
-
-**验收标准**:
-- [ ] 连续 3 天体温上升 → 医生端 WebSocket 收到告警
-- [ ] 医生面板 API 返回按风险排序的患者列表
-- [ ] 患者可查看康复计划完成进度
-- [ ] 管理后台可查看 Agent 使用统计
-
----
-
-## P7 — 模型优化与微调（4 周）
-
-> 提升垂直领域准确率。
-
-### 1. NER 模型微调
-
-**数据**: `data/ner_data_aug.txt`（已有增强数据）
-**方法**: 基于现有 RoBERTa 模型做 LoRA 微调
-**目标**: 术后特有实体（引流管、伤口状态、术后并发症）F1 > 0.85
-
-**改动文件**:
-- `finetune_demo/` — 复用已有微调管线
-- `scripts/ner_finetune.py` — 新建微调脚本
-- `app/services/ner_service.py` — 加载微调后模型
-
-### 2. LLM SFT 微调
-
-**数据**: `data/lora_data/`（已有）
-**方法**: DeepSeek / Qwen SFT
-**目标**: 术后管理领域回答准确率提升，减少幻觉
-
-### 3. 评测基准
-
-**新建目录**: `tests/eval/`
-
-```
-tests/eval/
-├── eval_ner.py          # NER F1-score 评测
-├── eval_qa.py           # 医学问答准确率评测
-├── eval_routing.py      # Coordinator 路由准确率评测
-├── eval_data/           # 评测数据集
-│   ├── ner_test.json
-│   ├── qa_test.json
-│   └── routing_test.json
-└── README.md
-```
-
-**验收标准**:
-- [ ] NER F1-score 相比基线提升 > 5%
-- [ ] 医学问答准确率 > 80%（基于评测集）
-- [ ] Coordinator 路由准确率 > 90%
-
----
-
-## P8 — 可观测性与运维（2 周）
+## A4 — 可观测性与运维（2 周）
 
 ### 1. 结构化日志
 
@@ -714,101 +374,459 @@ async def health_check():
 
 ---
 
-## P9 — 长期演进方向（按需推进）
+### 🅰️ A 线文件清单汇总
 
-> 以下功能根据实际需求择机启动，不设固定时间线。
-
-### 1. 多语言国际化
-- Vue3 前端 i18n（`vue-i18n`，中/英文切换）
-- LLM 多语言回答（利用 DeepSeek 多语言能力）
-- 适用场景：海外医疗机构合作
-
-### 2. 移动端适配
-- Vue3 本身支持响应式布局，配合 Element Plus 断点适配
-- 可进一步封装为 PWA（离线缓存 + 桌面图标）
-- 或使用 uni-app / Capacitor 打包为原生 App
-
-### 3. 药物相互作用检测
-- Neo4j 知识图谱中增加药物相互作用关系
-- Agent 工具调用时自动检查用药冲突
-- 高风险组合立即告警
-
-### 4. 患者社区 / 互助模块
-- 同病种患者匿名交流
-- 康复经验分享
-- 医生精选问答
-
-### 5. 对接外部系统
-- HIS/EMR 系统对接（HL7 FHIR）
-- 微信公众号/小程序推送
-- 医保结算接口
-
-### 6. 多模态增强
-- 医学影像分析（X光、CT）
-- 连续语音对话（流式 ASR + TTS）
-- 视频问诊
+| 操作   | 文件                                                  |
+|------|-----------------------------------------------------|
+| 新建   | `app/core/ws_manager.py`                            |
+| 新建   | `tests/` 目录及 13 个测试文件                             |
+| 新建   | `Dockerfile`, `Dockerfile.vue`, `docker-compose.yml` |
+| 新建   | `.dockerignore`, `nginx.conf`                       |
+| 新建   | `.github/workflows/ci.yml`                          |
+| 新建   | `app/api/v1/endpoints/metrics.py`                   |
+| 改动   | `app/core/security.py`                              |
+| 改动   | `app/core/config.py`                                |
+| 改动   | `app/db/session.py`                                 |
+| 改动   | `app/main.py`                                       |
+| 改动   | `app/api/v1/endpoints/chat.py`                      |
+| 改动   | `app/api/v1/endpoints/notifications.py`             |
+| 改动   | `app/agents/orchestrator.py`                        |
+| 改动   | `requirements.txt`                                  |
+| 全局改动 | 所有含 `print()` 的文件（结构化日志替换）                       |
 
 ---
 
-## 执行路线图
+# 🅱️ B 线 — 知识图谱安全与 API 层
+
+> **负责人**: ___ | **预计工时**: ~6 周 | **关键词**: Cypher 安全、Text2Cypher、管理后台、API 统一
+
+> 本线聚焦 "安全 + API 完善"：修复注入风险、补全新 API 端点、统一响应格式。
+> 与其他两线**零文件冲突**，可完全并行。
+
+---
+
+## B1 — 知识图谱安全加固 + Text2Cypher（2 周）
+
+### 1. Cypher 注入修复（安全优先）
+
+**改动文件**: `app/services/kg_service.py`
+
+**当前问题**:
+```python
+# 危险：字符串拼接 (第26行)
+sql_q = "match (a:疾病{名称:'%s'}) return a.%s" % (entity, shuxing)
+# 危险：字符串拼接 (第39行)
+sql_q = "match (a:疾病{名称:'%s'})-[r:%s]->(b:%s) return b.名称" % (entity, lianxi, target)
+```
+
+**修复方案**: 全部改为参数化查询
+```python
+# 安全：参数化
+result = self.client.run(
+    "MATCH (a:疾病 {名称: $name}) RETURN a." + validated_property,
+    name=entity
+)
+```
+
+属性名白名单校验：
+```python
+ALLOWED_PROPERTIES = {"疾病简介", "疾病病因", "预防措施", "治疗周期", "治愈概率", ...}
+ALLOWED_RELATIONSHIPS = {"疾病使用药品", "疾病宜吃食物", "疾病忌吃食物", ...}
+
+if shuxing not in ALLOWED_PROPERTIES:
+    raise ValueError(f"非法属性: {shuxing}")
+if lianxi not in ALLOWED_RELATIONSHIPS:
+    raise ValueError(f"非法关系: {lianxi}")
+```
+
+### 2. Text2Cypher 模块
+
+**新建文件**: `app/services/text2cypher_service.py`
+
+**核心流程**:
+```
+用户查询 → NER + Intent
+             │
+             ├─ 已知意图 (14种) → 现有硬编码映射 (快速路径，保留)
+             └─ 未知/复杂意图 → text2cypher (LLM 生成 Cypher)
+                                    │
+                                    ├─ 安全校验 (仅允许 MATCH/RETURN/WHERE/WITH)
+                                    ├─ 参数化提取实体值
+                                    └─ Neo4j 执行 → 结果注入 Prompt
+```
+
+**安全校验**:
+```python
+def validate_cypher(cypher: str) -> bool:
+    """仅允许只读操作"""
+    forbidden = ["CREATE", "DELETE", "DETACH", "SET", "REMOVE", "MERGE", "DROP"]
+    upper = cypher.upper()
+    return not any(kw in upper for kw in forbidden)
+```
+
+**改动文件**:
+- `app/services/kg_service.py` — 新增 `text_to_cypher()` 和安全校验
+- `app/agents/medical_qa_agent.py` — 集成 text2cypher 路径
+- `app/core/config.py` — 新增 `KG_MAX_HOPS=3`, `KG_TEXT2CYPHER_ENABLED=True`
+
+### 3. 知识图谱搜索 API 补全
+
+**改动文件**: `app/api/v1/endpoints/kg.py`
 
 ```
-                    Week 1-2       Week 3-4       Week 5-6       Week 7-8       Week 9+
-                    ──────────     ──────────     ──────────     ──────────     ─────────
-Phase 1 (基础):     P0 认证重构    P1 WebSocket   P3 基础设施    P4 安全加固
-                    + API 规范     + 通知 API     (Redis/测试    (bare except
-                                                    /Docker)      /CORS)
-
-Phase 2 (能力):     P2 KG增强      P5 API完善      P6 智能预警
-                                        │
-Phase 3 (优化):                         P7 模型微调     P8 可观测性
-
-Phase 4 (演进):                                              P9 按需启动
+GET  /api/v1/kg/search?q=      — 实体模糊搜索（用于 Vue3 搜索框自动补全）
+GET  /api/v1/kg/diseases        — 疾病列表（补充分页）
 ```
 
-> **并行策略**: P0/P2 可由两人并行（一人做认证+API规范，一人做 KG 增强）。
-> P5 需要与 Vue3 前端开发紧密配合，建议前后端联调推进。
+**验收标准**:
+- [ ] "感冒用什么药" → 命中现有快速路径，响应 < 1s
+- [ ] "吃了阿莫西林后头痛加重" → 触发 text2cypher，返回多跳结果
+- [ ] 输入 `'; DROP TABLE; //` → 被安全过滤器拦截
+- [ ] Vue3 端可渲染查询涉及的子图，支持拖拽/缩放/点击节点
 
-## 依赖关系
+---
+
+## B2 — 安全加固（1 周）
+
+### 1. 密码安全
+
+**改动文件**:
+- `database/password_utils.py` — 确认盐值为每用户随机生成
+- `database/db_operation.py` — `users` 表确认 `salt` 字段存在
+- `scripts/seed_users.py` — 测试脚本密码从 `.env` 读取，不硬编码
+- `.env.example` — 标注 SECRET_KEY 最小长度要求
+
+### 2. 异常处理精细化
+
+**改动文件**: 按优先级逐文件修复 bare except
+
+| 优先级 | 文件                              | 问题                           |
+|-----|---------------------------------|------------------------------|
+| P0  | `app/services/kg_service.py`    | Neo4j 连接失败时部分 except 静默吞错 |
+| P0  | `app/services/llm_service.py`   | LLM 调用失败影响所有 Agent           |
+| P0  | `app/agents/orchestrator.py`    | 历史加载/摘要失败异常处理              |
+| P1  | `app/api/v1/endpoints/chat.py`  | WebSocket 异常处理               |
+| P1  | `app/services/image_service.py` | OCR 失败静默                     |
+| P1  | `run.py`                        | 多处 bare except (第19、40、43行)  |
+| P2  | 其余文件                            | 逐个修复                         |
+
+**规则**:
+- 每个 `except` 改为具体异常类型 + `logger.error()` 记录
+- 添加请求级 `trace_id`（UUID），贯穿日志全链路
+
+**验收标准**:
+- [ ] 无 bare except 残留
+- [ ] 日志中每条请求可追溯到 trace_id
+
+---
+
+## B3 — 后端 API 完善（面向 Vue3）（2 周）
+
+> Vue3 是纯前端 SPA，需要后端提供完整、规范的 RESTful API。
+
+### 1. 管理后台 API（新建）
+
+**新建文件**: `app/api/v1/endpoints/admin.py`
 
 ```
-P0 认证重构 + API 规范 ──────────────────────┐
-P1 WebSocket + 通知 API ─────────────────────┤
-P2 KG增强 ───────────────────────────────────┤
-P3 基础设施 (Redis) ──┬──────────────────────┼──→ P6 智能预警
-                      ├──→ P4 安全加固       │
-                      └──→ P5 API 完善       ├──→ P7 模型微调
-                         (面向 Vue3)         └──→ P8 可观测性
-P9 长期演进 ── 无硬依赖，按需启动
+GET    /api/v1/admin/users                     — 用户列表（分页+搜索+角色筛选）
+PUT    /api/v1/admin/users/{username}/status    — 启用/禁用用户
+POST   /api/v1/admin/users/{username}/reset-password — 重置密码
+DELETE /api/v1/admin/users/{username}           — 删除用户
+GET    /api/v1/admin/stats/overview             — 系统统计概览
+GET    /api/v1/admin/stats/agent-usage          — Agent 路由使用统计
+GET    /api/v1/admin/stats/daily-active         — 日活用户趋势
+GET    /api/v1/admin/logs                       — 系统日志（分页+级别筛选）
+```
+
+**改动文件**:
+- `app/api/v1/api.py` — 注册 admin 路由
+- `database/local_db_utils.py` — 新增管理查询方法
+
+### 2. 数据导出 API
+
+**新建文件**: `app/services/report_service.py`
+
+```
+GET /api/v1/reports/health-summary/{username}   — 个人健康周报/月报（PDF）
+GET /api/v1/reports/doctor-patient-list          — 医生端患者数据导出（CSV）
+```
+
+### 3. SSE 流式聊天优化（Vue3 对接）
+
+**改动文件**: `app/api/v1/endpoints/chat.py`
+
+Vue3 使用 `EventSource` 或 `fetch + ReadableStream` 消费 SSE，需确保：
+- SSE 格式严格遵循 `data: {...}\n\n`
+- 流结束时发送 `data: [DONE]\n\n`
+- 错误时发送 `data: {"type":"error","error":"..."}\n\n`
+- 设置正确的 `Content-Type: text/event-stream` 和 `Cache-Control: no-cache`
+- 添加 `X-Accel-Buffering: no` 防止 Nginx 缓冲
+
+### 4. 现有 API 响应格式统一
+
+**改动文件**: 所有 `app/api/v1/endpoints/*.py`
+
+部分端点仍直接返回 `{"success": True, ...}` 而非使用 `ApiResponse`：
+- `notifications.py` — 直接返回 dict
+- `chat.py` — 混合使用
+- 需全面检查并统一
+
+### 5. 补齐现有 API 分页
+
+**改动文件**:
+- `app/api/v1/endpoints/sessions.py` — 会话列表分页
+- `app/api/v1/endpoints/checkin.py` — 打卡记录分页 + 日期范围查询
+- `app/api/v1/endpoints/reminder.py` — 提醒列表分页 + 按类型/状态筛选
+- `app/api/v1/endpoints/doctor.py` — 患者列表分页 + 风险排序
+
+**验收标准**:
+- [ ] Vue3 所有页面均有对应 API 端点
+- [ ] 所有列表 API 支持分页（`?page=1&size=20`）
+- [ ] 管理后台 API 可用（用户管理+系统统计+日志查看）
+- [ ] SSE 流式聊天在 Vue3 中正常工作
+- [ ] API 响应格式 100% 统一
+
+---
+
+## B4 — Agent 路由可观测性（1 周）
+
+**新建文件**: `app/services/agent_metrics.py`
+
+记录每次路由决策的 agent、confidence、耗时，用于：
+- 低置信度路由告警（confidence < 0.5 时记录日志）
+- Agent 使用频率统计（供管理后台展示）
+- 路由准确性人工标注接口
+
+**改动文件**:
+- `app/agents/orchestrator.py` — 记录路由指标
+- `app/api/v1/endpoints/admin.py` — 暴露 Agent 使用统计端点（在 B3 中已新建）
+
+**验收标准**:
+- [ ] 管理后台可查看 Agent 使用统计
+- [ ] 低置信度路由自动记录日志
+
+---
+
+### 🅱️ B 线文件清单汇总
+
+| 操作 | 文件                                              |
+|------|-------------------------------------------------|
+| 新建 | `app/services/text2cypher_service.py`           |
+| 新建 | `app/api/v1/endpoints/admin.py`                 |
+| 新建 | `app/services/report_service.py`                |
+| 新建 | `app/services/agent_metrics.py`                 |
+| 改动 | `app/services/kg_service.py`                    |
+| 改动 | `app/agents/medical_qa_agent.py`                |
+| 改动 | `app/agents/orchestrator.py`                    |
+| 改动 | `app/core/config.py`                            |
+| 改动 | `app/api/v1/api.py`                             |
+| 改动 | `app/api/v1/endpoints/chat.py`                  |
+| 改动 | `app/api/v1/endpoints/notifications.py`         |
+| 改动 | `app/api/v1/endpoints/sessions.py`              |
+| 改动 | `app/api/v1/endpoints/checkin.py`               |
+| 改动 | `app/api/v1/endpoints/reminder.py`              |
+| 改动 | `app/api/v1/endpoints/doctor.py`                |
+| 改动 | `app/api/v1/endpoints/kg.py`                    |
+| 改动 | `database/local_db_utils.py`                    |
+| 改动 | `database/password_utils.py`                    |
+| 改动 | `app/services/llm_service.py`                   |
+| 改动 | `app/services/image_service.py`                 |
+| 改动 | `run.py`                                        |
+| 改动 | `.env.example`                                  |
+
+---
+
+# 🅲 C 线 — 智能预警与模型优化
+
+> **负责人**: ___ | **预计工时**: ~7 周 | **关键词**: 异常检测、NER 微调、LLM SFT、评测
+
+> 本线聚焦 "智能"：让系统从被动问答升级为主动预警，同时提升模型准确率。
+> 与其他两线**零文件冲突**，可完全并行。
+
+---
+
+## C1 — 智能预警系统（3 周）
+
+### 1. 时序异常检测
+
+**新建文件**: `app/services/anomaly_service.py`
+
+**核心逻辑**:
+- 分析患者近 7 天打卡数据的体征趋势（体温、血压、血糖、心率）
+- 基于滑动窗口 + Z-score 检测异常波动
+- 异常触发自动告警 → 写入 notifications 表 → WebSocket 推送到医生端
+
+**改动文件**:
+- `app/agents/health_agent.py` — 集成异常检测结果
+- `app/api/v1/endpoints/overview.py` — 新增趋势异常标注 API
+- `app/services/checkin_service.py` — 打卡后触发异步异常检测
+
+### 2. 高危患者自动置顶
+
+**改动文件**:
+- `app/services/doctor_service.py` — 患者列表按风险等级排序
+- `app/api/v1/endpoints/doctor.py` — API 返回中增加 `risk_level` 字段
+- `database/local_db_utils.py` — 查询支持风险排序
+
+**Vue3 前端展示**: 前端据此排序 + 颜色标记。
+
+### 3. 健康趋势分析增强
+
+**改动文件**:
+- `app/services/overview_service.py` — 趋势数据增加异常标注
+- `app/api/v1/endpoints/overview.py` — 返回异常区间标记
+
+**验收标准**:
+- [ ] 连续 3 天体温上升 → 医生端 WebSocket 收到告警
+- [ ] 医生面板 API 返回按风险排序的患者列表
+- [ ] 趋势图数据包含异常标注点
+
+---
+
+## C2 — 模型优化与微调（4 周）
+
+### 1. NER 模型微调
+
+**数据**: `data/ner_data_aug.txt`（已有增强数据）
+**方法**: 基于现有 RoBERTa 模型做 LoRA 微调
+**目标**: 术后特有实体（引流管、伤口状态、术后并发症）F1 > 0.85
+
+**改动文件**:
+- `finetune_demo/` — 复用已有微调管线
+- `scripts/ner_finetune.py` — 新建微调脚本
+- `app/services/ner_service.py` — 加载微调后模型
+
+### 2. LLM SFT 微调
+
+**数据**: `data/lora_data/`（已有）
+**方法**: DeepSeek / Qwen SFT
+**目标**: 术后管理领域回答准确率提升，减少幻觉
+
+### 3. 评测基准
+
+**新建目录**: `tests/eval/`
+
+```
+tests/eval/
+├── eval_ner.py          # NER F1-score 评测
+├── eval_qa.py           # 医学问答准确率评测
+├── eval_routing.py      # Coordinator 路由准确率评测
+├── eval_data/           # 评测数据集
+│   ├── ner_test.json
+│   ├── qa_test.json
+│   └── routing_test.json
+└── README.md
+```
+
+**验收标准**:
+- [ ] NER F1-score 相比基线提升 > 5%
+- [ ] 医学问答准确率 > 80%（基于评测集）
+- [ ] Coordinator 路由准确率 > 90%
+
+---
+
+### 🅲 C 线文件清单汇总
+
+| 操作 | 文件                                         |
+|------|--------------------------------------------|
+| 新建 | `app/services/anomaly_service.py`          |
+| 新建 | `scripts/ner_finetune.py`                  |
+| 新建 | `tests/eval/` 目录及 6 个文件                   |
+| 改动 | `app/agents/health_agent.py`               |
+| 改动 | `app/services/checkin_service.py`          |
+| 改动 | `app/services/doctor_service.py`           |
+| 改动 | `app/services/overview_service.py`         |
+| 改动 | `app/api/v1/endpoints/overview.py`         |
+| 改动 | `app/api/v1/endpoints/doctor.py`           |
+| 改动 | `app/services/ner_service.py`              |
+| 改动 | `database/local_db_utils.py`               |
+| 改动 | `finetune_demo/`                           |
+
+---
+
+# 📊 三线并行总览
+
+## 工时对比
+
+| 线路 | 阶段               | 预计工时 | 新建文件 | 改动文件 |
+|------|-------------------|---------|---------|---------|
+| 🅰️  | A1 JWT持久化+CORS  | 0.5 周  | 0       | 3       |
+| 🅰️  | A2 WebSocket 重构   | 1.5 周  | 1       | 2       |
+| 🅰️  | A3 基础设施          | 2 周    | 15+     | 3       |
+| 🅰️  | A4 可观测性          | 2 周    | 1       | 全局     |
+| 🅰️  | **小计**           | **6 周** | **17+** | **10+** |
+| 🅱️  | B1 KG安全+Text2Cypher | 2 周  | 1       | 3       |
+| 🅱️  | B2 安全加固          | 1 周    | 0       | 10+     |
+| 🅱️  | B3 API完善          | 2 周    | 2       | 8+      |
+| 🅱️  | B4 Agent可观测性     | 1 周    | 1       | 2       |
+| 🅱️  | **小计**           | **6 周** | **4**   | **20+** |
+| 🅲   | C1 智能预警          | 3 周    | 1       | 6       |
+| 🅲   | C2 模型微调+评测      | 4 周    | 4       | 3       |
+| 🅲   | **小计**           | **7 周** | **5**   | **9**   |
+
+## 文件冲突检查
+
+```
+🅰️ 线独占文件: ws_manager.py, tests/, Dockerfile, docker-compose.yml, .github/, metrics.py
+🅱️ 线独占文件: text2cypher_service.py, admin.py, report_service.py, agent_metrics.py
+🅲 线独占文件: anomaly_service.py, ner_finetune.py, tests/eval/
+
+共用文件（需协调）:
+  - app/core/config.py        → 🅰️ 加 REDIS_URL / 🅱️ 加 KG 配置项（无冲突，不同字段）
+  - app/core/security.py      → 🅰️ 独占
+  - app/agents/orchestrator.py → 🅰️ 加 Redis 缓存 / 🅱️ 加指标记录（不同函数，协调即可）
+  - database/local_db_utils.py → 🅱️ 加管理查询 / 🅲 加风险排序查询（不同函数，协调即可）
+  - requirements.txt          → 三线各自添加依赖（追加不冲突）
+```
+
+## 执行时间线
+
+```
+            Week 1    Week 2    Week 3    Week 4    Week 5    Week 6    Week 7
+            ──────    ──────    ──────    ──────    ──────    ──────    ──────
+🅰️ A线:     A1        A2 ──────  A3 ──────  A3续      A4 ──────  A4续
+🅱️ B线:     B1 ──────  B1续      B2        B3 ──────  B3续      B4
+🅲 C线:      C1 ──────  C1续 ────── C1续     C2 ──────  C2续 ────── C2续 ──────
+
+三线完全并行，互不阻塞。唯一需协调的是 config.py 新增配置项和 orchestrator.py 改动。
+```
+
+## 依赖关系（线内）
+
+```
+🅰️ A线: A1 (Redis) → A3 (测试需要 Redis)   A2 (WebSocket) 与 A1/A3 可并行
+🅱️ B线: B1 (KG安全) → B2 (安全加固)         B3 (API完善) 与 B1/B2 可并行
+🅲 C线:  C1 (预警) 与 C2 (模型) 可并行
 ```
 
 ---
 
-## 工作量估算
+## 排除范围确认
 
-| 阶段     | 项目               | 预计工时       | 新建文件    | 改动文件    |
-|--------|------------------|------------|---------|---------|
-| P0     | 认证重构 + API 规范    | 1.5 周      | 1       | 10+     |
-| P1     | WebSocket + 通知   | 1.5 周      | 2       | 5       |
-| P2     | KG 增强            | 2 周        | 1       | 4       |
-| P3     | 基础设施             | 2 周        | 15+     | 3       |
-| P4     | 安全加固             | 1 周        | 0       | 15+     |
-| P5     | API 完善 (Vue3 对接) | 2 周        | 4       | 10+     |
-| P6     | 智能预警             | 3 周        | 2       | 6       |
-| P7     | 模型微调             | 4 周        | 3       | 3       |
-| P8     | 可观测性             | 2 周        | 1       | 全局      |
-| **合计** |                  | **约 19 周** | **29+** | **50+** |
+以下模块**三条线均不涉及**，由其他开发者负责：
+
+| 文件                         | 说明                 |
+|------------------------------|----------------------|
+| `app/agents/rehab_plan_agent.py`   | 康复计划 Agent         |
+| `app/services/rehab_plan_service.py` | 康复计划服务           |
+| `app/api/v1/endpoints/rehab_plan.py` | 康复计划 API           |
+| `app/agents/tools/rehab_plan_tools.py` | 康复计划工具           |
+| `database/local_db_utils.py` 中康复计划相关方法 | 如 `save_rehab_*`, `get_rehab_*` |
 
 ---
 
 ## 维护约定
 
-- 每个 Phase 完成后更新本文档状态
-- 已完成项标记 `~~删除线~~` 并注明日期
-- 新需求通过 Issue 讨论后加入对应 Phase
-- 每月回顾一次优先级，根据实际情况调整
+- 每条线独立创建 `feature/track-a`, `feature/track-b`, `feature/track-c` 分支开发
+- 完成后提交 PR 到 `master`
+- 共用文件的改动需在 PR 描述中说明修改范围，避免 merge 冲突
+- 已完成项标记 ✅ 并注明日期
+- 每两周三线同步一次进度，调整优先级
 
 ---
 
-*本文档基于代码深度审查生成，最后更新: 2026-05-23*
-*已根据 Vue3 + Vite + Element Plus 前端方案调整*
+*本文档基于代码深度审查生成*
+*初版: 2026-05-23 | 最后更新: 2026-06-01*
+*已根据实际代码状态更新完成标记*
+*已排除康复计划模块（由其他开发者负责）*
