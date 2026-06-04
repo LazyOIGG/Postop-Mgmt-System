@@ -5,6 +5,9 @@ import os
 import pickle
 
 from sklearn.model_selection import train_test_split
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 from torch.utils.data import Dataset,DataLoader
 from transformers import BertModel,BertTokenizer
 from tqdm import tqdm
@@ -241,17 +244,17 @@ class Bert_Model(nn.Module):
         super().__init__()
         # 尝试加载BERT模型，首先假设model_name是本地路径
         try:
-            print(f"尝试加载BERT模型: {model_name}")
+            logger.info("bert_model_load_start", model_name=model_name)
             self.bert = BertModel.from_pretrained(model_name, local_files_only=True)
-            print("成功使用local_files_only=True加载模型")
+            logger.info("bert_model_loaded_local", model_name=model_name)
         except Exception as e1:
-            print(f"使用local_files_only=True加载失败: {str(e1)}")
+            logger.warning("bert_local_load_failed", model_name=model_name, error=str(e1))
             try:
                 # 如果local_files_only失败，尝试普通加载，但仍然优先使用本地缓存
                 self.bert = BertModel.from_pretrained(model_name, force_download=False, resume_download=False)
-                print("成功加载模型")
+                logger.info("bert_model_loaded", model_name=model_name)
             except Exception as e2:
-                print(f"模型加载失败: {str(e2)}")
+                logger.error("bert_model_load_failed", model_name=model_name, error=str(e2))
                 raise RuntimeError(f"BERT 模型加载失败，NER 将降级到规则匹配: {e2}")
         
         self.gru = nn.RNN(input_size=768,hidden_size=hidden_size,num_layers=2,batch_first=True,bidirectional=bi)
@@ -335,7 +338,7 @@ if __name__ == "__main__":
     else:
         device = torch.device('cpu')
 
-        print(f"使用设备: {device}")
+        logger.info("device_selected", device=str(device))
 
     train_dataset = Nerdataset(train_text,train_label,tokenizer,max_len,tag2idx,enhance_data=True)
     train_dataloader = DataLoader(train_dataset,batch_size=batch_size,shuffle=True)
@@ -377,13 +380,14 @@ if __name__ == "__main__":
             f1 = f1_score(all_pre, all_label)
             if f1>bestf1:
                 bestf1 = f1
-                print(f'e={e},loss={loss_sum / ba:.5f} f1={f1:.5f} ---------------------->best')
+                logger.info("epoch_best", e=e, loss=round(float(loss_sum / ba), 5), f1=round(float(f1), 5))
                 torch.save(model.state_dict(),f'model/{cache_model}.pt')
-            else:print(f'e={e},loss={loss_sum/ba:.5f} f1={f1:.5f}')
+            else:
+                logger.info("epoch_result", e=e, loss=round(float(loss_sum/ba), 5), f1=round(float(f1), 5))
 
     rule = rule_find()
     tfidf_r = tfidf_alignment()
 
     while(True):
         sen = input('请输入:')
-        print(get_ner_result(model, tokenizer, sen, rule, tfidf_r,device,idx2tag))
+        logger.info("ner_result", result=get_ner_result(model, tokenizer, sen, rule, tfidf_r,device,idx2tag))

@@ -1,6 +1,6 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
+from typing import List, Optional, Union
 
 class Settings(BaseSettings):
     """项目全局配置"""
@@ -79,6 +79,15 @@ class Settings(BaseSettings):
     # ── 语音交互配置 ──
     TTS_VOICE: str = "longxiaochun"  # CosyVoice 音色
     TTS_ENABLED: bool = True
+
+    # ── Redis 配置 ──
+    REDIS_URL: Optional[str] = None  # 为空时降级为内存存储
+
+    # ── CORS 配置 ──
+    CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    # ── 调试配置 ──
+    DEBUG: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra='ignore')
 

@@ -8,7 +8,10 @@ from app.agents.reminder_agent import ReminderAgent
 from app.agents.psychology_agent import PsychologyAgent
 from app.agents.rehab_plan_agent import RehabPlanAgent
 from app.core.config import settings
+from app.core.logging import get_logger
 from app.db.session import db_instance
+
+logger = get_logger(__name__)
 
 AGENT_DISPLAY_NAMES = {
     "MedicalQA": "医学知识问答",
@@ -49,10 +52,24 @@ class MultiAgentOrchestrator:
     async def _load_conversation_history(self, session_id: str) -> List[Dict[str, str]]:
         if not session_id:
             return []
+
+        # ── 尝试 Redis 缓存 ──
+        try:
+            from app.db.session import get_redis
+            redis = await get_redis()
+            if redis:
+                cache_key = f"summary:{session_id}"
+                cached = await redis.get(cache_key)
+                if cached:
+                    logger.info("history", event="redis_cache_hit", session_id=session_id)
+                    return [{"role": "system", "content": cached}]
+        except Exception:
+            pass  # Redis 不可用时跳过缓存
+
         try:
             raw_messages = db_instance.get_session_messages(int(session_id))
         except Exception as e:
-            print(f"[WARN] 加载对话历史失败: {e}")
+            logger.warning("history_load_failed", error=str(e))
             return []
 
         if not raw_messages:
@@ -71,16 +88,16 @@ class MultiAgentOrchestrator:
                 history.append({"role": role, "content": content})
                 total_chars += _count_chinese_chars(content)
 
-        print(f"[HISTORY] session={session_id}, 加载 {len(history)} 条消息, 中文约 {total_chars} 字")
+        logger.info("history", session_id=session_id, message_count=len(history), chinese_chars=total_chars)
         if total_chars > settings.CONVERSATION_SUMMARY_THRESHOLD_CHARS:
-            summary = await self._summarize_history(history)
-            print(f"[HISTORY] 触发摘要压缩, 原文 {total_chars} 字 -> 摘要 {len(summary)} 字")
+            summary = await self._summarize_history(history, session_id)
+            logger.info("history", event="summary_compression", original_chars=total_chars, summary_chars=len(summary))
             return [{"role": "system", "content": f"<对话摘要>\n{summary}\n</对话摘要>"}]
 
         return history
 
-    async def _summarize_history(self, history: List[Dict[str, str]]) -> str:
-        """压缩对话历史为摘要"""
+    async def _summarize_history(self, history: List[Dict[str, str]], session_id: str = None) -> str:
+        """压缩对话历史为摘要，并缓存到 Redis"""
         lines = []
         for msg in history[-settings.MAX_CONVERSATION_HISTORY_TURNS * 2:]:
             role_label = "用户" if msg["role"] == "user" else "助手"
@@ -93,7 +110,20 @@ class MultiAgentOrchestrator:
                 "保留关键信息（症状、用药、建议、时间等）：\n\n" + conversation_text
             )
             from app.services.llm_service import llm_service
-            return await llm_service.generate_completion(summary_prompt, self.model_choice)
+            summary = await llm_service.generate_completion(summary_prompt, self.model_choice)
+
+            # ── 缓存到 Redis ──
+            if session_id:
+                try:
+                    from app.db.session import get_redis
+                    redis = await get_redis()
+                    if redis:
+                        cache_value = f"<对话摘要>\n{summary}\n</对话摘要>"
+                        await redis.setex(f"summary:{session_id}", 3600, cache_value)
+                except Exception:
+                    pass  # Redis 不可用时跳过
+
+            return summary
         except Exception:
             return f"对话历史包含 {len(history)} 条消息，主要涉及健康管理相关咨询。"
 

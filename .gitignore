@@ -4,4 +4,7 @@
 .trae/
 model/
 __pycache__/
+.pytest_cache/
+*.pyc
+*.docx
 neo4j-community-5.18.1/

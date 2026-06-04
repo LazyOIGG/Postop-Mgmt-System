@@ -2,7 +2,11 @@ import os
 import traceback
 import tempfile
 from typing import Optional
+
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 try:
@@ -33,48 +37,49 @@ class SpeechService:
         if self.enabled:
             try:
                 dashscope.api_key = self.api_key
-                print("[SUCCESS] 阿里云 DashScope (Fun-ASR) 配置成功")
+                logger.info("dashscope_configured", service="Fun-ASR")
             except Exception as e:
-                print(f"[ERROR] 阿里云 DashScope 配置失败: {e}")
+                logger.error("dashscope_config_failed", error=str(e))
                 self.enabled = False
 
     def _convert_audio_to_wav(self, audio_data: bytes) -> bytes:
         """将音频数据转换为 16kHz 单声道的 WAV 格式"""
         if not PYDUB_AVAILABLE:
-            print("[WARN] pydub 未安装，无法自动转换音频格式")
+            logger.warning("pydub_not_available")
             return audio_data
-        
+
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
                 tmp.write(audio_data)
                 temp_path = tmp.name
-            
+
             sound = AudioSegment.from_file(temp_path)
-            
-            print(f"[DEBUG] 原始音频: 通道数={sound.channels}, 采样率={sound.frame_rate} Hz, 时长={len(sound)/1000}秒")
-            
+
+            logger.debug("original_audio", channels=sound.channels,
+                        sample_rate=sound.frame_rate, duration_s=len(sound)/1000)
+
             if sound.channels != 1:
                 sound = sound.set_channels(1)
-                print("[DEBUG] 已转换为单声道")
-            
+                logger.debug("audio_converted_to_mono")
+
             if sound.frame_rate != 16000:
                 sound = sound.set_frame_rate(16000)
-                print("[DEBUG] 已转换为 16000 Hz")
-            
+                logger.debug("audio_resampled", target_rate=16000)
+
             output_path = temp_path + "_converted.wav"
             sound.export(output_path, format="wav")
-            
+
             with open(output_path, 'rb') as f:
                 converted_data = f.read()
-            
+
             os.unlink(temp_path)
             os.unlink(output_path)
-            
-            print(f"[DEBUG] 转换后音频: 大小={len(converted_data)} bytes")
+
+            logger.debug("audio_converted", size_bytes=len(converted_data))
             return converted_data
-            
+
         except Exception as e:
-            print(f"[ERROR] 音频转换失败: {e}")
+            logger.error("audio_conversion_failed", error=str(e))
             traceback.print_exc()
             return audio_data
 
@@ -94,37 +99,37 @@ class SpeechService:
         temp_file_path = None
         try:
             audio_data = self._convert_audio_to_wav(audio_data)
-            
+
             with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
                 tmp.write(audio_data)
                 temp_file_path = tmp.name
 
-            print(f"[INFO] 音频数据大小: {len(audio_data)} bytes，临时文件: {temp_file_path}")
+            logger.info("asr_begin", size_bytes=len(audio_data), temp_file=temp_file_path)
 
             recognition = Recognition(model='fun-asr-realtime-2026-02-28',
                                   format='wav',
                                   sample_rate=16000,
                                   language_hints=['zh', 'en'],
                                   callback=None)
-            
+
             result = recognition.call(temp_file_path)
 
             if result.status_code == 200:
                 sentence_result = result.get_sentence()
                 if sentence_result:
                     recognized_text = ''.join([item['text'] for item in sentence_result])
-                    print(f"[INFO] Fun-ASR 识别成功: {recognized_text}")
+                    logger.info("asr_success", text=recognized_text)
                     return recognized_text
                 else:
-                    print("[INFO] Fun-ASR 识别成功，但无结果")
+                    logger.info("asr_empty_result")
                     return ""
             else:
                 error_msg = f"语音识别失败，状态码: {result.status_code}"
-                print(f"[ERROR] {error_msg}")
+                logger.error("asr_failed", status_code=result.status_code)
                 return error_msg
 
         except Exception as e:
-            print(f"[ERROR] 语音识别过程中发生异常: {e}")
+            logger.error("asr_exception", error=str(e))
             traceback.print_exc()
             return f"语音识别失败: {str(e)}"
         finally:
@@ -134,7 +139,7 @@ class SpeechService:
     async def synthesize(self, text: str, voice: str = None) -> Optional[bytes]:
         """文本转语音 (TTS) — 对接 DashScope CosyVoice"""
         if not self.enabled:
-            print("[WARN] TTS 服务未启用")
+            logger.warning("tts_not_enabled")
             return None
         try:
             from dashscope.audio.tts import SpeechSynthesizer
@@ -146,13 +151,13 @@ class SpeechService:
             )
             audio_data = result.get_audio_data()
             if audio_data is not None:
-                print(f"[INFO] TTS 合成成功，音频大小: {len(audio_data)} bytes")
+                logger.info("tts_success", size_bytes=len(audio_data))
                 return audio_data
             else:
-                print(f"[ERROR] TTS 合成失败: {result.get_response()}")
+                logger.error("tts_failed", response=str(result.get_response()))
                 return None
         except Exception as e:
-            print(f"[ERROR] TTS 合成异常: {e}")
+            logger.error("tts_exception", error=str(e))
             traceback.print_exc()
             return None
 

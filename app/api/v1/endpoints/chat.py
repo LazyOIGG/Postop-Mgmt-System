@@ -1,38 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
+from typing import Dict, Optional
+import json
+import logging
+
 from app.models.schemas import ChatRequest
 from app.core.security import get_current_user, validate_token
+from app.core.ws_manager import ws_manager, WSMessageType
 from app.db.session import db_instance
 from app.agents.orchestrator import orchestrator
-from typing import Dict
-import json
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-class ConnectionManager:
-    """WebSocket 连接管理器（P3.15）"""
-    def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-
-    async def connect(self, username: str, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections[username] = websocket
-        print(f"[INFO] WebSocket 用户 {username} 已连接 (通知)")
-
-    def disconnect(self, username: str):
-        self.active_connections.pop(username, None)
-
-    async def send_notification(self, username: str, data: dict):
-        ws = self.active_connections.get(username)
-        if ws:
-            try:
-                await ws.send_text(json.dumps(data))
-            except Exception:
-                self.disconnect(username)
-
-
-ws_manager = ConnectionManager()
 
 
 @router.post("")
@@ -74,18 +53,27 @@ async def chat_endpoint(request: ChatRequest, user: dict = Depends(get_current_u
 @router.websocket("/agent/ws")
 async def agent_websocket_chat(websocket: WebSocket, token: str = None):
     """多智能体 WebSocket 实时聊天"""
-    await websocket.accept()
+    if not token:
+        await websocket.close(code=4001)
+        return
+    user = validate_token(token)
+    if not user:
+        await websocket.close(code=4001)
+        return
+
+    username = user["username"]
+    await ws_manager.connect(username, websocket)
+    logger.info("agent_websocket_connected", username=username)
+
+    session_id = None
     try:
-        user = validate_token(token) if token else None
-        if not user:
-            await websocket.send_text(json.dumps({"type": "error", "message": "未授权"})); await websocket.close(); return
-        print(f"[INFO] 多智能体 WebSocket 用户 {user['username']} 已连接")
-
-        username = user["username"]
-        session_id = None
-
         while True:
             data = json.loads(await websocket.receive_text())
+
+            # 处理心跳响应
+            if data.get("type") == WSMessageType.PONG:
+                continue
+
             if data.get("type") == "chat":
                 query = data.get("message", "")
                 if not query:
@@ -109,24 +97,34 @@ async def agent_websocket_chat(websocket: WebSocket, token: str = None):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        print(f"[ERROR] 多智能体 WebSocket 异常: {e}")
+        logger.error("agent_websocket_error", username=username, error=str(e))
+    finally:
+        ws_manager.disconnect(username, websocket)
 
 
 @router.websocket("/ws")
 async def websocket_chat(websocket: WebSocket, token: str = None):
     """WebSocket 实时聊天 — 多智能体编排"""
-    await websocket.accept()
+    if not token:
+        await websocket.close(code=4001)
+        return
+    user = validate_token(token)
+    if not user:
+        await websocket.close(code=4001)
+        return
+
+    username = user["username"]
+    await ws_manager.connect(username, websocket)
+    logger.info("websocket_chat_connected", username=username)
+
+    session_id = None
     try:
-        user = validate_token(token) if token else None
-        if not user:
-            await websocket.send_text(json.dumps({"type": "error", "message": "未授权"})); await websocket.close(); return
-        print(f"[INFO] WebSocket 用户 {user['username']} 已连接")
-
-        username = user["username"]
-        session_id = None
-
         while True:
             data = json.loads(await websocket.receive_text())
+
+            if data.get("type") == WSMessageType.PONG:
+                continue
+
             if data.get("type") == "chat":
                 query = data.get("message", "")
                 if not query:
@@ -150,25 +148,34 @@ async def websocket_chat(websocket: WebSocket, token: str = None):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        print(f"[ERROR] WebSocket 异常: {e}")
+        logger.error("websocket_chat_error", username=username, error=str(e))
+    finally:
+        ws_manager.disconnect(username, websocket)
 
 
 @router.websocket("/notifications/ws")
 async def notification_websocket(websocket: WebSocket, token: str = None):
-    """WebSocket 通知推送（P3.15）"""
+    """WebSocket 通知推送"""
+    if not token:
+        await websocket.close(code=4001)
+        return
+    user = validate_token(token)
+    if not user:
+        await websocket.close(code=4001)
+        return
+
+    username = user["username"]
+    await ws_manager.connect(username, websocket)
+    logger.info("notification_websocket_connected", username=username)
+
     try:
-        user = validate_token(token) if token else None
-        if not user:
-            await websocket.close(code=4001)
-            return
-        username = user["username"]
-        await ws_manager.connect(username, websocket)
-        try:
-            while True:
-                await websocket.receive_text()
-        except WebSocketDisconnect:
-            pass
-        finally:
-            ws_manager.disconnect(username)
+        while True:
+            data = await websocket.receive_text()
+            if data and json.loads(data).get("type") == WSMessageType.PONG:
+                continue
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
-        print(f"[ERROR] 通知 WebSocket 异常: {e}")
+        logger.error("notification_websocket_error", username=username, error=str(e))
+    finally:
+        ws_manager.disconnect(username, websocket)

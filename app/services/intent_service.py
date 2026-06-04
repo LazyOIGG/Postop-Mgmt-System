@@ -1,6 +1,9 @@
 from app.services.llm_service import llm_service
 from app.core.config import settings
+from app.core.logging import get_logger
 import traceback
+
+logger = get_logger(__name__)
 
 class IntentService:
     """意图识别服务"""
@@ -24,7 +27,7 @@ class IntentService:
         try:
             return await self.llm.generate_completion(prompt, model_choice)
         except Exception as e:
-            print(f"[ERROR] ❌ 意图识别失败: {str(e)}")
+            logger.error("intent_recognition_failed", error=str(e))
             return "[] # 意图识别失败"
 
 intent_service = IntentService()

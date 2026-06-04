@@ -5,7 +5,7 @@ class NotificationService:
     async def notify_doctor_message(
         self, patient_username: str, doctor_username: str, content: str, msg_id: int
     ):
-        from app.api.v1.endpoints.chat import ws_manager
+        from app.core.ws_manager import ws_manager
 
         await ws_manager.send_notification(
             patient_username,
@@ -18,7 +18,7 @@ class NotificationService:
         )
 
     async def notify_alert(self, username: str, alert_data: dict):
-        from app.api.v1.endpoints.chat import ws_manager
+        from app.core.ws_manager import ws_manager
 
         await ws_manager.send_notification(
             username,

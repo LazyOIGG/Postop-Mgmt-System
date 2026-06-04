@@ -2,6 +2,9 @@ from dataclasses import dataclass, field
 from typing import AsyncGenerator, Dict, List, Optional, Any
 from app.services.llm_service import llm_service, LLMServiceError
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -86,7 +89,7 @@ class BaseAgent:
         try:
             return await self._llm.generate_completion_with_messages(messages, self.model_choice)
         except LLMServiceError as e:
-            print(f"[ERROR] {self.name} LLM调用失败: {e}")
+            logger.error("llm_call_failed", agent=self.name, error=str(e))
             return "抱歉，AI服务暂时不可用，请稍后重试。"
 
     async def _call_llm_stream(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
@@ -94,7 +97,7 @@ class BaseAgent:
             async for chunk in self._llm.chat_with_messages(messages, self.model_choice, stream=True):
                 yield chunk
         except LLMServiceError as e:
-            print(f"[ERROR] {self.name} LLM流式调用失败: {e}")
+            logger.error("llm_stream_call_failed", agent=self.name, error=str(e))
             yield "抱歉，AI服务暂时不可用，请稍后重试。"
 
     async def _call_llm_with_tools(

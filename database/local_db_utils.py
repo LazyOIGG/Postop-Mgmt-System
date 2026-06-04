@@ -1,18 +1,18 @@
 import mysql.connector
 from mysql.connector import Error, pooling
 import time
-import logging
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 import json
 import os
 from dotenv import load_dotenv
 
+from app.core.logging import get_logger
+
 # 加载环境变量
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class DatabaseConnector:
     def __init__(self, host=None, database=None, user=None, password=None,
@@ -447,7 +447,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"保存病例OCR失败: {e}")
+            logger.error("save_patient_report_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -473,7 +473,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"保存健康评估记录失败: {e}")
+            logger.error("save_health_assessment_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -496,7 +496,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"查询健康评估历史失败: {e}")
+            logger.error("get_health_assessment_history_failed", error=str(e))
             return []
 
     def save_patient_profile(
@@ -553,7 +553,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"保存健康档案失败: {e}")
+            logger.error("save_patient_profile_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -578,7 +578,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"查询健康档案失败: {e}")
+            logger.error("get_patient_profile_failed", error=str(e))
             return None
 
     def get_latest_health_assessment(self, username: str):
@@ -600,7 +600,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"查询最近一次健康评估失败: {e}")
+            logger.error("get_latest_health_assessment_failed", error=str(e))
             return None
 
     def save_daily_checkin(
@@ -655,7 +655,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"保存每日打卡失败: {e}")
+            logger.error("save_daily_checkin_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -682,7 +682,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取每日打卡记录失败: {e}")
+            logger.error("get_daily_checkins_failed", error=str(e))
             return []
 
 
@@ -706,7 +706,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"获取今日打卡失败: {e}")
+            logger.error("get_today_checkin_failed", error=str(e))
             return None
 
     def get_recent_checkins_for_overview(self, username: str, days: int = 7):
@@ -729,7 +729,7 @@ class DatabaseConnector:
             cursor.close()
             return list(reversed(results))  # 反转成时间正序，方便前端画图
         except Exception as e:
-            print(f"获取趋势分析打卡数据失败: {e}")
+            logger.error("get_recent_checkins_for_overview_failed", error=str(e))
             return []
 
     def get_checkin_summary_stats(self, username: str, days: int = 7):
@@ -758,7 +758,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"获取打卡汇总统计失败: {e}")
+            logger.error("get_checkin_summary_stats_failed", error=str(e))
             return None
 
     def save_reminder(
@@ -789,7 +789,7 @@ class DatabaseConnector:
             cursor.close()
             return new_id
         except Exception as e:
-            print(f"保存提醒失败: {e}")
+            logger.error("save_reminder_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return None
@@ -814,7 +814,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取提醒列表失败: {e}")
+            logger.error("get_reminders_failed", error=str(e))
             return []
 
     def update_reminder_status(self, username: str, reminder_id: int, status: str) -> bool:
@@ -834,7 +834,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"更新提醒状态失败: {e}")
+            logger.error("update_reminder_status_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -855,7 +855,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"删除提醒失败: {e}")
+            logger.error("delete_reminder_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -881,7 +881,7 @@ class DatabaseConnector:
                 "completed_count": int(result.get("completed_count") or 0)
             }
         except Exception as e:
-            print(f"获取今日提醒统计失败: {e}")
+            logger.error("get_today_reminder_stats_failed", error=str(e))
             return {"pending_count": 0, "completed_count": 0}
 
     def get_doctor_patient_list(self, limit: int = 100):
@@ -921,7 +921,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取患者列表失败: {e}")
+            logger.error("get_doctor_patient_list_failed", error=str(e))
             return []
 
     def get_high_risk_assessments(self, limit: int = 50):
@@ -946,7 +946,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取高风险评估失败: {e}")
+            logger.error("get_high_risk_assessments_failed", error=str(e))
             return []
 
     def get_abnormal_checkins_for_doctor(self, limit: int = 50):
@@ -972,7 +972,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取异常打卡失败: {e}")
+            logger.error("get_abnormal_checkins_for_doctor_failed", error=str(e))
             return []
 
     def get_patient_detail_for_doctor(self, username: str):
@@ -992,7 +992,7 @@ class DatabaseConnector:
                 "recent_reminders": reminders
             }
         except Exception as e:
-            print(f"获取患者详情失败: {e}")
+            logger.error("get_patient_detail_for_doctor_failed", error=str(e))
             return None
 
     def get_system_basic_stats(self):
@@ -1039,7 +1039,7 @@ class DatabaseConnector:
             cursor.close()
             return stats
         except Exception as e:
-            print(f"获取系统基础统计失败: {e}")
+            logger.error("get_system_basic_stats_failed", error=str(e))
             return {}
 
     def get_system_ratio_stats(self):
@@ -1077,7 +1077,7 @@ class DatabaseConnector:
             cursor.close()
             return ratios
         except Exception as e:
-            print(f"获取系统比例统计失败: {e}")
+            logger.error("get_system_ratio_stats_failed", error=str(e))
             return {}
 
     def get_recent_high_risk_records(self, limit: int = 10):
@@ -1104,7 +1104,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取最近高风险记录失败: {e}")
+            logger.error("get_recent_high_risk_records_failed", error=str(e))
             return []
 
     def get_recent_abnormal_checkins(self, limit: int = 10):
@@ -1131,7 +1131,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取最近异常打卡失败: {e}")
+            logger.error("get_recent_abnormal_checkins_failed", error=str(e))
             return []
 
     def create_alert_notification(
@@ -1152,7 +1152,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"创建告警通知失败: {e}")
+            logger.error("create_alert_notification_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1185,7 +1185,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取告警通知列表失败: {e}")
+            logger.error("get_alert_notifications_failed", error=str(e))
             return []
 
     def process_alert_notification(self, alert_id: int) -> bool:
@@ -1204,7 +1204,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"处理告警通知失败: {e}")
+            logger.error("process_alert_notification_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1227,7 +1227,7 @@ class DatabaseConnector:
             cursor.close()
             return msg_id
         except Exception as e:
-            print(f"保存医生消息失败: {e}")
+            logger.error("save_doctor_message_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return None
@@ -1249,7 +1249,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取医生消息记录失败: {e}")
+            logger.error("get_doctor_messages_failed", error=str(e))
             return []
 
     # ── P3.15 推送通知 DB 方法 ──
@@ -1272,7 +1272,7 @@ class DatabaseConnector:
             cursor.close()
             return nid
         except Exception as e:
-            print(f"创建通知失败: {e}")
+            logger.error("create_notification_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return None
@@ -1301,7 +1301,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取通知列表失败: {e}")
+            logger.error("get_notifications_failed", error=str(e))
             return []
 
     def get_unread_notification_count(self, username: str) -> int:
@@ -1318,7 +1318,7 @@ class DatabaseConnector:
             cursor.close()
             return int(result['cnt']) if result else 0
         except Exception as e:
-            print(f"获取未读通知数失败: {e}")
+            logger.error("get_unread_notification_count_failed", error=str(e))
             return 0
 
     def mark_notification_read(self, notification_id: int, username: str) -> bool:
@@ -1336,7 +1336,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"标记通知已读失败: {e}")
+            logger.error("mark_notification_read_failed", error=str(e))
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1355,7 +1355,79 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"全部已读失败: {e}")
+            logger.error("mark_all_notifications_read_failed", error=str(e))
+            if self.connection:
+                self.connection.rollback()
+            return False
+
+    def get_notifications_paginated(
+        self, username: str, unread_only: bool = False, limit: int = 20, offset: int = 0
+    ):
+        """分页获取通知列表"""
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            if unread_only:
+                query = """
+                    SELECT id, username, type, title, content, related_id, is_read, created_at
+                    FROM notifications
+                    WHERE username = %s AND is_read = FALSE
+                    ORDER BY created_at DESC LIMIT %s OFFSET %s
+                """
+            else:
+                query = """
+                    SELECT id, username, type, title, content, related_id, is_read, created_at
+                    FROM notifications
+                    WHERE username = %s
+                    ORDER BY created_at DESC LIMIT %s OFFSET %s
+                """
+            cursor.execute(query, (username, limit, offset))
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            logger.error(f"分页获取通知失败: {e}")
+            return []
+
+    def get_notification_count(self, username: str, unread_only: bool = False) -> int:
+        """获取通知总数"""
+        try:
+            if not self._ensure_connection():
+                return 0
+            cursor = self.connection.cursor(dictionary=True)
+            if unread_only:
+                query = """
+                    SELECT COUNT(*) AS cnt FROM notifications
+                    WHERE username = %s AND is_read = FALSE
+                """
+            else:
+                query = """
+                    SELECT COUNT(*) AS cnt FROM notifications
+                    WHERE username = %s
+                """
+            cursor.execute(query, (username,))
+            result = cursor.fetchone()
+            cursor.close()
+            return int(result['cnt']) if result else 0
+        except Exception as e:
+            logger.error(f"获取通知总数失败: {e}")
+            return 0
+
+    def delete_notification(self, notification_id: int, username: str) -> bool:
+        """删除通知（仅所有者可删除）"""
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = "DELETE FROM notifications WHERE id = %s AND username = %s"
+            cursor.execute(query, (notification_id, username))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            logger.error(f"删除通知失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1370,7 +1442,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"获取管理员列表失败: {e}")
+            logger.error(f"获取管理员列表失败: {e}")
             return []
 
     # ── 原有方法 ──
@@ -1398,7 +1470,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"保存医生回复到患者对话失败: {e}")
+            logger.error(f"保存医生回复到患者对话失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1422,7 +1494,7 @@ class DatabaseConnector:
             cursor.close()
             return new_id
         except Exception as e:
-            print(f"保存康复计划失败: {e}")
+            logger.error(f"保存康复计划失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return None
@@ -1452,7 +1524,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取康复计划列表失败: {e}")
+            logger.error(f"获取康复计划列表失败: {e}")
             return []
 
     def get_rehab_plan(self, plan_id: int):
@@ -1470,7 +1542,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"获取康复计划失败: {e}")
+            logger.error(f"获取康复计划失败: {e}")
             return None
 
     def update_rehab_plan_phase(self, plan_id: int, current_phase: str) -> bool:
@@ -1485,7 +1557,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"更新康复计划阶段失败: {e}")
+            logger.error(f"更新康复计划阶段失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1502,7 +1574,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"更新康复计划状态失败: {e}")
+            logger.error(f"更新康复计划状态失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1527,7 +1599,7 @@ class DatabaseConnector:
             cursor.close()
             return True
         except Exception as e:
-            print(f"保存康复计划任务失败: {e}")
+            logger.error(f"保存康复计划任务失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1557,7 +1629,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取康复计划任务失败: {e}")
+            logger.error(f"获取康复计划任务失败: {e}")
             return []
 
     def get_today_rehab_tasks(self, username: str, task_date: str):
@@ -1579,7 +1651,7 @@ class DatabaseConnector:
             cursor.close()
             return results
         except Exception as e:
-            print(f"获取今日康复任务失败: {e}")
+            logger.error(f"获取今日康复任务失败: {e}")
             return []
 
     def update_rehab_task_status(self, task_id: int, status: str) -> bool:
@@ -1594,7 +1666,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"更新康复任务状态失败: {e}")
+            logger.error(f"更新康复任务状态失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False
@@ -1614,7 +1686,7 @@ class DatabaseConnector:
             cursor.close()
             return result
         except Exception as e:
-            print(f"获取康复任务失败: {e}")
+            logger.error(f"获取康复任务失败: {e}")
             return None
 
     def get_rehab_plan_phase_task_stats(self, plan_id: int, phase: str):
@@ -1632,7 +1704,7 @@ class DatabaseConnector:
             cursor.close()
             return result or {"total": 0, "completed": 0}
         except Exception as e:
-            print(f"获取康复阶段任务统计失败: {e}")
+            logger.error(f"获取康复阶段任务统计失败: {e}")
             return {"total": 0, "completed": 0}
 
     def delete_rehab_plan(self, plan_id: int) -> bool:
@@ -1647,7 +1719,7 @@ class DatabaseConnector:
             cursor.close()
             return affected > 0
         except Exception as e:
-            print(f"删除康复计划失败: {e}")
+            logger.error(f"删除康复计划失败: {e}")
             if self.connection:
                 self.connection.rollback()
             return False

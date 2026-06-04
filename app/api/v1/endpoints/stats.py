@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict
+from app.core.logging import get_logger
 from app.core.security import get_current_user
 from app.db.session import db_instance
 from app.services.dashboard_service import dashboard_service
 from datetime import datetime
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -73,7 +76,7 @@ async def get_system_stats(user: Dict = Depends(get_current_user)):
             stats["active_today"] = cursor.fetchone()['count']
             cursor.close()
         except Exception as e:
-            print(f"获取数据库统计失败: {e}")
+            logger.error("db_stats_fetch_failed", error=str(e))
 
         return {
             "success": True,

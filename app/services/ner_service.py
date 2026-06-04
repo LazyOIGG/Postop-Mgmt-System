@@ -3,8 +3,11 @@ import pickle
 import torch
 from typing import Dict, Optional
 from app.core.config import settings
+from app.core.logging import get_logger
 import sys
 from pathlib import Path
+
+logger = get_logger(__name__)
 
 try:
     from . import ner_model as zwk
@@ -25,7 +28,7 @@ class NERService:
 
     def _load_models(self):
         """加载 NER 模型及配置"""
-        print("[INFO] 开始加载 NER 模型...")
+        logger.info("loading_ner_models")
         try:
             if zwk and os.path.exists(settings.TAG2IDX_PATH):
                 with open(settings.TAG2IDX_PATH, 'rb') as f:
@@ -33,9 +36,9 @@ class NERService:
                 self.idx2tag = list(tag2idx)
                 self.rule = zwk.rule_find()
                 self.tfidf_r = zwk.tfidf_alignment()
-                print("[SUCCESS] NER 配置文件加载成功")
+                logger.info("ner_config_loaded")
         except Exception as e:
-            print(f"[ERROR] NER 配置加载失败: {e}")
+            logger.error("ner_config_load_failed", error=str(e))
 
         try:
             if BertTokenizer and BertModel:
@@ -47,9 +50,9 @@ class NERService:
                     self.bert_model = zwk.Bert_Model(model_name, hidden_size=128, tag_num=len(tag2idx), bi=True)
                     self.bert_model.load_state_dict(torch.load(settings.NER_MODEL_WEIGHTS, map_location=self.device))
                     self.bert_model = self.bert_model.to(self.device).eval()
-                    print("[SUCCESS] NER 模型加载成功")
+                    logger.info("ner_model_loaded")
         except Exception as e:
-            print(f"[ERROR] NER 模型加载失败: {e}")
+            logger.error("ner_model_load_failed", error=str(e))
 
     def recognize(self, query: str) -> Dict:
         """执行实体识别"""
@@ -62,7 +65,7 @@ class NERService:
                 self.rule, self.tfidf_r, self.device, self.idx2tag
             )
         except Exception as e:
-            print(f"[WARN] ⚠️ 识别异常，切换简易模式: {e}")
+            logger.warning("ner_recognition_fallback", error=str(e))
             return self._simple_recognize(query)
 
     def _simple_recognize(self, query: str) -> Dict:

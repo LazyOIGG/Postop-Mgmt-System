@@ -1,7 +1,12 @@
 import py2neo
 import random
 from typing import Dict, List, Optional, Tuple
+
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 class KGService:
     """知识图谱服务"""
@@ -13,9 +18,9 @@ class KGService:
                 password=settings.NEO4J_PASSWORD,
                 name=settings.NEO4J_NAME
             )
-            print("[SUCCESS] Neo4j连接成功")
+            logger.info("neo4j_connected")
         except Exception as e:
-            print(f"[ERROR] Neo4j连接失败: {e}")
+            logger.error("neo4j_connection_failed", error=str(e))
             self.client = None
 
     def add_shuxing_prompt(self, entity: str, shuxing: str) -> str:
@@ -28,7 +33,7 @@ class KGService:
                 content = "".join(res[0].values())
                 return f"<提示>用户对{entity}有查询{shuxing}需求，知识库内容：{content}</提示>"
         except py2neo.errors.ClientError as e:
-            print(f"[WARN] 属性查询失败({shuxing}): {e}")
+            logger.warning("attribute_query_failed", attribute=shuxing, error=str(e))
         return ""
 
     def add_lianxi_prompt(self, entity: str, lianxi: str, target: str) -> str:
@@ -41,7 +46,7 @@ class KGService:
                 names = "、".join([list(data.values())[0] for data in res])
                 return f"<提示>用户对{entity}有查询{lianxi}需求，知识库内容：{names}</提示>"
         except py2neo.errors.ClientError as e:
-            print(f"[WARN] 关系查询失败({lianxi}): {e}")
+            logger.warning("relation_query_failed", relation=lianxi, error=str(e))
         return ""
 
     def generate_enhanced_prompt(self, intent_response: str, query: str, entities: Dict) -> Tuple[str, str, Dict, bool]:
@@ -59,7 +64,7 @@ class KGService:
                     entities['疾病'] = random.choice(res)
                     neo4j_prompt += f"<提示>基于{entities['疾病症状']}，推测可能是：{'、'.join(res)}。请告知用户这仅为推测。</提示>"
             except py2neo.errors.ClientError as e:
-                print(f"[ERROR] 症状推测失败: {e}")
+                logger.error("symptom_inference_failed", error=str(e))
 
         # 意图映射查询
         intent_map = {
@@ -95,7 +100,7 @@ class KGService:
         try:
             return self.client.run(cypher_query).data()
         except py2neo.errors.ClientError as e:
-            print(f"[ERROR] 图谱查询失败: {e}")
+            logger.error("cypher_query_failed", error=str(e))
             return []
 
     def multi_hop_query(self, entity_name: str, max_hops: int = 3):
@@ -129,7 +134,7 @@ class KGService:
 
             return {"nodes": list(nodes.values()), "edges": edges}
         except Exception as e:
-            print(f"[ERROR] 多跳查询失败: {e}")
+            logger.error("multi_hop_query_failed", error=str(e))
             return {"nodes": [], "edges": []}
 
     def get_schema(self) -> dict:
@@ -143,7 +148,7 @@ class KGService:
             rel_types = [r['relationshipType'] for r in self.client.run(rel_query).data()]
             return {"node_types": node_types, "relationship_types": rel_types}
         except Exception as e:
-            print(f"[ERROR] 获取Schema失败: {e}")
+            logger.error("schema_fetch_failed", error=str(e))
             return {"node_types": [], "relationship_types": []}
 
 kg_service = KGService()

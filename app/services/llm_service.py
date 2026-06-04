@@ -1,6 +1,9 @@
 from typing import AsyncGenerator, Dict, List
 from openai import OpenAI
 from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class LLMServiceError(Exception):
@@ -47,7 +50,7 @@ class LLMService:
             else:
                 yield response.choices[0].message.content
         except Exception as e:
-            print(f"[ERROR] LLM调用失败: {str(e)}")
+            logger.error("llm_chat_failed", error=str(e))
             yield f"抱歉，AI服务暂时不可用。错误详情: {str(e)}"
 
     async def generate_completion_with_messages(
@@ -66,7 +69,7 @@ class LLMService:
             content = response.choices[0].message.content
             return content if content else ""
         except Exception as e:
-            print(f"[ERROR] LLM生成失败: {str(e)}")
+            logger.error("llm_generation_failed", error=str(e))
             raise LLMServiceError(f"LLM调用失败: {str(e)}") from e
 
     async def chat_with_tools(
@@ -87,7 +90,7 @@ class LLMService:
             )
             return response
         except Exception as e:
-            print(f"[ERROR] LLM工具调用失败: {str(e)}")
+            logger.error("llm_tool_call_failed", error=str(e))
             raise LLMServiceError(f"LLM工具调用失败: {str(e)}") from e
 
     # ── Deprecated methods (kept for backward compatibility) ────────
@@ -108,7 +111,7 @@ class LLMService:
             else:
                 yield response.choices[0].message.content
         except Exception as e:
-            print(f"[ERROR] LLM调用失败: {str(e)}")
+            logger.error("llm_chat_failed", error=str(e))
             yield f"抱歉，AI服务暂时不可用。错误详情: {str(e)}"
 
     async def generate_completion(self, prompt: str, model_choice: str = None) -> str:
@@ -122,7 +125,7 @@ class LLMService:
             )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"[ERROR] LLM生成失败: {str(e)}")
+            logger.error("llm_generation_failed", error=str(e))
             raise LLMServiceError(f"LLM调用失败: {str(e)}") from e
 
 
