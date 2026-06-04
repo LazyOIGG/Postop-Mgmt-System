@@ -1,7 +1,6 @@
 """结构化日志配置 — 基于 structlog + 标准 logging"""
 
 import logging
-import uuid
 from contextvars import ContextVar
 
 import structlog

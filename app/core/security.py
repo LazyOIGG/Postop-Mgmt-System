@@ -263,6 +263,7 @@ def require_admin(user: Dict = Depends(get_current_user)) -> Dict:
 
 async def _cleanup_expired_data():
     """定期清理过期的黑名单和 refresh token（内存回退）"""
+    global _token_blacklist, _refresh_tokens
     while True:
         await asyncio.sleep(300)
         now = datetime.now(timezone.utc)

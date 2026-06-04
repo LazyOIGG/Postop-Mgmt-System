@@ -1,9 +1,9 @@
 """WebSocket ConnectionManager 单元测试"""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
-from app.core.ws_manager import ConnectionManager, WSMessageType
+from app.core.ws_manager import ConnectionManager
 
 
 class FakeWebSocket:

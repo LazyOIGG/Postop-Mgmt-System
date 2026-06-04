@@ -1,6 +1,5 @@
-import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List, Optional, Union
+from typing import Optional
 
 class Settings(BaseSettings):
     """项目全局配置"""
