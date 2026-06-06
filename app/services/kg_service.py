@@ -7,6 +7,10 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+ALLOWED_PROPERTIES = {"疾病简介", "疾病病因", "预防措施", "治疗周期", "治愈概率", "疾病易感人群"}
+ALLOWED_RELATIONSHIPS = {"疾病使用药品", "疾病宜吃食物", "疾病忌吃食物", "疾病所需检查", "疾病所属科目", "疾病的症状", "治疗的方法", "疾病并发疾病"}
+ALLOWED_LABELS = {"药品", "食物", "检查项目", "科目", "疾病症状", "治疗方法", "疾病"}
+
 
 class KGService:
     """知识图谱服务"""
@@ -26,9 +30,11 @@ class KGService:
     def add_shuxing_prompt(self, entity: str, shuxing: str) -> str:
         """查询疾病属性并生成提示"""
         if self.client is None: return ""
+        if shuxing not in ALLOWED_PROPERTIES:
+            raise ValueError(f"非法属性: {shuxing}")
         try:
-            sql_q = "match (a:疾病{名称:'%s'}) return a.%s" % (entity, shuxing)
-            res = self.client.run(sql_q).data()
+            sql_q = "match (a:疾病{名称:$name}) return a." + shuxing
+            res = self.client.run(sql_q, name=entity).data()
             if res:
                 content = "".join(res[0].values())
                 return f"<提示>用户对{entity}有查询{shuxing}需求，知识库内容：{content}</提示>"
@@ -39,9 +45,13 @@ class KGService:
     def add_lianxi_prompt(self, entity: str, lianxi: str, target: str) -> str:
         """查询疾病联系并生成提示"""
         if self.client is None: return ""
+        if lianxi not in ALLOWED_RELATIONSHIPS:
+            raise ValueError(f"非法关系: {lianxi}")
+        if target not in ALLOWED_LABELS:
+            raise ValueError(f"非法标签: {target}")
         try:
-            sql_q = "match (a:疾病{名称:'%s'})-[r:%s]->(b:%s) return b.名称" % (entity, lianxi, target)
-            res = self.client.run(sql_q).data()
+            sql_q = f"match (a:疾病{{名称:$name}})-[r:{lianxi}]->(b:{target}) return b.名称"
+            res = self.client.run(sql_q, name=entity).data()
             if res:
                 names = "、".join([list(data.values())[0] for data in res])
                 return f"<提示>用户对{entity}有查询{lianxi}需求，知识库内容：{names}</提示>"
@@ -57,8 +67,8 @@ class KGService:
         # 症状推测逻辑
         if '疾病症状' in entities and '疾病' not in entities and self.client:
             try:
-                sql_q = "match (a:疾病)-[r:疾病的症状]->(b:疾病症状 {名称:'%s'}) return a.名称" % (entities['疾病症状'])
-                res = [v for d in self.client.run(sql_q).data() for v in d.values()]
+                sql_q = "match (a:疾病)-[r:疾病的症状]->(b:疾病症状 {名称:$name}) return a.名称"
+                res = [v for d in self.client.run(sql_q, name=entities['疾病症状']).data() for v in d.values()]
                 if res:
                     has_kg = True
                     entities['疾病'] = random.choice(res)
@@ -110,10 +120,10 @@ class KGService:
         try:
             query = f"""
                 MATCH path = (n)-[*1..{max_hops}]-(m)
-                WHERE n.名称 = '{entity_name}'
+                WHERE n.名称 = $name
                 RETURN path LIMIT 100
             """
-            result = self.client.run(query).data()
+            result = self.client.run(query, name=entity_name).data()
             nodes = {}
             edges = []
 
