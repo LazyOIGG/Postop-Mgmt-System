@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     # ── 知识图谱增强配置 ──
     KG_MAX_HOPS: int = 3
     KG_VISUALIZE_MAX_NODES: int = 50
+    KG_TEXT2CYPHER_ENABLED: bool = True
 
     # ── 推送通知配置 ──
     NOTIFICATION_CHECK_INTERVAL: int = 60

@@ -1,6 +1,7 @@
 import re
 from typing import AsyncGenerator, Dict, List
 from app.agents.base import BaseAgent, AgentResponse
+from app.core.config import settings
 from app.services.ner_service import ner_service
 from app.services.intent_service import intent_service
 from app.services.kg_service import kg_service
@@ -48,6 +49,19 @@ class MedicalQAAgent(BaseAgent):
         intent_res = await intent_service.recognize(user_input, self.model_choice)
         prompt, yitu, entities, has_kg = kg_service.generate_enhanced_prompt(intent_res, user_input, entities)
 
+        # Text2Cypher 备选路径：已知意图未命中时，LLM 动态生成 Cypher
+        if not has_kg and settings.KG_TEXT2CYPHER_ENABLED:
+            t2c_prompt, t2c_results = await kg_service.text_to_cypher(user_input, entities, intent_res)
+            if t2c_prompt:
+                prompt = prompt.replace(
+                    '<指令>你是一个健康管理助手。请直接回答用户问题，并确保准确专业。</指令>',
+                    f'<指令>你是一个专业的健康管理助手。回答必须严格基于给定的提示内容，不可自由发挥。如无信息，请回答“根据已知信息无法回答该问题”。</指令>\n{t2c_prompt}'
+                )
+                has_kg = True
+                yitu_list = [i for i in re.findall(r'查询(.*?)(?:需求|信息)', t2c_prompt) if len(i) <= 10]
+                if yitu_list:
+                    yitu = "、".join(yitu_list) if yitu else yitu_list[0]
+
         # When tools are active, route through the tool-call loop
         if tools and self.tools:
             response = await self._call_llm_with_tools(prompt, extra_context, history, tools)
@@ -92,6 +106,15 @@ class MedicalQAAgent(BaseAgent):
         entities = ner_service.recognize(user_input)
         intent_res = await intent_service.recognize(user_input, self.model_choice)
         prompt, yitu, entities, has_kg = kg_service.generate_enhanced_prompt(intent_res, user_input, entities)
+
+        # Text2Cypher 备选路径
+        if not has_kg and settings.KG_TEXT2CYPHER_ENABLED:
+            t2c_prompt, t2c_results = await kg_service.text_to_cypher(user_input, entities, intent_res)
+            if t2c_prompt:
+                prompt = prompt.replace(
+                    '<指令>你是一个健康管理助手。请直接回答用户问题，并确保准确专业。</指令>',
+                    f'<指令>你是一个专业的健康管理助手。回答必须严格基于给定的提示内容，不可自由发挥。如无信息，请回答“根据已知信息无法回答该问题”。</指令>\n{t2c_prompt}'
+                )
 
         if tools and self.tools:
             result = await self._call_llm_with_tools(prompt, extra_context, history, tools)

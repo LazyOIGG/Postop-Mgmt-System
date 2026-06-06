@@ -161,4 +161,28 @@ class KGService:
             logger.error("schema_fetch_failed", error=str(e))
             return {"node_types": [], "relationship_types": []}
 
+    def get_schema_summary(self) -> str:
+        """获取 Schema 文本摘要，供 text2cypher prompt 使用"""
+        schema = self.get_schema()
+        node_types = schema.get("node_types", [])
+        rel_types = schema.get("relationship_types", [])
+        lines = [f"节点标签: {', '.join(node_types) if node_types else '无'}"]
+        lines.append(f"关系类型: {', '.join(rel_types) if rel_types else '无'}")
+        return "\n".join(lines)
+
+    async def text_to_cypher(
+        self, user_query: str, entities: Dict, intent_response: str = ""
+    ) -> Tuple[Optional[str], Optional[List[Dict]]]:
+        """Text2Cypher 入口：将自然语言转为 Cypher 查询并执行，返回 (prompt_segment, raw_results)"""
+        from app.services.text2cypher_service import text2cypher_service as t2c
+        return await t2c.execute_text2cypher(user_query, entities, intent_response)
+
+    @staticmethod
+    def validate_cypher(cypher: str) -> bool:
+        """仅允许只读 Cypher 语句"""
+        forbidden = ["CREATE", "DELETE", "DETACH", "SET", "REMOVE", "MERGE", "DROP"]
+        upper = cypher.upper()
+        return not any(kw in upper for kw in forbidden)
+
+
 kg_service = KGService()
