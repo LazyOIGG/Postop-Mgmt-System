@@ -133,3 +133,66 @@ class RehabPlanTaskCompleteRequest(BaseModel):
 class RehabPlanUpdatePhaseRequest(BaseModel):
     plan_id: int
     current_phase: str
+
+
+# ===== 康复指标 =====
+class RehabMetricCreate(BaseModel):
+    metric_date: str  # YYYY-MM-DD
+    metric_type: str
+    metric_value: float
+    metric_unit: Optional[str] = ""
+    note: Optional[str] = ""
+
+
+class RehabMetricResponse(BaseModel):
+    id: int
+    plan_id: int
+    metric_date: str
+    metric_type: str
+    metric_value: float
+    metric_unit: Optional[str] = ""
+    note: Optional[str] = ""
+    created_at: Optional[str] = None
+
+
+# ===== 康复日志 =====
+class RehabJournalCreate(BaseModel):
+    journal_date: str
+    mood: Optional[str] = "okay"
+    pain_level: Optional[int] = 0
+    content: Optional[str] = ""
+    photo_urls: Optional[List[str]] = []
+    voice_url: Optional[str] = ""
+    sleep_quality: Optional[int] = 3
+    appetite: Optional[int] = 3
+    energy_level: Optional[int] = 3
+    questions_for_doctor: Optional[str] = ""
+
+
+class RehabJournalResponse(BaseModel):
+    id: int
+    plan_id: int
+    username: str
+    journal_date: str
+    mood: Optional[str] = ""
+    pain_level: Optional[int] = 0
+    content: Optional[str] = ""
+    photo_urls: Any = None
+    voice_url: Optional[str] = ""
+    sleep_quality: Optional[int] = 0
+    appetite: Optional[int] = 0
+    energy_level: Optional[int] = 0
+    questions_for_doctor: Optional[str] = ""
+    created_at: Optional[str] = None
+
+
+# ===== 医生端 =====
+class DoctorRehabFeedback(BaseModel):
+    plan_id: int
+    feedback_content: str
+    action_type: Optional[str] = "note"  # note / adjust / alert
+
+
+class DoctorRehabPlanAdjust(BaseModel):
+    plan_id: int
+    adjustments: Dict[str, Any]  # {"add_tasks": [...], "modify_tasks": [...], "phase_override": "急性期"}

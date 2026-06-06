@@ -105,3 +105,33 @@ async def cancel_plan(
     if not ok:
         raise HTTPException(status_code=500, detail="取消计划失败")
     return {"success": True, "message": "康复计划已取消"}
+
+
+@router.get("/{plan_id}/dashboard")
+async def get_plan_dashboard(
+    plan_id: int,
+    user: Dict = Depends(get_current_user)
+):
+    """获取康复计划仪表盘聚合数据"""
+    plan = rehab_plan_service.get_plan_detail(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="康复计划不存在")
+    if plan.get("username") != user["username"]:
+        raise HTTPException(status_code=403, detail="无权查看此计划")
+    return rehab_plan_service.get_dashboard_data(plan_id)
+
+
+@router.get("/{plan_id}/calendar")
+async def get_plan_calendar(
+    plan_id: int,
+    year: int = Query(...),
+    month: int = Query(...),
+    user: Dict = Depends(get_current_user)
+):
+    """获取康复计划月度日历热力图数据"""
+    plan = rehab_plan_service.get_plan_detail(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="康复计划不存在")
+    if plan.get("username") != user["username"]:
+        raise HTTPException(status_code=403, detail="无权查看此计划")
+    return rehab_plan_service.get_calendar_data(plan_id, year, month)

@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import (auth, chat, sessions, kg, stats, tools, multimodal,
                                  health, profile, checkin, overview, reminder, doctor,
-                                 rehab_plan, notifications, upload)
+                                 rehab_plan, notifications, upload,
+                                 rehab_metrics, rehab_exercises, rehab_journals, rehab_achievements,
+                                 rehab_doctor)
 
 api_router = APIRouter()
 
@@ -18,6 +20,11 @@ api_router.include_router(checkin.router, prefix="/checkin", tags=["每日健康
 api_router.include_router(overview.router, prefix="/overview", tags=["趋势分析与健康概览"])
 api_router.include_router(reminder.router, prefix="/reminder", tags=["提醒中心"])
 api_router.include_router(doctor.router, prefix="/doctor", tags=["医生端最小版"])
+api_router.include_router(rehab_doctor.router, prefix="/doctor", tags=["医生端康复管理"])
 api_router.include_router(rehab_plan.router, prefix="/rehab-plan", tags=["康复计划"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["通知消息"])
 api_router.include_router(upload.router, prefix="/upload", tags=["文件上传"])
+api_router.include_router(rehab_metrics.router, prefix="/rehab-plan", tags=["康复指标"])
+api_router.include_router(rehab_journals.router, prefix="/rehab-plan", tags=["康复日志"])
+api_router.include_router(rehab_achievements.router, prefix="/rehab-plan", tags=["康复成就"])
+api_router.include_router(rehab_exercises.router, prefix="", tags=["运动指导库"])

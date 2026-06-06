@@ -337,6 +337,14 @@ class RehabPlanService:
             if idx < len(phase_order) - 1:
                 next_phase = phase_order[idx + 1]
 
+        # 更新计划统计（完成率、连续打卡）
+        db_instance.update_rehab_plan_stats(task["plan_id"])
+
+        # 检查并触发成就
+        from app.services.rehab_achievement_service import rehab_achievement_service
+        ach_result = rehab_achievement_service.check_and_award(username, task["plan_id"])
+        new_achievements = ach_result.get("new_achievements", [])
+
         return {
             "success": True,
             "task_id": task_id,
@@ -344,7 +352,8 @@ class RehabPlanService:
             "phase_complete": phase_complete,
             "current_phase": current_phase,
             "next_phase": next_phase,
-            "phase_stats": stats
+            "phase_stats": stats,
+            "new_achievements": new_achievements
         }
 
     def cancel_plan(self, plan_id: int, username: str) -> bool:
@@ -367,6 +376,41 @@ class RehabPlanService:
             if phase_order.index(new_phase) < phase_order.index(current):
                 return False  # 不能回退
         return db_instance.update_rehab_plan_phase(plan_id, new_phase)
+
+    def get_dashboard_data(self, plan_id: int) -> Dict:
+        plan = db_instance.get_rehab_plan(plan_id)
+        if not plan:
+            return {"success": False, "error": "计划不存在"}
+
+        stats = db_instance.get_rehab_dashboard_stats(plan_id)
+        today = __import__("datetime").datetime.now()
+        year, month = today.year, today.month
+
+        calendar_data = db_instance.get_rehab_calendar_data(plan_id, year, month)
+        today_tasks = db_instance.get_today_rehab_tasks(
+            plan.get("username"), today.strftime("%Y-%m-%d"))
+        latest_metrics = db_instance.get_latest_metrics(plan_id)
+
+        # 阶段统计
+        phase_order = ["急性期", "恢复期", "巩固期"]
+        phase_stats = {}
+        for p in phase_order:
+            stats_p = db_instance.get_rehab_plan_phase_task_stats(plan_id, p)
+            phase_stats[p] = stats_p
+
+        return {
+            "success": True,
+            "plan": plan,
+            "stats": stats,
+            "calendar": calendar_data,
+            "today_tasks": today_tasks,
+            "latest_metrics": latest_metrics,
+            "phase_stats": phase_stats
+        }
+
+    def get_calendar_data(self, plan_id: int, year: int, month: int) -> Dict:
+        data = db_instance.get_rehab_calendar_data(plan_id, year, month)
+        return {"success": True, "calendar": data}
 
 
 rehab_plan_service = RehabPlanService()

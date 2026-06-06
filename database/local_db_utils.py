@@ -1723,3 +1723,379 @@ class DatabaseConnector:
             if self.connection:
                 self.connection.rollback()
             return False
+
+    # ── rehab_metrics ──
+    def save_rehab_metric(
+        self, plan_id: int, username: str, metric_date: str,
+        metric_type: str, metric_value: float, metric_unit: str = "", note: str = ""
+    ):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor()
+            query = """
+                INSERT INTO rehab_metrics (plan_id, username, metric_date, metric_type, metric_value, metric_unit, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE metric_value = VALUES(metric_value), metric_unit = VALUES(metric_unit), note = VALUES(note)
+            """
+            cursor.execute(query, (plan_id, username, metric_date, metric_type, metric_value, metric_unit, note))
+            self.connection.commit()
+            new_id = cursor.lastrowid
+            cursor.close()
+            return new_id
+        except Exception as e:
+            print(f"保存康复指标失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return None
+
+    def get_rehab_metrics(
+        self, plan_id: int, metric_type: str = None,
+        date_from: str = None, date_to: str = None
+    ):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            conditions = ["plan_id = %s"]
+            params = [plan_id]
+            if metric_type:
+                conditions.append("metric_type = %s")
+                params.append(metric_type)
+            if date_from:
+                conditions.append("metric_date >= %s")
+                params.append(date_from)
+            if date_to:
+                conditions.append("metric_date <= %s")
+                params.append(date_to)
+            where = " AND ".join(conditions)
+            query = f"""
+                SELECT id, plan_id, username, metric_date, metric_type,
+                       metric_value, metric_unit, note, created_at
+                FROM rehab_metrics WHERE {where}
+                ORDER BY metric_date ASC, metric_type ASC
+            """
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"获取康复指标失败: {e}")
+            return []
+
+    def get_latest_metrics(self, plan_id: int):
+        try:
+            if not self._ensure_connection():
+                return {}
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT m.metric_type, m.metric_value, m.metric_unit, m.metric_date
+                FROM rehab_metrics m
+                INNER JOIN (
+                    SELECT metric_type, MAX(metric_date) as max_date
+                    FROM rehab_metrics WHERE plan_id = %s GROUP BY metric_type
+                ) latest ON m.metric_type = latest.metric_type AND m.metric_date = latest.max_date
+                WHERE m.plan_id = %s
+            """
+            cursor.execute(query, (plan_id, plan_id))
+            results = cursor.fetchall()
+            cursor.close()
+            metrics = {}
+            for r in results:
+                metrics[r["metric_type"]] = {
+                    "value": r["metric_value"],
+                    "unit": r["metric_unit"],
+                    "date": str(r["metric_date"])
+                }
+            return metrics
+        except Exception as e:
+            print(f"获取最新指标失败: {e}")
+            return {}
+
+    # ── rehab_exercises ──
+    def get_rehab_exercises(
+        self, phase: str = None, category: str = None,
+        surgery_type: str = None, difficulty: str = None,
+        search: str = None, limit: int = 50
+    ):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            conditions = []
+            params = []
+            if phase:
+                conditions.append("phase_suitable = %s")
+                params.append(phase)
+            if category:
+                conditions.append("category = %s")
+                params.append(category)
+            if difficulty:
+                conditions.append("difficulty = %s")
+                params.append(difficulty)
+            if surgery_type:
+                conditions.append("(surgery_type_tag = %s OR surgery_type_tag = '通用')")
+                params.append(surgery_type)
+            if search:
+                conditions.append("(title LIKE %s OR description LIKE %s)")
+                params.extend([f"%{search}%", f"%{search}%"])
+            where = " AND ".join(conditions) if conditions else "1=1"
+            query = f"""
+                SELECT id, title, category, difficulty, target_body_part,
+                       surgery_type_tag, video_url, thumbnail_url, image_urls,
+                       description, steps, duration_minutes, repetitions,
+                       precautions, phase_suitable
+                FROM rehab_exercises WHERE {where}
+                ORDER BY FIELD(phase_suitable, '急性期','恢复期','巩固期'), difficulty
+                LIMIT %s
+            """
+            params.append(limit)
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            cursor.close()
+            for r in results:
+                if r.get("steps") and isinstance(r["steps"], str):
+                    r["steps"] = __import__("json").loads(r["steps"])
+                if r.get("image_urls") and isinstance(r["image_urls"], str):
+                    r["image_urls"] = __import__("json").loads(r["image_urls"])
+            return results
+        except Exception as e:
+            print(f"获取运动库失败: {e}")
+            return []
+
+    def get_rehab_exercise(self, exercise_id: int):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor(dictionary=True)
+            query = "SELECT * FROM rehab_exercises WHERE id = %s"
+            cursor.execute(query, (exercise_id,))
+            result = cursor.fetchone()
+            cursor.close()
+            if result:
+                if result.get("steps") and isinstance(result["steps"], str):
+                    result["steps"] = __import__("json").loads(result["steps"])
+                if result.get("image_urls") and isinstance(result["image_urls"], str):
+                    result["image_urls"] = __import__("json").loads(result["image_urls"])
+            return result
+        except Exception as e:
+            print(f"获取运动详情失败: {e}")
+            return None
+
+    # ── rehab_journals ──
+    def save_rehab_journal(self, plan_id: int, username: str, data: dict):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor()
+            photo_urls_json = __import__("json").dumps(data.get("photo_urls", []), ensure_ascii=False)
+            query = """
+                INSERT INTO rehab_journals
+                (plan_id, username, journal_date, mood, pain_level, content,
+                 photo_urls, voice_url, sleep_quality, appetite, energy_level, questions_for_doctor)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                ON DUPLICATE KEY UPDATE
+                    mood = VALUES(mood), pain_level = VALUES(pain_level),
+                    content = VALUES(content), photo_urls = VALUES(photo_urls),
+                    voice_url = VALUES(voice_url), sleep_quality = VALUES(sleep_quality),
+                    appetite = VALUES(appetite), energy_level = VALUES(energy_level),
+                    questions_for_doctor = VALUES(questions_for_doctor)
+            """
+            cursor.execute(query, (
+                plan_id, username, data.get("journal_date"),
+                data.get("mood", "okay"), data.get("pain_level", 0),
+                data.get("content", ""), photo_urls_json,
+                data.get("voice_url", ""), data.get("sleep_quality", 3),
+                data.get("appetite", 3), data.get("energy_level", 3),
+                data.get("questions_for_doctor", "")
+            ))
+            self.connection.commit()
+            new_id = cursor.lastrowid
+            cursor.close()
+            return new_id
+        except Exception as e:
+            print(f"保存康复日志失败: {e}")
+            if self.connection:
+                self.connection.rollback()
+            return None
+
+    def get_rehab_journals(self, plan_id: int, date_from: str = None, date_to: str = None):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            conditions = ["plan_id = %s"]
+            params = [plan_id]
+            if date_from:
+                conditions.append("journal_date >= %s")
+                params.append(date_from)
+            if date_to:
+                conditions.append("journal_date <= %s")
+                params.append(date_to)
+            where = " AND ".join(conditions)
+            query = f"SELECT * FROM rehab_journals WHERE {where} ORDER BY journal_date DESC"
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            cursor.close()
+            for r in results:
+                if r.get("photo_urls") and isinstance(r["photo_urls"], str):
+                    r["photo_urls"] = __import__("json").loads(r["photo_urls"])
+            return results
+        except Exception as e:
+            print(f"获取康复日志失败: {e}")
+            return []
+
+    def get_rehab_journal(self, journal_id: int):
+        try:
+            if not self._ensure_connection():
+                return None
+            cursor = self.connection.cursor(dictionary=True)
+            query = "SELECT * FROM rehab_journals WHERE id = %s"
+            cursor.execute(query, (journal_id,))
+            result = cursor.fetchone()
+            cursor.close()
+            if result and result.get("photo_urls") and isinstance(result["photo_urls"], str):
+                result["photo_urls"] = __import__("json").loads(result["photo_urls"])
+            return result
+        except Exception as e:
+            print(f"获取日志详情失败: {e}")
+            return None
+
+    # ── achievements ──
+    def get_all_achievement_defs(self):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            query = "SELECT * FROM achievement_defs ORDER BY category, points"
+            cursor.execute(query)
+            results = cursor.fetchall()
+            cursor.close()
+            for r in results:
+                if r.get("condition_json") and isinstance(r["condition_json"], str):
+                    r["condition_json"] = __import__("json").loads(r["condition_json"])
+            return results
+        except Exception as e:
+            print(f"获取成就定义失败: {e}")
+            return []
+
+    def get_user_achievements(self, username: str, plan_id: int):
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT ua.id as user_achievement_id, ua.earned_at,
+                       ad.id, ad.code, ad.name, ad.description, ad.icon_url,
+                       ad.category, ad.condition_json, ad.points
+                FROM user_achievements ua
+                JOIN achievement_defs ad ON ua.achievement_id = ad.id
+                WHERE ua.username = %s AND ua.plan_id = %s
+                ORDER BY ua.earned_at DESC
+            """
+            cursor.execute(query, (username, plan_id))
+            results = cursor.fetchall()
+            cursor.close()
+            for r in results:
+                if r.get("condition_json") and isinstance(r["condition_json"], str):
+                    r["condition_json"] = __import__("json").loads(r["condition_json"])
+            return results
+        except Exception as e:
+            print(f"获取用户成就失败: {e}")
+            return []
+
+    def award_achievement(self, username: str, plan_id: int, achievement_id: int):
+        try:
+            if not self._ensure_connection():
+                return False
+            cursor = self.connection.cursor()
+            query = """
+                INSERT IGNORE INTO user_achievements (username, plan_id, achievement_id)
+                VALUES (%s, %s, %s)
+            """
+            cursor.execute(query, (username, plan_id, achievement_id))
+            self.connection.commit()
+            affected = cursor.rowcount
+            cursor.close()
+            return affected > 0
+        except Exception as e:
+            print(f"授予成就失败: {e}")
+            return False
+
+    # ── 日历聚合 ──
+    def get_rehab_calendar_data(self, plan_id: int, year: int, month: int):
+        try:
+            if not self._ensure_connection():
+                return {}
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT task_date,
+                       COUNT(*) as total,
+                       SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+                       SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped
+                FROM rehab_plan_tasks
+                WHERE plan_id = %s
+                  AND YEAR(task_date) = %s AND MONTH(task_date) = %s
+                GROUP BY task_date
+                ORDER BY task_date
+            """
+            cursor.execute(query, (plan_id, year, month))
+            results = cursor.fetchall()
+            cursor.close()
+            calendar = {}
+            for r in results:
+                calendar[str(r["task_date"])] = {
+                    "total": r["total"],
+                    "completed": r["completed"],
+                    "skipped": r["skipped"]
+                }
+            return calendar
+        except Exception as e:
+            print(f"获取日历数据失败: {e}")
+            return {}
+
+    # ── 仪表盘聚合 ──
+    def get_rehab_dashboard_stats(self, plan_id: int):
+        try:
+            if not self._ensure_connection():
+                return {}
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT
+                    COUNT(*) as total_tasks,
+                    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks
+                FROM rehab_plan_tasks WHERE plan_id = %s
+            """
+            cursor.execute(query, (plan_id,))
+            stats = cursor.fetchone()
+            cursor.close()
+            return stats or {"total_tasks": 0, "completed_tasks": 0, "pending_tasks": 0}
+        except Exception as e:
+            print(f"获取仪表盘统计失败: {e}")
+            return {}
+
+    # ── 更新计划统计（完成率、连续打卡） ──
+    def update_rehab_plan_stats(self, plan_id: int):
+        try:
+            if not self._ensure_connection():
+                return
+            cursor = self.connection.cursor()
+            query = """
+                UPDATE rehab_plans p
+                SET
+                    total_completion_rate = (
+                        SELECT ROUND(SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) * 100.0 / GREATEST(COUNT(*), 1), 2)
+                        FROM rehab_plan_tasks WHERE plan_id = p.id
+                    ),
+                    last_checkin_date = (
+                        SELECT MAX(task_date) FROM rehab_plan_tasks
+                        WHERE plan_id = p.id AND status = 'completed'
+                    )
+                WHERE p.id = %s
+            """
+            cursor.execute(query, (plan_id,))
+            self.connection.commit()
+            cursor.close()
+        except Exception as e:
+            print(f"更新计划统计失败: {e}")
