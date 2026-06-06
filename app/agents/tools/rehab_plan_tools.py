@@ -1,6 +1,8 @@
 from app.agents.tools.base import Tool
 from app.agents.tools.registry import tool_registry
 from app.services.rehab_plan_service import rehab_plan_service
+from app.services.rehab_exercise_service import rehab_exercise_service
+from app.services.rehab_metrics_service import rehab_metrics_service
 
 # ── Tool schemas ──────────────────────────────────────────────────
 
@@ -131,6 +133,97 @@ complete_rehab_task_tool = Tool(
     handler=_complete_rehab_task
 )
 
+# ── 推荐运动 ──────────────────────────────────────────────────────
+
+RECOMMEND_EXERCISES_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "surgery_type": {
+            "type": "string",
+            "description": "手术类型"
+        },
+        "current_phase": {
+            "type": "string",
+            "description": "当前康复阶段：急性期/恢复期/巩固期"
+        }
+    },
+    "required": ["surgery_type", "current_phase"]
+}
+
+
+async def _recommend_exercises(surgery_type: str, current_phase: str) -> str:
+    result = rehab_exercise_service.get_recommended(surgery_type, current_phase)
+    exercises = result.get("exercises", [])
+    if not exercises:
+        return f"未找到适合「{current_phase}」阶段、「{surgery_type}」的运动指导。"
+    lines = [f"为「{current_phase}」阶段的{surgery_type}患者推荐以下运动："]
+    for i, ex in enumerate(exercises, 1):
+        diff_map = {"easy": "简单", "medium": "中等", "hard": "困难"}
+        cat_map = {"stretching": "拉伸", "strength": "力量", "balance": "平衡",
+                   "mobility": "活动度", "breathing": "呼吸", "other": "其他"}
+        lines.append(
+            f"\n{i}. **{ex['title']}** ({cat_map.get(ex.get('category',''), '其他')} · "
+            f"{diff_map.get(ex.get('difficulty',''), '简单')})\n"
+            f"   {ex.get('description','')[:100]}\n"
+            f"   时长：{ex.get('duration_minutes',5)}分钟 · 重复：{ex.get('repetitions',10)}次\n"
+            f"   ⚠️ {ex.get('precautions','请遵医嘱')}"
+        )
+    return "\n".join(lines)
+
+
+# ── 查看指标 ──────────────────────────────────────────────────────
+
+GET_REHAB_METRICS_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "username": {
+            "type": "string",
+            "description": "用户名"
+        },
+        "plan_id": {
+            "type": "integer",
+            "description": "康复计划ID"
+        }
+    },
+    "required": ["username", "plan_id"]
+}
+
+
+async def _get_rehab_metrics(username: str, plan_id: int) -> str:
+    result = rehab_metrics_service.get_latest_metrics(plan_id)
+    metrics = result.get("metrics", {})
+    if not metrics:
+        return "该计划暂无指标记录。建议患者每日记录疼痛评分、关节活动度等指标。"
+    lines = ["最新指标快照："]
+    label_map = {
+        "pain_vas": "疼痛VAS", "rom_flexion": "屈曲ROM", "rom_extension": "伸直ROM",
+        "muscle_strength": "肌力等级", "walking_distance": "步行距离", "weight": "体重",
+        "temperature": "体温", "heart_rate": "心率", "sleep_hours": "睡眠时长"
+    }
+    for key, val in metrics.items():
+        label = label_map.get(key, key)
+        lines.append(f"  {label}: {val['value']} {val.get('unit','')}  ({val.get('date','未知日期')})")
+    return "\n".join(lines)
+
+
+# ── Register additional tools ──────────────────────────────────────
+
+recommend_exercises_tool = Tool(
+    name="recommend_exercises",
+    description="根据手术类型和当前康复阶段推荐适合的运动指导。当用户询问康复期间应该做什么运动、如何锻炼时使用。",
+    parameters=RECOMMEND_EXERCISES_SCHEMA,
+    handler=_recommend_exercises
+)
+
+get_rehab_metrics_tool = Tool(
+    name="get_rehab_metrics",
+    description="查看患者最新康复指标数据（疼痛评分、关节活动度、肌力等）。当用户询问恢复情况、指标变化时使用。",
+    parameters=GET_REHAB_METRICS_SCHEMA,
+    handler=_get_rehab_metrics
+)
+
 tool_registry.register(generate_rehab_plan_tool)
 tool_registry.register(get_rehab_plan_status_tool)
 tool_registry.register(complete_rehab_task_tool)
+tool_registry.register(recommend_exercises_tool)
+tool_registry.register(get_rehab_metrics_tool)

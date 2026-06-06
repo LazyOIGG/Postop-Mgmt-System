@@ -10,6 +10,8 @@ REHAB_PLAN_SYSTEM_PROMPT = """你是一个健康管理与康复计划助手。�
 - 生成康复计划：调用 generate_rehab_plan 工具（手术类型可选，非术后用户无需提供）
 - 查看康复计划状态：调用 get_rehab_plan_status 工具
 - 完成康复任务：调用 complete_rehab_task 工具
+- 推荐康复运动：调用 recommend_exercises 工具（根据手术类型和阶段推荐运动）
+- 查看康复指标：调用 get_rehab_metrics 工具（查看最新指标数据）
 
 当用户询问康复计划、要求生成计划或标记任务完成时，请调用对应工具。
 对于康复相关的一般咨询（如注意事项、锻炼方法、饮食建议），请直接基于专业知识回答。
@@ -21,7 +23,8 @@ REHAB_PLAN_SYSTEM_PROMPT = """你是一个健康管理与康复计划助手。�
 
 
 class RehabPlanAgent(BaseAgent):
-    tools = ["generate_rehab_plan", "get_rehab_plan_status", "complete_rehab_task"]
+    tools = ["generate_rehab_plan", "get_rehab_plan_status", "complete_rehab_task",
+             "recommend_exercises", "get_rehab_metrics"]
 
     def __init__(self, model_choice=None):
         super().__init__(

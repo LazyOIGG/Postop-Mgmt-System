@@ -46,8 +46,8 @@ class ConnectionManager:
         if username not in self._connections:
             self._connections[username] = []
         self._connections[username].append(websocket)
-        logger.info("websocket_connected", username=username,
-                     active_connections=len(self._connections[username]))
+        logger.info("websocket_connected username=%s active_connections=%s",
+                     username, len(self._connections[username]))
 
     def disconnect(self, username: str, websocket: WebSocket):
         """移除指定连接，如果用户无连接则清理用户条目"""
@@ -57,8 +57,8 @@ class ConnectionManager:
             ]
             if not self._connections[username]:
                 del self._connections[username]
-            logger.info("websocket_disconnected", username=username,
-                         remaining=len(self._connections.get(username, [])))
+            logger.info("websocket_disconnected username=%s remaining=%s",
+                         username, len(self._connections.get(username, [])))
 
     # ── Sending ───────────────────────────────────────────────────
 
@@ -113,14 +113,14 @@ class ConnectionManager:
                 self.disconnect(username, ws)
 
             if dead:
-                logger.info("heartbeat_cleanup", dead_count=len(dead),
-                            active_users=len(self._connections))
+                logger.info("heartbeat_cleanup dead_count=%s active_users=%s",
+                            len(dead), len(self._connections))
 
     def start_heartbeat(self):
         """启动心跳任务（在 FastAPI startup 事件中调用）"""
         if self._heartbeat_task is None:
             self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
-            logger.info("heartbeat_started", interval=self._heartbeat_interval)
+            logger.info("heartbeat_started interval=%s", self._heartbeat_interval)
 
     async def shutdown(self):
         """优雅关闭：停止心跳并关闭所有连接"""
