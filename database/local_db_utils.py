@@ -913,7 +913,12 @@ class DatabaseConnector:
                     ON h1.username = h2.username AND h1.created_at = h2.max_created_at
                 ) ha
                     ON u.username = ha.username
-                ORDER BY ha.created_at DESC, u.username ASC
+                ORDER BY CASE ha.risk_level
+                    WHEN '高风险' THEN 1
+                    WHEN '中风险' THEN 2
+                    WHEN '低风险' THEN 3
+                    ELSE 4
+                END ASC, ha.created_at DESC, u.username ASC
                 LIMIT %s
             """
             cursor.execute(query, (limit,))

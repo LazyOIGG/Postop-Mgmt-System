@@ -1,0 +1,330 @@
+{
+  "overall": {
+    "accuracy": 1.0,
+    "total_samples": 20,
+    "correct_count": 20
+  },
+  "by_agent": {
+    "medical_qa": {
+      "total": 4,
+      "correct": 4,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "health_assessment": {
+      "total": 4,
+      "correct": 4,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "reminder": {
+      "total": 4,
+      "correct": 4,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "psychology": {
+      "total": 4,
+      "correct": 4,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "rehab_plan": {
+      "total": 4,
+      "correct": 4,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "by_category": {
+    "疾病查询": {
+      "accuracy": 1.0,
+      "total": 1,
+      "correct": 1
+    },
+    "健康评估": {
+      "accuracy": 1.0,
+      "total": 4,
+      "correct": 4
+    },
+    "提醒管理": {
+      "accuracy": 1.0,
+      "total": 4,
+      "correct": 4
+    },
+    "心理问题": {
+      "accuracy": 1.0,
+      "total": 4,
+      "correct": 4
+    },
+    "康复计划": {
+      "accuracy": 1.0,
+      "total": 4,
+      "correct": 4
+    },
+    "药品查询": {
+      "accuracy": 1.0,
+      "total": 3,
+      "correct": 3
+    }
+  },
+  "confusion_matrix": {
+    "medical_qa": {
+      "medical_qa": 4
+    },
+    "health_assessment": {
+      "health_assessment": 4
+    },
+    "reminder": {
+      "reminder": 4
+    },
+    "psychology": {
+      "psychology": 4
+    },
+    "rehab_plan": {
+      "rehab_plan": 4
+    }
+  },
+  "details": [
+    {
+      "input": "帮我查一下糖尿病的治疗方法",
+      "expected": "medical_qa",
+      "predicted": "medical_qa",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "medical_qa",
+        "reason": "用户询问糖尿病的治疗方法，属于医学知识问答中的疾病治疗查询",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"medical_qa\", \"reason\": \"用户询问糖尿病的治疗方法，属于医学知识问答中的疾病治疗查询\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "我今天感觉伤口有点疼，需要去医院吗",
+      "expected": "health_assessment",
+      "predicted": "health_assessment",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "health_assessment",
+        "reason": "用户描述伤口疼痛并询问是否需要就医，属于健康风险评估范围",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"health_assessment\", \"reason\": \"用户描述伤口疼痛并询问是否需要就医，属于健康风险评估范围\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "帮我设置一个吃药提醒，每天早上8点",
+      "expected": "reminder",
+      "predicted": "reminder",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "reminder",
+        "reason": "用户意图是创建吃药提醒，属于提醒管理范畴",
+        "confidence": 1.0,
+        "raw_response": "{\"agent\": \"reminder\", \"reason\": \"用户意图是创建吃药提醒，属于提醒管理范畴\", \"confidence\": 1.0}"
+      }
+    },
+    {
+      "input": "我最近总是睡不着，很焦虑",
+      "expected": "psychology",
+      "predicted": "psychology",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "psychology",
+        "reason": "用户描述失眠伴随焦虑情绪，需要心理疏导和情绪支持。",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"psychology\", \"reason\": \"用户描述失眠伴随焦虑情绪，需要心理疏导和情绪支持。\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "帮我制定一个康复计划",
+      "expected": "rehab_plan",
+      "predicted": "rehab_plan",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "rehab_plan",
+        "reason": "用户请求制定康复计划，属于康复计划管理范畴",
+        "confidence": 0.98,
+        "raw_response": "{\"agent\": \"rehab_plan\", \"reason\": \"用户请求制定康复计划，属于康复计划管理范畴\", \"confidence\": 0.98}"
+      }
+    },
+    {
+      "input": "阿莫西林是治什么病的",
+      "expected": "medical_qa",
+      "predicted": "medical_qa",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "medical_qa",
+        "reason": "用户询问阿莫西林的适应症，属于药品查询的医学知识问答",
+        "confidence": 0.98,
+        "raw_response": "{\"agent\": \"medical_qa\", \"reason\": \"用户询问阿莫西林的适应症，属于药品查询的医学知识问答\", \"confidence\": 0.98}"
+      }
+    },
+    {
+      "input": "我体温38度5，头很晕",
+      "expected": "health_assessment",
+      "predicted": "health_assessment",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "health_assessment",
+        "reason": "用户描述发热和头晕症状，需要评估健康状况及就医建议",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"health_assessment\", \"reason\": \"用户描述发热和头晕症状，需要评估健康状况及就医建议\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "查看我今天的用药提醒",
+      "expected": "reminder",
+      "predicted": "reminder",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "reminder",
+        "reason": "用户请求查看用药提醒，属于提醒管理范畴",
+        "confidence": 1.0,
+        "raw_response": "{\"agent\": \"reminder\", \"reason\": \"用户请求查看用药提醒，属于提醒管理范畴\", \"confidence\": 1.0}"
+      }
+    },
+    {
+      "input": "我感觉很抑郁，对什么都提不起兴趣",
+      "expected": "psychology",
+      "predicted": "psychology",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "psychology",
+        "reason": "用户表达抑郁情绪和兴趣减退，属于心理情绪问题",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"psychology\", \"reason\": \"用户表达抑郁情绪和兴趣减退，属于心理情绪问题\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "我今天的康复任务完成了吗",
+      "expected": "rehab_plan",
+      "predicted": "rehab_plan",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "rehab_plan",
+        "reason": "用户询问今日康复任务的完成情况，属于康复计划进度查看。",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"rehab_plan\", \"reason\": \"用户询问今日康复任务的完成情况，属于康复计划进度查看。\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "高血压吃什么药好",
+      "expected": "medical_qa",
+      "predicted": "medical_qa",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "medical_qa",
+        "reason": "用户询问高血压的用药建议，属于医学知识问答",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"medical_qa\", \"reason\": \"用户询问高血压的用药建议，属于医学知识问答\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "术后伤口有点红肿，正常吗",
+      "expected": "health_assessment",
+      "predicted": "health_assessment",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "health_assessment",
+        "reason": "用户描述术后伤口红肿，询问是否正常，属于健康恢复情况评估和是否需要就医的咨询。",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"health_assessment\", \"reason\": \"用户描述术后伤口红肿，询问是否正常，属于健康恢复情况评估和是否需要就医的咨询。\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "帮我创建一个复查提醒",
+      "expected": "reminder",
+      "predicted": "reminder",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "reminder",
+        "reason": "用户明确要求创建复查提醒，属于提醒管理范畴",
+        "confidence": 1.0,
+        "raw_response": "{\"agent\": \"reminder\", \"reason\": \"用户明确要求创建复查提醒，属于提醒管理范畴\", \"confidence\": 1.0}"
+      }
+    },
+    {
+      "input": "我手术后很害怕，总是担心恢复不好",
+      "expected": "psychology",
+      "predicted": "psychology",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "psychology",
+        "reason": "用户表达术后恐惧和担忧恢复，属于心理情绪问题，需要心理疏导。",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"psychology\", \"reason\": \"用户表达术后恐惧和担忧恢复，属于心理情绪问题，需要心理疏导。\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "我想看看康复计划的进度",
+      "expected": "rehab_plan",
+      "predicted": "rehab_plan",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "rehab_plan",
+        "reason": "用户意图是查看康复计划的进度，属于康复计划管理的查询功能",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"rehab_plan\", \"reason\": \"用户意图是查看康复计划的进度，属于康复计划管理的查询功能\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "感冒了吃什么药",
+      "expected": "medical_qa",
+      "predicted": "medical_qa",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "medical_qa",
+        "reason": "用户询问感冒的用药建议，属于医学知识问答中的疾病治疗信息查询",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"medical_qa\", \"reason\": \"用户询问感冒的用药建议，属于医学知识问答中的疾病治疗信息查询\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "我血压150/95，需要吃药吗",
+      "expected": "health_assessment",
+      "predicted": "health_assessment",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "health_assessment",
+        "reason": "用户描述血压异常并询问是否需要服药，属于健康风险评估范畴",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"health_assessment\", \"reason\": \"用户描述血压异常并询问是否需要服药，属于健康风险评估范畴\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "删除明天的吃药提醒",
+      "expected": "reminder",
+      "predicted": "reminder",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "reminder",
+        "reason": "用户明确要求删除提醒，涉及提醒管理操作",
+        "confidence": 1.0,
+        "raw_response": "{\"agent\": \"reminder\", \"reason\": \"用户明确要求删除提醒，涉及提醒管理操作\", \"confidence\": 1.0}"
+      }
+    },
+    {
+      "input": "我最近失眠很严重，怎么办",
+      "expected": "psychology",
+      "predicted": "psychology",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "psychology",
+        "reason": "用户主诉严重失眠，属于心理情绪问题范围，需要情绪支持和心理疏导。",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"psychology\", \"reason\": \"用户主诉严重失眠，属于心理情绪问题范围，需要情绪支持和心理疏导。\", \"confidence\": 0.95}"
+      }
+    },
+    {
+      "input": "今天要做什么康复训练",
+      "expected": "rehab_plan",
+      "predicted": "rehab_plan",
+      "is_correct": true,
+      "metadata": {
+        "routed_agent": "rehab_plan",
+        "reason": "用户询问今日康复训练内容，属于查看康复计划中的今日任务。",
+        "confidence": 0.95,
+        "raw_response": "{\"agent\": \"rehab_plan\", \"reason\": \"用户询问今日康复训练内容，属于查看康复计划中的今日任务。\", \"confidence\": 0.95}"
+      }
+    }
+  ]
+}

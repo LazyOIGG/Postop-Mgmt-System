@@ -1,5 +1,6 @@
 from typing import Dict, List
 from app.db.session import db_instance
+from app.services.anomaly_service import anomaly_service
 
 
 class OverviewService:
@@ -50,10 +51,13 @@ class OverviewService:
             "today_completed_reminders": reminder_stats.get("completed_count", 0)
         }
 
+        trend_anomalies = anomaly_service.detect_trend_anomaly(username, days=days)
+
         return {
             "overview": overview_cards,
             "trend": trend,
             "abnormal_records": abnormal_records,
+            "trend_anomalies": trend_anomalies,
             "latest_assessment": latest_assessment,
             "profile": profile
         }

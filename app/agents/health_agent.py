@@ -1,6 +1,7 @@
 from typing import AsyncGenerator, Dict, List
 from app.agents.base import BaseAgent, AgentResponse
 from app.services.health_assessment_service import health_assessment_service
+from app.services.anomaly_service import anomaly_service
 
 HEALTH_AGENT_SYSTEM_PROMPT = """你是一个健康风险评估助手。你的职责是：
 1. 分析用户描述的身体症状和不适
@@ -28,12 +29,35 @@ HEALTH_AGENT_SYSTEM_PROMPT = """你是一个健康风险评估助手。你的职
 class HealthAssessmentAgent(BaseAgent):
     tools = ["get_recent_checkins", "get_checkin_trend"]
 
+    @staticmethod
+    def _extract_username(extra_context: str) -> str:
+        """从 extra_context 中提取用户名"""
+        if not extra_context:
+            return ""
+        for line in extra_context.split("\n"):
+            if "当前用户" in line and ":" in line:
+                return line.split(":", 1)[-1].strip()
+        return ""
+
     def __init__(self, model_choice: str = None):
         super().__init__(
             name="HealthAssessment",
             system_prompt=HEALTH_AGENT_SYSTEM_PROMPT,
             model_choice=model_choice
         )
+
+    async def _get_anomaly_context(self, extra_context: str) -> str:
+        """获取趋势异常检测结果，注入上下文"""
+        username = self._extract_username(extra_context)
+        if not username:
+            return ""
+        try:
+            result = anomaly_service.run_full_check(username)
+            if result["has_alert"]:
+                return f"\n<趋势预警>\n{result['alert_summary']}\n</趋势预警>"
+        except Exception:
+            pass
+        return ""
 
     async def run(
         self,
@@ -45,8 +69,11 @@ class HealthAssessmentAgent(BaseAgent):
     ) -> AgentResponse:
         risk_result = health_assessment_service.rule_based_assess(user_input)
 
+        # 获取趋势异常上下文
+        anomaly_ctx = await self._get_anomaly_context(extra_context)
+
         if tools and self.tools:
-            ctx = extra_context or ""
+            ctx = (extra_context or "") + anomaly_ctx
             if risk_result["risk_reasons"]:
                 ctx += f"\n风险评估: {risk_result['risk_level']} | 原因: {';'.join(risk_result['risk_reasons'])}"
             response = await self._call_llm_with_tools(user_input, ctx, history, tools)
@@ -60,6 +87,9 @@ class HealthAssessmentAgent(BaseAgent):
                 }
             )
 
+        ctx = anomaly_ctx
+        if ctx:
+            user_input = f"{user_input}\n{ctx}"
         advice = await health_assessment_service.generate_health_advice(user_input, risk_result)
         return AgentResponse(
             agent_name=self.name,
