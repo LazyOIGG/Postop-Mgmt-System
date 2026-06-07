@@ -184,5 +184,185 @@ class KGService:
         upper = cypher.upper()
         return not any(kw in upper for kw in forbidden)
 
+    # ── Search & autocomplete ───────────────────────────────────────
+
+    def search_entities(self, query: str, limit: int = 20, offset: int = 0) -> dict:
+        """模糊搜索实体 —— 跨所有节点类型，用于 Vue3 搜索框自动补全"""
+        if self.client is None:
+            return {"items": [], "total": 0}
+
+        # Escape backslashes and double quotes inside the query for Cypher string literal
+        safe_query = query.replace("\\", "\\\\").replace('"', '\\"')
+        search_pattern = f"(?i).*{safe_query}.*"
+
+        cypher = """
+            CALL {
+                MATCH (n:疾病) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '疾病' AS label, 'exact' AS match_type
+                UNION ALL
+                MATCH (n:药品) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '药品' AS label, 'exact' AS match_type
+                UNION ALL
+                MATCH (n:疾病症状) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '疾病症状' AS label, 'exact' AS match_type
+                UNION ALL
+                MATCH (n:食物) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '食物' AS label, 'exact' AS match_type
+                UNION ALL
+                MATCH (n:检查项目) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '检查项目' AS label, 'exact' AS match_type
+                UNION ALL
+                MATCH (n:科目) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '科目' AS label, 'exact' AS match_type
+                UNION ALL
+                MATCH (n:治疗方法) WHERE n.名称 =~ $pattern RETURN n.名称 AS name, '治疗方法' AS label, 'exact' AS match_type
+            }
+            RETURN name, label, match_type
+            ORDER BY name
+            SKIP $offset LIMIT $limit
+        """
+
+        # Also run a CONTAINS-based fuzzy search for broader results
+        fuzzy_cypher = """
+            CALL {
+                MATCH (n:疾病) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '疾病' AS label, 'fuzzy' AS match_type
+                UNION ALL
+                MATCH (n:药品) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '药品' AS label, 'fuzzy' AS match_type
+                UNION ALL
+                MATCH (n:疾病症状) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '疾病症状' AS label, 'fuzzy' AS match_type
+                UNION ALL
+                MATCH (n:食物) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '食物' AS label, 'fuzzy' AS match_type
+                UNION ALL
+                MATCH (n:检查项目) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '检查项目' AS label, 'fuzzy' AS match_type
+                UNION ALL
+                MATCH (n:科目) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '科目' AS label, 'fuzzy' AS match_type
+                UNION ALL
+                MATCH (n:治疗方法) WHERE n.名称 CONTAINS $query RETURN n.名称 AS name, '治疗方法' AS label, 'fuzzy' AS match_type
+            }
+            RETURN name, label, match_type
+            ORDER BY name
+            SKIP $offset LIMIT $limit
+        """
+
+        try:
+            # Prefer regex for short queries, CONTAINS for longer ones
+            if len(query) <= 3:
+                results = self.client.run(cypher, pattern=search_pattern, offset=offset, limit=limit).data()
+            else:
+                results = self.client.run(fuzzy_cypher, query=query, offset=offset, limit=limit).data()
+
+            # Deduplicate by (name, label) — exact match takes priority
+            seen = set()
+            items = []
+            for r in results:
+                key = (r["name"], r["label"])
+                if key not in seen:
+                    seen.add(key)
+                    items.append({"name": r["name"], "label": r["label"], "match_type": r["match_type"]})
+
+            # Count total (simplified: count distinct names across all labels)
+            total = len(items)
+
+            return {"items": items, "total": total}
+        except Exception as e:
+            logger.error("entity_search_failed", error=str(e))
+            return {"items": [], "total": 0}
+
+    def fast_path_query(self, entity_name: str, relation_type: str) -> list:
+        """快速路径查询：直接 1-hop Cypher，响应 < 1s"""
+        if self.client is None:
+            return []
+
+        # Map relation types to Cypher patterns
+        relation_map = {
+            "疾病使用药品": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病使用药品]->(b:药品) RETURN b.名称 AS result, '药品' AS type",
+                "label": "药品",
+            },
+            "疾病的症状": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病的症状]->(b:疾病症状) RETURN b.名称 AS result, '疾病症状' AS type",
+                "label": "疾病症状",
+            },
+            "疾病宜吃食物": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病宜吃食物]->(b:食物) RETURN b.名称 AS result, '食物' AS type",
+                "label": "食物",
+            },
+            "疾病忌吃食物": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病忌吃食物]->(b:食物) RETURN b.名称 AS result, '食物' AS type",
+                "label": "食物",
+            },
+            "疾病所需检查": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病所需检查]->(b:检查项目) RETURN b.名称 AS result, '检查项目' AS type",
+                "label": "检查项目",
+            },
+            "疾病所属科目": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病所属科目]->(b:科目) RETURN b.名称 AS result, '科目' AS type",
+                "label": "科目",
+            },
+            "治疗的方法": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:治疗的方法]->(b:治疗方法) RETURN b.名称 AS result, '治疗方法' AS type",
+                "label": "治疗方法",
+            },
+            "疾病并发疾病": {
+                "cypher": "MATCH (a:疾病{名称:$name})-[r:疾病并发疾病]->(b:疾病) RETURN b.名称 AS result, '疾病' AS type",
+                "label": "疾病",
+            },
+            "疾病简介": {
+                "cypher": "MATCH (a:疾病{名称:$name}) RETURN a.疾病简介 AS result, '属性' AS type",
+                "label": None,
+            },
+            "疾病病因": {
+                "cypher": "MATCH (a:疾病{名称:$name}) RETURN a.疾病病因 AS result, '属性' AS type",
+                "label": None,
+            },
+            "预防措施": {
+                "cypher": "MATCH (a:疾病{名称:$name}) RETURN a.预防措施 AS result, '属性' AS type",
+                "label": None,
+            },
+            "治疗周期": {
+                "cypher": "MATCH (a:疾病{名称:$name}) RETURN a.治疗周期 AS result, '属性' AS type",
+                "label": None,
+            },
+            "治愈概率": {
+                "cypher": "MATCH (a:疾病{名称:$name}) RETURN a.治愈概率 AS result, '属性' AS type",
+                "label": None,
+            },
+            "疾病易感人群": {
+                "cypher": "MATCH (a:疾病{名称:$name}) RETURN a.疾病易感人群 AS result, '属性' AS type",
+                "label": None,
+            },
+            # Reverse lookup: symptom → diseases
+            "症状反查疾病": {
+                "cypher": "MATCH (a:疾病)-[r:疾病的症状]->(b:疾病症状{名称:$name}) RETURN a.名称 AS result, '疾病' AS type",
+                "label": "疾病",
+            },
+        }
+
+        entry = relation_map.get(relation_type)
+        if not entry:
+            return []
+
+        try:
+            results = self.client.run(entry["cypher"], name=entity_name).data()
+            return [
+                {"result": r.get("result"), "type": r.get("type"), "relationship": relation_type}
+                for r in results
+                if r.get("result")
+            ]
+        except Exception as e:
+            logger.error("fast_path_query_failed", error=str(e), entity=entity_name, relation=relation_type)
+            return []
+
+    def count_nodes(self, label: str, name_filter: str = None) -> int:
+        """统计节点数量，用于分页"""
+        if self.client is None:
+            return 0
+        try:
+            if name_filter:
+                safe = name_filter.replace("\\", "\\\\").replace('"', '\\"')
+                cypher = f'MATCH (n:{label}) WHERE n.名称 CONTAINS $filter RETURN count(n) AS cnt'
+                result = self.client.run(cypher, filter=name_filter).data()
+            else:
+                cypher = f"MATCH (n:{label}) RETURN count(n) AS cnt"
+                result = self.client.run(cypher).data()
+            return result[0]["cnt"] if result else 0
+        except Exception as e:
+            logger.error("count_nodes_failed", error=str(e), label=label)
+            return 0
+
 
 kg_service = KGService()
