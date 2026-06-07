@@ -18,10 +18,10 @@ import json
 import pickle
 import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 import torch
-from transformers import BertTokenizer, BertModel
+from transformers import BertTokenizer
 
 # 添加项目根目录到路径
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -113,7 +113,6 @@ def evaluate_by_type(results: List[Dict]) -> Dict[str, Dict[str, float]]:
             if ent_type not in type_stats:
                 type_stats[ent_type] = {'tp': 0, 'fp': 0, 'fn': 0}
 
-            pred_entities = {e['type']: e['text'] for e in result.get('predicted_entities', [])}
             expected_entities = result.get('expected_entities', [])
 
             # 统计该类型的 TP, FP, FN
@@ -181,14 +180,14 @@ class SimpleNERModel:
 
         # 加载分词器
         self.tokenizer = BertTokenizer.from_pretrained(bert_model_path)
-        print(f"[INFO] 分词器加载成功")
+        print("[INFO] 分词器加载成功")
 
         # 加载模型
         if model_weights_path.exists():
             self.model = self.zwk.Bert_Model(bert_model_path, hidden_size=128, tag_num=len(tag2idx), bi=True)
             self.model.load_state_dict(torch.load(model_weights_path, map_location=self.device, weights_only=True))
             self.model = self.model.to(self.device).eval()
-            print(f"[INFO] NER 模型加载成功")
+            print("[INFO] NER 模型加载成功")
 
         # 加载规则和 TF-IDF 对齐（需要切换到项目根目录）
         original_dir = os.getcwd()
@@ -196,7 +195,7 @@ class SimpleNERModel:
             os.chdir(PROJECT_ROOT)
             self.rule = self.zwk.rule_find()
             self.tfidf_r = self.zwk.tfidf_alignment()
-            print(f"[INFO] 规则和 TF-IDF 对齐加载成功")
+            print("[INFO] 规则和 TF-IDF 对齐加载成功")
         except Exception as e:
             print(f"[WARN] 规则/TF-IDF 加载失败: {e}")
             self.rule = None
@@ -299,13 +298,13 @@ def main():
     print("\n" + "=" * 60)
     print("NER 评测结果")
     print("=" * 60)
-    print(f"总体指标:")
+    print("总体指标:")
     print(f"  Precision: {overall_metrics['precision']:.4f}")
     print(f"  Recall:    {overall_metrics['recall']:.4f}")
     print(f"  F1-score:  {overall_metrics['f1']:.4f}")
     print(f"  TP: {total_tp}, FP: {total_fp}, FN: {total_fn}")
 
-    print(f"\n各类型指标:")
+    print("\n各类型指标:")
     for ent_type, metrics in sorted(type_metrics.items()):
         print(f"  {ent_type}:")
         print(f"    P={metrics['precision']:.4f}, R={metrics['recall']:.4f}, F1={metrics['f1']:.4f}")

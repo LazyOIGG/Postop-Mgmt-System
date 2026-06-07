@@ -17,14 +17,15 @@ import json
 import asyncio
 import argparse
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
+
+from dotenv import load_dotenv
 
 # 添加项目根目录到路径
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # 加载 .env 文件
-from dotenv import load_dotenv
 load_dotenv(PROJECT_ROOT / '.env')
 
 
@@ -278,14 +279,14 @@ def main():
     print("\n" + "=" * 60)
     print("医学问答评测结果")
     print("=" * 60)
-    print(f"总体指标:")
+    print("总体指标:")
     print(f"  准确率:          {results['overall']['accuracy']:.4f}")
     print(f"  平均关键词覆盖:  {results['overall']['avg_keyword_coverage']:.4f}")
     print(f"  平均相似度:      {results['overall']['avg_similarity']:.4f}")
     print(f"  总样本数:        {results['overall']['total_samples']}")
     print(f"  可接受回答数:    {results['overall']['acceptable_count']}")
 
-    print(f"\n各类别指标:")
+    print("\n各类别指标:")
     for category, metrics in sorted(results['by_category'].items()):
         print(f"  {category}:")
         print(f"    准确率: {metrics['accuracy']:.4f} ({metrics['acceptable']}/{metrics['total']})")

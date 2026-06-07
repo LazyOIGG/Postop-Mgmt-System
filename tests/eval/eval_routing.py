@@ -198,24 +198,24 @@ def main():
     print("\n" + "=" * 60)
     print("Coordinator 路由评测结果")
     print("=" * 60)
-    print(f"总体指标:")
+    print("总体指标:")
     print(f"  路由准确率:  {results['overall']['accuracy']:.4f}")
     print(f"  总样本数:    {results['overall']['total_samples']}")
     print(f"  正确路由数:  {results['overall']['correct_count']}")
 
-    print(f"\n各 Agent 指标:")
+    print("\n各 Agent 指标:")
     for agent_name, metrics in sorted(results['by_agent'].items()):
         print(f"  {agent_name}:")
         print(f"    Precision: {metrics['precision']:.4f}")
         print(f"    Recall:    {metrics['recall']:.4f}")
         print(f"    样本数:    {metrics['total']}")
 
-    print(f"\n各类别指标:")
+    print("\n各类别指标:")
     for category, metrics in sorted(results['by_category'].items()):
         print(f"  {category}:")
         print(f"    准确率: {metrics['accuracy']:.4f} ({metrics['correct']}/{metrics['total']})")
 
-    print(f"\n混淆矩阵:")
+    print("\n混淆矩阵:")
     # 打印表头
     agents = sorted(set(list(results['confusion_matrix'].keys()) +
                         [k for v in results['confusion_matrix'].values() for k in v.keys()]))
