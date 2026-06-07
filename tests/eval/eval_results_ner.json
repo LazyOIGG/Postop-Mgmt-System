@@ -1,0 +1,533 @@
+{
+  "overall": {
+    "precision": 0.8636363636363636,
+    "recall": 0.8636363636363636,
+    "f1": 0.8636363636363636,
+    "tp": 19,
+    "fp": 3,
+    "fn": 3
+  },
+  "by_type": {
+    "疾病": {
+      "precision": 1.0,
+      "recall": 0.8571428571428571,
+      "f1": 0.923076923076923,
+      "tp": 6,
+      "fp": 0,
+      "fn": 1
+    },
+    "检查项目": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0
+    },
+    "治疗方法": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0
+    },
+    "食物": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0
+    },
+    "科目": {
+      "precision": 1.0,
+      "recall": 0.3333333333333333,
+      "f1": 0.5,
+      "tp": 1,
+      "fp": 0,
+      "fn": 2
+    },
+    "疾病症状": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  },
+  "details": [
+    {
+      "text": "糖尿病患者检查血压",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 3,
+          "type": "疾病",
+          "text": "糖尿病"
+        },
+        {
+          "start": 6,
+          "end": 8,
+          "type": "检查项目",
+          "text": "血压"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "疾病",
+          "text": "糖尿病",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "type": "检查项目",
+          "text": "血压",
+          "start": 7,
+          "end": 9
+        }
+      ],
+      "ner_raw_result": {
+        "疾病": "糖尿病",
+        "检查项目": "血压"
+      },
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "高血压需要检查血糖",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 3,
+          "type": "疾病",
+          "text": "高血压"
+        },
+        {
+          "start": 7,
+          "end": 9,
+          "type": "检查项目",
+          "text": "血糖"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "疾病",
+          "text": "高血压",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "type": "检查项目",
+          "text": "血糖",
+          "start": 7,
+          "end": 9
+        }
+      ],
+      "ner_raw_result": {
+        "疾病": "高血压",
+        "检查项目": "血糖"
+      },
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "肺炎可以手术",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "疾病",
+          "text": "肺炎"
+        },
+        {
+          "start": 5,
+          "end": 7,
+          "type": "治疗方法",
+          "text": "手术"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "疾病",
+          "text": "肺炎",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "type": "治疗方法",
+          "text": "手术",
+          "start": 4,
+          "end": 6
+        }
+      ],
+      "ner_raw_result": {
+        "疾病": "肺炎",
+        "治疗方法": "手术"
+      },
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "牛奶是食物",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "食物",
+          "text": "牛奶"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "食物",
+          "text": "牛奶",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "食物": "牛奶"
+      },
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "去内科检查",
+      "expected_entities": [
+        {
+          "start": 1,
+          "end": 3,
+          "type": "科目",
+          "text": "内科"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "检查项目",
+          "text": "内科检查",
+          "start": 1,
+          "end": 5
+        }
+      ],
+      "ner_raw_result": {
+        "检查项目": "内科检查"
+      },
+      "tp": 0,
+      "fp": 1,
+      "fn": 1
+    },
+    {
+      "text": "肿瘤需要切除",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "疾病",
+          "text": "肿瘤"
+        },
+        {
+          "start": 5,
+          "end": 7,
+          "type": "治疗方法",
+          "text": "切除"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "疾病",
+          "text": "肿瘤",
+          "start": 0,
+          "end": 2
+        },
+        {
+          "type": "治疗方法",
+          "text": "切除",
+          "start": 4,
+          "end": 6
+        }
+      ],
+      "ner_raw_result": {
+        "疾病": "肿瘤",
+        "治疗方法": "切除"
+      },
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "骨折补充维生素",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "疾病",
+          "text": "骨折"
+        },
+        {
+          "start": 4,
+          "end": 8,
+          "type": "检查项目",
+          "text": "维生素"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "检查项目",
+          "text": "维生素",
+          "start": 4,
+          "end": 7
+        },
+        {
+          "type": "疾病",
+          "text": "骨折",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "检查项目": "维生素",
+        "疾病": "骨折"
+      },
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "肥胖导致糖尿病",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "疾病症状",
+          "text": "肥胖"
+        },
+        {
+          "start": 4,
+          "end": 7,
+          "type": "疾病",
+          "text": "糖尿病"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "疾病",
+          "text": "糖尿病",
+          "start": 4,
+          "end": 7
+        },
+        {
+          "type": "疾病症状",
+          "text": "肥胖",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "疾病": "糖尿病",
+        "疾病症状": "肥胖"
+      },
+      "tp": 2,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "妇科检查很重要",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "科目",
+          "text": "妇科"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "检查项目",
+          "text": "妇科检查",
+          "start": 0,
+          "end": 4
+        }
+      ],
+      "ner_raw_result": {
+        "检查项目": "妇科检查"
+      },
+      "tp": 0,
+      "fp": 1,
+      "fn": 1
+    },
+    {
+      "text": "胡萝卜有营养",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 3,
+          "type": "食物",
+          "text": "胡萝卜"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "食物",
+          "text": "胡萝卜",
+          "start": 0,
+          "end": 3
+        },
+        {
+          "type": "治疗方法",
+          "text": "营养",
+          "start": 4,
+          "end": 6
+        }
+      ],
+      "ner_raw_result": {
+        "食物": "胡萝卜",
+        "治疗方法": "营养"
+      },
+      "tp": 1,
+      "fp": 1,
+      "fn": 0
+    },
+    {
+      "text": "预防疾病很重要",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "治疗方法",
+          "text": "预防"
+        },
+        {
+          "start": 2,
+          "end": 4,
+          "type": "疾病",
+          "text": "疾病"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "治疗方法",
+          "text": "预防",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "治疗方法": "预防"
+      },
+      "tp": 1,
+      "fp": 0,
+      "fn": 1
+    },
+    {
+      "text": "咖啡可以提神",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "食物",
+          "text": "咖啡"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "食物",
+          "text": "咖啡",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "食物": "咖啡"
+      },
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "胰岛素检查",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 3,
+          "type": "检查项目",
+          "text": "胰岛素"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "检查项目",
+          "text": "胰岛素",
+          "start": 0,
+          "end": 3
+        }
+      ],
+      "ner_raw_result": {
+        "检查项目": "胰岛素"
+      },
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "外科很重要",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "科目",
+          "text": "外科"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "科目",
+          "text": "外科",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "科目": "外科"
+      },
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    },
+    {
+      "text": "鸡蛋是食物",
+      "expected_entities": [
+        {
+          "start": 0,
+          "end": 2,
+          "type": "食物",
+          "text": "鸡蛋"
+        }
+      ],
+      "predicted_entities": [
+        {
+          "type": "食物",
+          "text": "鸡蛋",
+          "start": 0,
+          "end": 2
+        }
+      ],
+      "ner_raw_result": {
+        "食物": "鸡蛋"
+      },
+      "tp": 1,
+      "fp": 0,
+      "fn": 0
+    }
+  ],
+  "config": {
+    "data_path": "E:\\Code\\Python\\Postop-Mgmt-System\\tests\\eval\\eval_data\\ner_test.json",
+    "model_path": null,
+    "test_samples": 15
+  }
+}

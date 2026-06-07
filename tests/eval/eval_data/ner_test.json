@@ -1,0 +1,99 @@
+[
+  {
+    "text": "糖尿病患者检查血压",
+    "entities": [
+      {"start": 0, "end": 3, "type": "疾病", "text": "糖尿病"},
+      {"start": 6, "end": 8, "type": "检查项目", "text": "血压"}
+    ]
+  },
+  {
+    "text": "高血压需要检查血糖",
+    "entities": [
+      {"start": 0, "end": 3, "type": "疾病", "text": "高血压"},
+      {"start": 7, "end": 9, "type": "检查项目", "text": "血糖"}
+    ]
+  },
+  {
+    "text": "肺炎可以手术",
+    "entities": [
+      {"start": 0, "end": 2, "type": "疾病", "text": "肺炎"},
+      {"start": 5, "end": 7, "type": "治疗方法", "text": "手术"}
+    ]
+  },
+  {
+    "text": "牛奶是食物",
+    "entities": [
+      {"start": 0, "end": 2, "type": "食物", "text": "牛奶"}
+    ]
+  },
+  {
+    "text": "去内科检查",
+    "entities": [
+      {"start": 1, "end": 3, "type": "科目", "text": "内科"}
+    ]
+  },
+  {
+    "text": "肿瘤需要切除",
+    "entities": [
+      {"start": 0, "end": 2, "type": "疾病", "text": "肿瘤"},
+      {"start": 5, "end": 7, "type": "治疗方法", "text": "切除"}
+    ]
+  },
+  {
+    "text": "骨折补充维生素",
+    "entities": [
+      {"start": 0, "end": 2, "type": "疾病", "text": "骨折"},
+      {"start": 4, "end": 8, "type": "检查项目", "text": "维生素"}
+    ]
+  },
+  {
+    "text": "肥胖导致糖尿病",
+    "entities": [
+      {"start": 0, "end": 2, "type": "疾病症状", "text": "肥胖"},
+      {"start": 4, "end": 7, "type": "疾病", "text": "糖尿病"}
+    ]
+  },
+  {
+    "text": "妇科检查很重要",
+    "entities": [
+      {"start": 0, "end": 2, "type": "科目", "text": "妇科"}
+    ]
+  },
+  {
+    "text": "胡萝卜有营养",
+    "entities": [
+      {"start": 0, "end": 3, "type": "食物", "text": "胡萝卜"}
+    ]
+  },
+  {
+    "text": "预防疾病很重要",
+    "entities": [
+      {"start": 0, "end": 2, "type": "治疗方法", "text": "预防"},
+      {"start": 2, "end": 4, "type": "疾病", "text": "疾病"}
+    ]
+  },
+  {
+    "text": "咖啡可以提神",
+    "entities": [
+      {"start": 0, "end": 2, "type": "食物", "text": "咖啡"}
+    ]
+  },
+  {
+    "text": "胰岛素检查",
+    "entities": [
+      {"start": 0, "end": 3, "type": "检查项目", "text": "胰岛素"}
+    ]
+  },
+  {
+    "text": "外科很重要",
+    "entities": [
+      {"start": 0, "end": 2, "type": "科目", "text": "外科"}
+    ]
+  },
+  {
+    "text": "鸡蛋是食物",
+    "entities": [
+      {"start": 0, "end": 2, "type": "食物", "text": "鸡蛋"}
+    ]
+  }
+]

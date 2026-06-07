@@ -1,0 +1,102 @@
+[
+  {
+    "input": "帮我查一下糖尿病的治疗方法",
+    "expected_agent": "medical_qa",
+    "category": "疾病查询"
+  },
+  {
+    "input": "我今天感觉伤口有点疼，需要去医院吗",
+    "expected_agent": "health_assessment",
+    "category": "健康评估"
+  },
+  {
+    "input": "帮我设置一个吃药提醒，每天早上8点",
+    "expected_agent": "reminder",
+    "category": "提醒管理"
+  },
+  {
+    "input": "我最近总是睡不着，很焦虑",
+    "expected_agent": "psychology",
+    "category": "心理问题"
+  },
+  {
+    "input": "帮我制定一个康复计划",
+    "expected_agent": "rehab_plan",
+    "category": "康复计划"
+  },
+  {
+    "input": "阿莫西林是治什么病的",
+    "expected_agent": "medical_qa",
+    "category": "药品查询"
+  },
+  {
+    "input": "我体温38度5，头很晕",
+    "expected_agent": "health_assessment",
+    "category": "健康评估"
+  },
+  {
+    "input": "查看我今天的用药提醒",
+    "expected_agent": "reminder",
+    "category": "提醒管理"
+  },
+  {
+    "input": "我感觉很抑郁，对什么都提不起兴趣",
+    "expected_agent": "psychology",
+    "category": "心理问题"
+  },
+  {
+    "input": "我今天的康复任务完成了吗",
+    "expected_agent": "rehab_plan",
+    "category": "康复计划"
+  },
+  {
+    "input": "高血压吃什么药好",
+    "expected_agent": "medical_qa",
+    "category": "药品查询"
+  },
+  {
+    "input": "术后伤口有点红肿，正常吗",
+    "expected_agent": "health_assessment",
+    "category": "健康评估"
+  },
+  {
+    "input": "帮我创建一个复查提醒",
+    "expected_agent": "reminder",
+    "category": "提醒管理"
+  },
+  {
+    "input": "我手术后很害怕，总是担心恢复不好",
+    "expected_agent": "psychology",
+    "category": "心理问题"
+  },
+  {
+    "input": "我想看看康复计划的进度",
+    "expected_agent": "rehab_plan",
+    "category": "康复计划"
+  },
+  {
+    "input": "感冒了吃什么药",
+    "expected_agent": "medical_qa",
+    "category": "药品查询"
+  },
+  {
+    "input": "我血压150/95，需要吃药吗",
+    "expected_agent": "health_assessment",
+    "category": "健康评估"
+  },
+  {
+    "input": "删除明天的吃药提醒",
+    "expected_agent": "reminder",
+    "category": "提醒管理"
+  },
+  {
+    "input": "我最近失眠很严重，怎么办",
+    "expected_agent": "psychology",
+    "category": "心理问题"
+  },
+  {
+    "input": "今天要做什么康复训练",
+    "expected_agent": "rehab_plan",
+    "category": "康复计划"
+  }
+]
