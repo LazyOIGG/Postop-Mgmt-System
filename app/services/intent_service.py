@@ -27,7 +27,7 @@ class IntentService:
         try:
             return await self.llm.generate_completion(prompt, model_choice)
         except Exception as e:
-            logger.error("intent_recognition_failed", error=str(e))
+            logger.error("intent_recognition_failed error=%s", str(e))
             return "[] # 意图识别失败"
 
 intent_service = IntentService()

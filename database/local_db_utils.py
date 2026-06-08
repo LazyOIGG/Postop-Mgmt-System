@@ -2099,3 +2099,38 @@ class DatabaseConnector:
             cursor.close()
         except Exception as e:
             print(f"更新计划统计失败: {e}")
+
+    # ── 临床指南检索 (RAG) ──
+    def get_rehab_guidelines(
+        self, surgery_type: str, phase: str = None, category: str = None
+    ):
+        """根据手术类型和阶段检索循证康复指南"""
+        try:
+            if not self._ensure_connection():
+                return []
+            cursor = self.connection.cursor(dictionary=True)
+            conditions = ["(surgery_type = %s OR surgery_type = '通用')"]
+            params = [surgery_type]
+            if phase:
+                conditions.append("(phase = %s OR phase = '通用')")
+                params.append(phase)
+            if category:
+                conditions.append("category = %s")
+                params.append(category)
+            where = " AND ".join(conditions)
+            query = f"""
+                SELECT id, surgery_type, phase, category, title, content,
+                       evidence_level, source
+                FROM rehab_guidelines
+                WHERE {where}
+                ORDER BY FIELD(phase, %s, '通用') DESC, FIELD(surgery_type, %s, '通用') DESC
+                LIMIT 15
+            """
+            params.extend([phase or '', surgery_type])
+            cursor.execute(query, params)
+            results = cursor.fetchall()
+            cursor.close()
+            return results
+        except Exception as e:
+            print(f"检索临床指南失败: {e}")
+            return []

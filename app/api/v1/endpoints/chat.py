@@ -63,7 +63,7 @@ async def agent_websocket_chat(websocket: WebSocket, token: str = None):
 
     username = user["username"]
     await ws_manager.connect(username, websocket)
-    logger.info("agent_websocket_connected", username=username)
+    logger.info("agent_websocket_connected username=%s", username)
 
     session_id = None
     try:
@@ -97,7 +97,7 @@ async def agent_websocket_chat(websocket: WebSocket, token: str = None):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        logger.error("agent_websocket_error", username=username, error=str(e))
+        logger.error("agent_websocket_error username=%s error=%s", username, str(e))
     finally:
         ws_manager.disconnect(username, websocket)
 
@@ -115,7 +115,7 @@ async def websocket_chat(websocket: WebSocket, token: str = None):
 
     username = user["username"]
     await ws_manager.connect(username, websocket)
-    logger.info("websocket_chat_connected", username=username)
+    logger.info("websocket_chat_connected username=%s", username)
 
     session_id = None
     try:
@@ -148,7 +148,7 @@ async def websocket_chat(websocket: WebSocket, token: str = None):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        logger.error("websocket_chat_error", username=username, error=str(e))
+        logger.error("websocket_chat_error username=%s error=%s", username, str(e))
     finally:
         ws_manager.disconnect(username, websocket)
 
@@ -166,7 +166,7 @@ async def notification_websocket(websocket: WebSocket, token: str = None):
 
     username = user["username"]
     await ws_manager.connect(username, websocket)
-    logger.info("notification_websocket_connected", username=username)
+    logger.info("notification_websocket_connected username=%s", username)
 
     try:
         while True:
@@ -176,6 +176,6 @@ async def notification_websocket(websocket: WebSocket, token: str = None):
     except WebSocketDisconnect:
         pass
     except Exception as e:
-        logger.error("notification_websocket_error", username=username, error=str(e))
+        logger.error("notification_websocket_error username=%s error=%s", username, str(e))
     finally:
         ws_manager.disconnect(username, websocket)

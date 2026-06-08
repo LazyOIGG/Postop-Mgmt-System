@@ -24,7 +24,7 @@ class KGService:
             )
             logger.info("neo4j_connected")
         except Exception as e:
-            logger.error("neo4j_connection_failed", error=str(e))
+            logger.error("neo4j_connection_failed error=%s", str(e))
             self.client = None
 
     def add_shuxing_prompt(self, entity: str, shuxing: str) -> str:
@@ -39,7 +39,7 @@ class KGService:
                 content = "".join(res[0].values())
                 return f"<提示>用户对{entity}有查询{shuxing}需求，知识库内容：{content}</提示>"
         except py2neo.errors.ClientError as e:
-            logger.warning("attribute_query_failed", attribute=shuxing, error=str(e))
+            logger.warning("attribute_query_failed attribute=%s error=%s", shuxing, str(e))
         return ""
 
     def add_lianxi_prompt(self, entity: str, lianxi: str, target: str) -> str:
@@ -56,7 +56,7 @@ class KGService:
                 names = "、".join([list(data.values())[0] for data in res])
                 return f"<提示>用户对{entity}有查询{lianxi}需求，知识库内容：{names}</提示>"
         except py2neo.errors.ClientError as e:
-            logger.warning("relation_query_failed", relation=lianxi, error=str(e))
+            logger.warning("relation_query_failed relation=%s error=%s", lianxi, str(e))
         return ""
 
     def generate_enhanced_prompt(self, intent_response: str, query: str, entities: Dict) -> Tuple[str, str, Dict, bool]:
@@ -74,7 +74,7 @@ class KGService:
                     entities['疾病'] = random.choice(res)
                     neo4j_prompt += f"<提示>基于{entities['疾病症状']}，推测可能是：{'、'.join(res)}。请告知用户这仅为推测。</提示>"
             except py2neo.errors.ClientError as e:
-                logger.error("symptom_inference_failed", error=str(e))
+                logger.error("symptom_inference_failed error=%s", str(e))
 
         # 意图映射查询
         intent_map = {
@@ -110,7 +110,7 @@ class KGService:
         try:
             return self.client.run(cypher_query).data()
         except py2neo.errors.ClientError as e:
-            logger.error("cypher_query_failed", error=str(e))
+            logger.error("cypher_query_failed error=%s", str(e))
             return []
 
     def multi_hop_query(self, entity_name: str, max_hops: int = 3):
@@ -144,7 +144,7 @@ class KGService:
 
             return {"nodes": list(nodes.values()), "edges": edges}
         except Exception as e:
-            logger.error("multi_hop_query_failed", error=str(e))
+            logger.error("multi_hop_query_failed error=%s", str(e))
             return {"nodes": [], "edges": []}
 
     def get_schema(self) -> dict:
@@ -158,7 +158,7 @@ class KGService:
             rel_types = [r['relationshipType'] for r in self.client.run(rel_query).data()]
             return {"node_types": node_types, "relationship_types": rel_types}
         except Exception as e:
-            logger.error("schema_fetch_failed", error=str(e))
+            logger.error("schema_fetch_failed error=%s", str(e))
             return {"node_types": [], "relationship_types": []}
 
     def get_schema_summary(self) -> str:
@@ -259,7 +259,7 @@ class KGService:
 
             return {"items": items, "total": total}
         except Exception as e:
-            logger.error("entity_search_failed", error=str(e))
+            logger.error("entity_search_failed error=%s", str(e))
             return {"items": [], "total": 0}
 
     def fast_path_query(self, entity_name: str, relation_type: str) -> list:
@@ -344,7 +344,7 @@ class KGService:
                 if r.get("result")
             ]
         except Exception as e:
-            logger.error("fast_path_query_failed", error=str(e), entity=entity_name, relation=relation_type)
+            logger.error("fast_path_query_failed error=%s", str(e), entity=entity_name, relation=relation_type)
             return []
 
     def count_nodes(self, label: str, name_filter: str = None) -> int:
@@ -361,7 +361,7 @@ class KGService:
                 result = self.client.run(cypher).data()
             return result[0]["cnt"] if result else 0
         except Exception as e:
-            logger.error("count_nodes_failed", error=str(e), label=label)
+            logger.error("count_nodes_failed error=%s", str(e), label=label)
             return 0
 
 

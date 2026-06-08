@@ -89,7 +89,7 @@ class BaseAgent:
         try:
             return await self._llm.generate_completion_with_messages(messages, self.model_choice)
         except LLMServiceError as e:
-            logger.error("llm_call_failed", agent=self.name, error=str(e))
+            logger.error("llm_call_failed agent=%s error=%s", self.name, str(e))
             return "抱歉，AI服务暂时不可用，请稍后重试。"
 
     async def _call_llm_stream(self, messages: List[Dict]) -> AsyncGenerator[str, None]:
@@ -97,7 +97,7 @@ class BaseAgent:
             async for chunk in self._llm.chat_with_messages(messages, self.model_choice, stream=True):
                 yield chunk
         except LLMServiceError as e:
-            logger.error("llm_stream_call_failed", agent=self.name, error=str(e))
+            logger.error("llm_stream_call_failed agent=%s error=%s", self.name, str(e))
             yield "抱歉，AI服务暂时不可用，请稍后重试。"
 
     async def _call_llm_with_tools(

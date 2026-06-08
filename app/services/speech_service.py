@@ -37,9 +37,9 @@ class SpeechService:
         if self.enabled:
             try:
                 dashscope.api_key = self.api_key
-                logger.info("dashscope_configured", service="Fun-ASR")
+                logger.info("dashscope_configured service=%s", "Fun-ASR")
             except Exception as e:
-                logger.error("dashscope_config_failed", error=str(e))
+                logger.error("dashscope_config_failed error=%s", str(e))
                 self.enabled = False
 
     def _convert_audio_to_wav(self, audio_data: bytes) -> bytes:
@@ -55,8 +55,7 @@ class SpeechService:
 
             sound = AudioSegment.from_file(temp_path)
 
-            logger.debug("original_audio", channels=sound.channels,
-                        sample_rate=sound.frame_rate, duration_s=len(sound)/1000)
+            logger.debug("original_audio channels=%s sample_rate=%s duration_s=%s", sound.channels, sound.frame_rate, len(sound)/1000)
 
             if sound.channels != 1:
                 sound = sound.set_channels(1)
@@ -64,7 +63,7 @@ class SpeechService:
 
             if sound.frame_rate != 16000:
                 sound = sound.set_frame_rate(16000)
-                logger.debug("audio_resampled", target_rate=16000)
+                logger.debug("audio_resampled target_rate=%s", 16000)
 
             output_path = temp_path + "_converted.wav"
             sound.export(output_path, format="wav")
@@ -75,11 +74,11 @@ class SpeechService:
             os.unlink(temp_path)
             os.unlink(output_path)
 
-            logger.debug("audio_converted", size_bytes=len(converted_data))
+            logger.debug("audio_converted size_bytes=%s", len(converted_data))
             return converted_data
 
         except Exception as e:
-            logger.error("audio_conversion_failed", error=str(e))
+            logger.error("audio_conversion_failed error=%s", str(e))
             traceback.print_exc()
             return audio_data
 
@@ -104,7 +103,7 @@ class SpeechService:
                 tmp.write(audio_data)
                 temp_file_path = tmp.name
 
-            logger.info("asr_begin", size_bytes=len(audio_data), temp_file=temp_file_path)
+            logger.info("asr_begin size_bytes=%s", len(audio_data), temp_file=temp_file_path)
 
             recognition = Recognition(model='fun-asr-realtime-2026-02-28',
                                   format='wav',
@@ -118,18 +117,18 @@ class SpeechService:
                 sentence_result = result.get_sentence()
                 if sentence_result:
                     recognized_text = ''.join([item['text'] for item in sentence_result])
-                    logger.info("asr_success", text=recognized_text)
+                    logger.info("asr_success text=%s", recognized_text)
                     return recognized_text
                 else:
                     logger.info("asr_empty_result")
                     return ""
             else:
                 error_msg = f"语音识别失败，状态码: {result.status_code}"
-                logger.error("asr_failed", status_code=result.status_code)
+                logger.error("asr_failed status_code=%s", result.status_code)
                 return error_msg
 
         except Exception as e:
-            logger.error("asr_exception", error=str(e))
+            logger.error("asr_exception error=%s", str(e))
             traceback.print_exc()
             return f"语音识别失败: {str(e)}"
         finally:
@@ -151,13 +150,13 @@ class SpeechService:
             )
             audio_data = result.get_audio_data()
             if audio_data is not None:
-                logger.info("tts_success", size_bytes=len(audio_data))
+                logger.info("tts_success size_bytes=%s", len(audio_data))
                 return audio_data
             else:
-                logger.error("tts_failed", response=str(result.get_response()))
+                logger.error("tts_failed response=%s", str(result.get_response()))
                 return None
         except Exception as e:
-            logger.error("tts_exception", error=str(e))
+            logger.error("tts_exception error=%s", str(e))
             traceback.print_exc()
             return None
 

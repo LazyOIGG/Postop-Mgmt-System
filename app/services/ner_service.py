@@ -38,7 +38,7 @@ class NERService:
                 self.tfidf_r = zwk.tfidf_alignment()
                 logger.info("ner_config_loaded")
         except Exception as e:
-            logger.error("ner_config_load_failed", error=str(e))
+            logger.error("ner_config_load_failed error=%s", str(e))
 
         try:
             if BertTokenizer and BertModel:
@@ -52,7 +52,7 @@ class NERService:
                     self.bert_model = self.bert_model.to(self.device).eval()
                     logger.info("ner_model_loaded")
         except Exception as e:
-            logger.error("ner_model_load_failed", error=str(e))
+            logger.error("ner_model_load_failed error=%s", str(e))
 
     def recognize(self, query: str) -> Dict:
         """执行实体识别"""
@@ -65,7 +65,7 @@ class NERService:
                 self.rule, self.tfidf_r, self.device, self.idx2tag
             )
         except Exception as e:
-            logger.warning("ner_recognition_fallback", error=str(e))
+            logger.warning("ner_recognition_fallback error=%s", str(e))
             return self._simple_recognize(query)
 
     def _simple_recognize(self, query: str) -> Dict:

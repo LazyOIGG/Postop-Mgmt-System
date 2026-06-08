@@ -279,6 +279,5 @@ async def _cleanup_expired_data():
             pass
 
         if expired_blacklist or expired_refresh:
-            logger.info("cleanup_complete",
-                        expired_blacklist=len(expired_blacklist),
+            logger.info("cleanup_complete expired_blacklist=%s", len(expired_blacklist),
                         expired_refresh=len(expired_refresh))

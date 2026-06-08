@@ -61,7 +61,7 @@ class MultiAgentOrchestrator:
                 cache_key = f"summary:{session_id}"
                 cached = await redis.get(cache_key)
                 if cached:
-                    logger.info("history", event="redis_cache_hit", session_id=session_id)
+                    logger.info("history event=%s session_id=%s", "redis_cache_hit", session_id)
                     return [{"role": "system", "content": cached}]
         except Exception:
             pass  # Redis 不可用时跳过缓存
@@ -69,7 +69,7 @@ class MultiAgentOrchestrator:
         try:
             raw_messages = db_instance.get_session_messages(int(session_id))
         except Exception as e:
-            logger.warning("history_load_failed", error=str(e))
+            logger.warning("history_load_failed error=%s", str(e))
             return []
 
         if not raw_messages:
@@ -88,10 +88,10 @@ class MultiAgentOrchestrator:
                 history.append({"role": role, "content": content})
                 total_chars += _count_chinese_chars(content)
 
-        logger.info("history", session_id=session_id, message_count=len(history), chinese_chars=total_chars)
+        logger.info("history session_id=%s message_count=%s", session_id, len(history), chinese_chars=total_chars)
         if total_chars > settings.CONVERSATION_SUMMARY_THRESHOLD_CHARS:
             summary = await self._summarize_history(history, session_id)
-            logger.info("history", event="summary_compression", original_chars=total_chars, summary_chars=len(summary))
+            logger.info("history event=%s original_chars=%s summary_chars=%s", "summary_compression", total_chars, len(summary))
             return [{"role": "system", "content": f"<对话摘要>\n{summary}\n</对话摘要>"}]
 
         return history

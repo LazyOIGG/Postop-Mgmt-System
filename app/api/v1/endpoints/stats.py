@@ -76,7 +76,7 @@ async def get_system_stats(user: Dict = Depends(get_current_user)):
             stats["active_today"] = cursor.fetchone()['count']
             cursor.close()
         except Exception as e:
-            logger.error("db_stats_fetch_failed", error=str(e))
+            logger.error("db_stats_fetch_failed error=%s", str(e))
 
         return {
             "success": True,

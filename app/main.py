@@ -165,7 +165,7 @@ async def startup_event():
     # 初始化结构化日志
     setup_logging("DEBUG" if settings.DEBUG else "INFO")
 
-    logger.info("startup_begin", project=settings.PROJECT_NAME)
+    logger.info("startup_begin project=%s", settings.PROJECT_NAME)
     print("=" * 50)
     print(f"{settings.PROJECT_NAME} 启动中...")
 
@@ -179,7 +179,7 @@ async def startup_event():
     else:
         logger.warning("database_connection_failed")
 
-    logger.info("api_docs", url="http://localhost:8000/docs")
+    logger.info("api_docs url=%s", "http://localhost:8000/docs")
     asyncio.create_task(_cleanup_expired_data())
 
     # Start WebSocket heartbeat

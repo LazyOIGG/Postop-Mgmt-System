@@ -120,7 +120,7 @@ class HealthAssessmentService:
         try:
             return await llm_service.generate_completion(prompt)
         except LLMServiceError as e:
-            logger.error("health_advice_generation_failed", error=str(e))
+            logger.error("health_advice_generation_failed error=%s", str(e))
             return "AI服务暂时不可用，请根据风险等级自行判断。高风险请立即就医，中低风险请持续观察症状变化。"
 
     async def assess(self, text: str, source_type: str = "text") -> Dict:
