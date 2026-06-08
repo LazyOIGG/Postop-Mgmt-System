@@ -6,6 +6,7 @@ from app.core.security import get_current_user
 from app.services.health_assessment_service import health_assessment_service
 from app.services.speech_service import speech_service
 from app.services.image_service import image_service
+from app.services.notification_service import notification_service
 from app.db.session import db_instance
 
 router = APIRouter()
@@ -24,6 +25,18 @@ async def _maybe_create_alert(username: str, risk_level: str, risk_reasons: list
         advice=advice,
         source_type=source_type
     )
+
+    # 推送 WebSocket 到所有在线医生
+    admins = db_instance.get_admin_usernames()
+    for admin in admins:
+        await notification_service.notify_alert(admin, {
+            "username": username,
+            "real_name": real_name,
+            "risk_level": risk_level,
+            "risk_reasons": risk_reasons,
+            "advice": advice,
+            "source_type": source_type,
+        })
 
 
 @router.post("/assess/text")
