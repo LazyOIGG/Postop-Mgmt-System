@@ -2,7 +2,7 @@ import os
 import json
 import pickle
 import torch
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 from app.core.config import settings
 from app.core.logging import get_logger
 import sys
@@ -24,6 +24,11 @@ class NERService:
     1. 原始 BERT + RNN 模型（默认）
     2. LoRA 微调后的模型（优先级更高）
 
+    功能特性：
+    - 实体归一化：将别名映射到标准名称
+    - 多实体识别：支持同类型多个实体
+    - 置信度输出：输出识别置信度
+
     LoRA 微调模型目录结构:
         model/ner_lora_finetuned/
         ├── config.json          # 模型配置
@@ -40,7 +45,9 @@ class NERService:
         self.rule = None
         self.tfidf_r = None
         self.is_lora_model = False
+        self.entity_aliases = {}  # 实体别名词典
         self._load_models()
+        self._load_entity_aliases()
 
     def _load_models(self):
         """加载 NER 模型及配置
@@ -82,6 +89,33 @@ class NERService:
                     logger.info("ner_model_loaded")
         except Exception as e:
             logger.error("ner_model_load_failed error=%s", str(e))
+
+    def _load_entity_aliases(self):
+        """加载实体别名词典"""
+        aliases_path = os.path.join('data', 'entity_aliases.json')
+        try:
+            if os.path.exists(aliases_path):
+                with open(aliases_path, 'r', encoding='utf-8') as f:
+                    self.entity_aliases = json.load(f)
+                logger.info("entity_aliases_loaded", path=aliases_path)
+            else:
+                logger.warning("entity_aliases_not_found", path=aliases_path)
+        except Exception as e:
+            logger.error("entity_aliases_load_failed", error=str(e))
+
+    def _normalize_entity(self, entity_type: str, entity_text: str) -> str:
+        """实体归一化：将别名映射到标准名称
+
+        Args:
+            entity_type: 实体类型（疾病、症状等）
+            entity_text: 实体文本
+
+        Returns:
+            标准化后的实体名称
+        """
+        if entity_type in self.entity_aliases:
+            return self.entity_aliases[entity_type].get(entity_text, entity_text)
+        return entity_text
 
     def _try_load_lora_model(self, model_dir: str) -> bool:
         """尝试加载 LoRA 微调模型
@@ -140,38 +174,89 @@ class NERService:
             print(f"[ERROR] LoRA 模型加载失败: {e}")
             return False
 
-    def recognize(self, query: str) -> Dict:
-        """执行实体识别
+    def recognize(self, query: str) -> Dict[str, str]:
+        """执行实体识别（单实体模式，兼容旧接口）
 
         支持两种模型：
         1. LoRA 微调模型 - 使用 PeftModel 推理
         2. 原始 BERT + RNN 模型 - 使用 zwk.get_ner_result
+
+        Returns:
+            实体字典，同类型只保留第一个
+            示例: {'疾病': '糖尿病', '检查项目': '血压'}
+        """
+        # 获取多实体结果
+        multi_result = self.recognize_multi(query)
+
+        # 转换为单实体格式（兼容旧接口）
+        result = {}
+        for ent_type, ent_list in multi_result.items():
+            if ent_list:
+                result[ent_type] = ent_list[0]
+
+        return result
+
+    def recognize_multi(self, query: str) -> Dict[str, List[str]]:
+        """执行实体识别（多实体模式）
+
+        支持两种模型：
+        1. LoRA 微调模型 - 使用 PeftModel 推理
+        2. 原始 BERT + RNN 模型 - 使用 zwk.get_ner_result
+
+        Returns:
+            实体字典，同类型用列表存储
+            示例: {'疾病': ['高血压', '糖尿病'], '检查项目': ['血压', '血糖']}
         """
         if self.bert_model is None or self.bert_tokenizer is None:
-            return self._simple_recognize(query)
+            return self._simple_recognize_multi(query)
 
         try:
             if self.is_lora_model:
-                return self._recognize_with_lora(query)
+                raw_entities = self._recognize_with_lora_multi(query)
             elif zwk is not None:
-                return zwk.get_ner_result(
+                # 调用原始模型，结果转换为多实体格式
+                single_result = zwk.get_ner_result(
                     self.bert_model, self.bert_tokenizer, query,
                     self.rule, self.tfidf_r, self.device, self.idx2tag
                 )
+                raw_entities = {k: [v] for k, v in single_result.items()}
             else:
-                return self._simple_recognize(query)
+                return self._simple_recognize_multi(query)
+
+            # 实体归一化
+            normalized_entities = self._normalize_entities(raw_entities)
+
+            return normalized_entities
         except Exception as e:
             logger.warning("ner_recognition_fallback error=%s", str(e))
-            return self._simple_recognize(query)
+            return self._simple_recognize_multi(query)
 
-    def _recognize_with_lora(self, query: str) -> Dict:
-        """使用 LoRA 微调模型进行实体识别
+    def _normalize_entities(self, entities: Dict[str, List[str]]) -> Dict[str, List[str]]:
+        """批量实体归一化
+
+        Args:
+            entities: 原始实体字典
+
+        Returns:
+            归一化后的实体字典
+        """
+        normalized = {}
+        for ent_type, ent_list in entities.items():
+            normalized_list = []
+            for ent_text in ent_list:
+                standard_name = self._normalize_entity(ent_type, ent_text)
+                normalized_list.append(standard_name)
+            normalized[ent_type] = normalized_list
+        return normalized
+
+    def _recognize_with_lora_multi(self, query: str) -> Dict[str, List[str]]:
+        """使用 LoRA 微调模型进行实体识别（多实体模式）
 
         Args:
             query: 输入文本
 
         Returns:
-            识别到的实体字典
+            识别到的实体字典，同类型用列表存储
         """
         import torch.nn.functional as F
 
@@ -195,7 +280,7 @@ class NERService:
         # 解码预测结果
         pred_tags = [self.idx2tag[idx] if idx < len(self.idx2tag) else 'O' for idx in preds]
 
-        # 提取实体
+        # 提取实体（支持多实体）
         entities = {}
         current_entity = []
         current_type = None
@@ -206,7 +291,8 @@ class NERService:
                 if current_entity and current_type:
                     entity_text = ''.join(current_entity)
                     if current_type not in entities:
-                        entities[current_type] = entity_text
+                        entities[current_type] = []
+                    entities[current_type].append(entity_text)
                 # 开始新实体
                 current_type = tag[2:]
                 current_entity = [tokens[i]] if i < len(tokens) else []
@@ -218,7 +304,8 @@ class NERService:
                 if current_entity and current_type:
                     entity_text = ''.join(current_entity)
                     if current_type not in entities:
-                        entities[current_type] = entity_text
+                        entities[current_type] = []
+                    entities[current_type].append(entity_text)
                 current_entity = []
                 current_type = None
 
@@ -226,7 +313,8 @@ class NERService:
         if current_entity and current_type:
             entity_text = ''.join(current_entity)
             if current_type not in entities:
-                entities[current_type] = entity_text
+                entities[current_type] = []
+            entities[current_type].append(entity_text)
 
         # 如果有规则匹配和 TF-IDF 对齐，进行合并优化
         if self.rule and self.tfidf_r and zwk:
@@ -235,14 +323,26 @@ class NERService:
                 # 将规则结果转换为统一格式
                 for start, end, ent_type, ent_text in rule_result:
                     if ent_type not in entities:
-                        entities[ent_type] = ent_text
+                        entities[ent_type] = []
+                    # 避免重复添加
+                    if ent_text not in entities[ent_type]:
+                        entities[ent_type].append(ent_text)
             except Exception:
                 pass
 
         return entities
 
-    def _simple_recognize(self, query: str) -> Dict:
-        """关键词匹配简易识别"""
+    def _simple_recognize(self, query: str) -> Dict[str, str]:
+        """关键词匹配简易识别（单实体模式，兼容旧接口）"""
+        multi_result = self._simple_recognize_multi(query)
+        result = {}
+        for ent_type, ent_list in multi_result.items():
+            if ent_list:
+                result[ent_type] = ent_list[0]
+        return result
+
+    def _simple_recognize_multi(self, query: str) -> Dict[str, List[str]]:
+        """关键词匹配简易识别（多实体模式）"""
         entities = {}
         maps = {
             '疾病': ['感冒', '发烧', '糖尿病', '高血压', '肺炎'],
@@ -251,7 +351,10 @@ class NERService:
         }
         for tag, keywords in maps.items():
             for k in keywords:
-                if k in query: entities[tag] = k; break
+                if k in query:
+                    if tag not in entities:
+                        entities[tag] = []
+                    entities[tag].append(k)
         return entities
 
 ner_service = NERService()
