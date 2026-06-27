@@ -2,9 +2,9 @@
 
 > **基于多智能体编排的KG-RAG医疗问答与康复管理系统**
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.136-green.svg)](https://fastapi.tiangolo.com/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.52-red.svg)](https://streamlit.io/)
+[![Vue](https://img.shields.io/badge/Vue-3.5-brightgreen.svg)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -15,13 +15,14 @@
 
 ### 核心特性
 
-- 🤖 **多智能体协作**: Coordinator + 4个专业Agent的编排模式
+- 🤖 **多智能体协作**: Coordinator + 5个专业Agent的编排模式
 - 🧠 **KG-RAG管线**: 知识图谱增强的检索增强生成
 - 🏥 **健康风险评估**: 三级风险评估体系
 - 💊 **智能用药提醒**: 基于患者情况的个性化提醒
 - 📊 **康复计划管理**: AI驱动的个性化康复方案
 - 🎯 **NER实体识别**: RoBERTa+BiLSTM医疗实体识别模型
 - 🔊 **多模态交互**: 支持语音输入和图像识别
+- 🌐 **双端支持**: Vue前端(患者端+医生端) + Streamlit前端
 
 ---
 
@@ -30,7 +31,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      用户界面层                              │
-│         Streamlit前端 (患者端 + 医生端)                      │
+│     Vue前端 (患者端 + 医生端)  │  Streamlit前端              │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -47,10 +48,10 @@
 │  │   Agent      │  │   Agent      │  │   Agent      │       │
 │  └──────────────┘  └──────────────┘  └──────────────┘       │
 │         │                │                  │                │
-│  ┌──────────────┐  ┌──────────────┐                         │
-│  │ Reminder     │  │ Psychology   │                         │
-│  │   Agent      │  │   Agent      │                         │
-│  └──────────────┘  └──────────────┘                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
+│  │ Reminder     │  │ Psychology   │  │ RehabPlan    │       │
+│  │   Agent      │  │   Agent      │  │   Agent      │       │
+│  └──────────────┘  └──────────────┘  └──────────────┘       │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -74,17 +75,30 @@
 
 ## 🛠️ 技术栈
 
+### 后端
+
 | 类别 | 技术 | 说明 |
 |------|------|------|
 | **大模型** | DeepSeek API | 兼容OpenAI接口的LLM服务 |
 | **知识图谱** | Neo4j Community | Cypher查询语言，APOC插件 |
 | **深度学习** | PyTorch + Transformers | RoBERTa + BiLSTM/RNN NER模型 |
 | **后端框架** | FastAPI + Uvicorn | 异步高性能Web框架 |
-| **前端界面** | Streamlit | 快速构建数据应用 |
-| **数据库** | MySQL | 用户认证与会话管理 |
-| **缓存** | Redis | 可选，用于查询结果缓存 |
+| **数据库** | MySQL 8.0 | 用户认证与会话管理 |
+| **缓存** | Redis 7 | 可选，用于Token黑名单和对话缓存 |
 | **语音识别** | 阿里云Fun-ASR | 语音输入转文本 |
 | **图像识别** | PaddleOCR | 医疗图像OCR识别 |
+| **监控** | Prometheus + structlog | 指标监控与结构化日志 |
+
+### 前端
+
+| 类别 | 技术 | 说明 |
+|------|------|------|
+| **框架** | Vue 3.5 + TypeScript | Composition API |
+| **构建工具** | Vite 8 | 快速开发与构建 |
+| **UI组件库** | Element Plus 2.14 | 企业级UI组件 |
+| **状态管理** | Pinia 3 | Vue官方状态管理 |
+| **图表** | ECharts 6 | 数据可视化 |
+| **HTTP客户端** | Axios 1.16 | 请求拦截与Token刷新 |
 
 ---
 
@@ -92,71 +106,82 @@
 
 ```
 Postop-Mgmt-System/
-├── app/                        # 后端核心代码
-│   ├── agents/                 # 多智能体模块
-│   │   ├── coordinator.py      # 协调者Agent
-│   │   ├── medical_qa_agent.py # 医学问答Agent
-│   │   ├── health_agent.py     # 健康评估Agent
-│   │   ├── reminder_agent.py   # 提醒Agent
-│   │   ├── psychology_agent.py # 心理辅导Agent
-│   │   └── tools/              # Agent工具集
-│   ├── api/v1/                 # API路由层
-│   │   └── endpoints/          # 各功能端点
-│   ├── core/                   # 核心配置
-│   │   ├── config.py           # 配置管理
-│   │   ├── security.py         # JWT认证
-│   │   └── ws_manager.py       # WebSocket管理
-│   ├── db/                     # 数据库连接
-│   ├── models/                 # 数据模型
-│   └── services/               # 业务逻辑层
-│       ├── llm_service.py      # LLM服务
-│       ├── kg_service.py       # 知识图谱服务
-│       ├── ner_service.py      # NER服务
-│       ├── rehab_plan_service.py # 康复计划服务
-│       └── ...                 # 其他服务
-├── data/                       # 医疗数据
-│   ├── medical_new_2.json      # 医疗知识数据
-│   ├── ner_data_aug.txt        # NER训练数据
-│   └── guidelines/             # 临床指南PDF
-├── database/                   # 数据库工具
-│   ├── db_operation.py         # 数据库操作
-│   ├── local_db_utils.py       # 本地数据库工具
-│   └── migrations/             # 数据库迁移
-├── model/                      # 预训练模型
-│   └── chinese-roberta-wwm-ext/ # RoBERTa模型
-├── scripts/                    # 初始化脚本
-│   ├── init_mysql.py           # MySQL初始化
-│   ├── build_up_graph.py       # 知识图谱构建
-│   ├── ingest_guideline.py     # 指南数据导入
-│   ├── seed_users.py           # 种子用户数据
-│   └── ner_finetune.py         # NER模型微调
-├── tests/                      # 测试代码
-│   ├── test_auth.py            # 认证测试
-│   ├── test_health.py          # 健康模块测试
-│   ├── test_ws_manager.py      # WebSocket测试
-│   └── scripts/                # 测试脚本
-├── static/                     # 静态文件
-├── .env                        # 环境变量配置
-├── .env.example                # 环境变量模板
-├── requirements.txt            # Python依赖
-├── run.py                      # 统一启动入口
-├── streamlit_app.py            # 患者端前端
-└── streamlit_doctor_app.py     # 医生端前端
+├── app/                            # 后端核心代码
+│   ├── agents/                     # 多智能体模块
+│   │   ├── coordinator.py          # 协调者Agent
+│   │   ├── medical_qa_agent.py     # 医学问答Agent
+│   │   ├── health_agent.py         # 健康评估Agent
+│   │   ├── reminder_agent.py       # 提醒Agent
+│   │   ├── psychology_agent.py     # 心理辅导Agent
+│   │   ├── rehab_plan_agent.py     # 康复计划Agent
+│   │   └── tools/                  # Agent工具集
+│   ├── api/v1/                     # API路由层
+│   │   └── endpoints/              # 各功能端点
+│   ├── core/                       # 核心配置
+│   │   ├── config.py               # 配置管理
+│   │   ├── security.py             # JWT认证
+│   │   ├── ws_manager.py           # WebSocket管理
+│   │   └── logging.py              # 结构化日志
+│   ├── db/                         # 数据库连接
+│   ├── models/                     # 数据模型
+│   └── services/                   # 业务逻辑层 (20+服务)
+├── data/                           # 医疗数据
+│   ├── ent_aug/                    # 实体增强数据
+│   └── guidelines/                 # 临床指南PDF
+├── database/                       # 数据库工具
+├── docs/                           # 项目文档
+├── finetune_demo/                  # 模型微调演示
+├── model/                          # 预训练模型
+├── scripts/                        # 初始化脚本
+│   ├── init_mysql.py               # MySQL初始化
+│   ├── build_up_graph.py           # 知识图谱构建
+│   ├── seed_users.py               # 种子用户数据
+│   └── seed_checkins_*.py          # 打卡数据种子
+├── tests/                          # 测试代码
+│   ├── unit/                       # 单元测试
+│   ├── eval/                       # 模型评估
+│   └── scripts/                    # 测试脚本
+├── static/                         # 静态文件
+├── docker-compose.yml              # Docker编排
+├── Dockerfile                      # 后端镜像
+├── Dockerfile.vue                  # 前端镜像
+├── nginx.conf                      # Nginx配置
+├── requirements.txt                # Python依赖
+├── requirements-ci.txt             # CI轻量依赖
+├── run.py                          # 统一启动入口
+└── run_backend.py                  # 仅启动后端
 ```
 
 ---
 
 ## 🚀 快速开始
 
-### 1. 环境准备
-
-**Python版本**: 推荐 3.10.11
+### 方式一：Docker Compose (推荐)
 
 ```bash
 # 克隆项目
 git clone https://github.com/LazyOIGG/Postop-Mgmt-System.git
 cd Postop-Mgmt-System
 
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env 填写必要配置
+
+# 启动所有服务
+docker-compose up -d
+
+# 访问系统
+# 前端: http://localhost
+# API文档: http://localhost:8000/docs
+```
+
+### 方式二：本地开发
+
+#### 1. 环境准备
+
+**Python版本**: 3.11+
+
+```bash
 # 创建虚拟环境
 python -m venv venv
 venv\Scripts\activate  # Windows
@@ -166,9 +191,7 @@ venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量
-
-复制环境变量模板并填写配置：
+#### 2. 配置环境变量
 
 ```bash
 cp .env.example .env
@@ -195,10 +218,10 @@ MYSQL_PASSWORD=your_password
 MYSQL_DATABASE=RAG
 
 # 安全配置
-SECRET_KEY=your_secret_key_here
+SECRET_KEY=your_random_secret_key_here
 ```
 
-### 3. 数据库初始化
+#### 3. 数据库初始化
 
 确保MySQL和Neo4j服务已启动：
 
@@ -213,29 +236,37 @@ python scripts/build_up_graph.py
 python scripts/seed_users.py
 ```
 
-### 4. 启动系统
+#### 4. 启动后端
 
 ```bash
-# 一键启动（推荐）
-python run.py
+# 仅启动FastAPI后端
+python run_backend.py
 
-# 或分别启动
-# 启动后端
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# 启动患者端
-streamlit run streamlit_app.py --server.port 8501
-
-# 启动医生端
-streamlit run streamlit_doctor_app.py --server.port 8502
+# 或使用uvicorn
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 5. 访问系统
+#### 5. 启动Vue前端
 
-- **患者端界面**: http://localhost:8501
-- **医生端界面**: http://localhost:8502
-- **API文档**: http://localhost:8000/docs
-- **健康检查**: http://localhost:8000/health
+```bash
+# 进入前端目录
+cd ../postop-mgmt-frontend
+
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+```
+
+### 6. 访问系统
+
+| 服务 | 地址 | 说明 |
+|------|------|------|
+| **Vue前端** | http://localhost:5173 | 患者端/医生端 |
+| **API文档** | http://localhost:8000/docs | Swagger UI |
+| **健康检查** | http://localhost:8000/health | 系统状态 |
+| **Prometheus** | http://localhost:8000/metrics | 监控指标 |
 
 ---
 
@@ -250,42 +281,117 @@ streamlit run streamlit_doctor_app.py --server.port 8502
 | **HealthAssessmentAgent** | 健康风险评估 | 三级风险关键词 + LLM |
 | **ReminderAgent** | 用药/复查提醒 | LLM对话 |
 | **PsychologyAgent** | 心理辅导 | LLM共情对话 |
+| **RehabPlanAgent** | 康复计划管理 | LLM + 工具调用 |
 
 ### 调度流程
 
 ```
 用户输入 → CoordinatorAgent (LLM意图分析)
                │
-   ┌───────────┼────────────┬──────────────┐
-   ▼           ▼            ▼              ▼
-MedicalQA  HealthAssessment  Reminder  Psychology
-医学问答    健康风险评估    用药复查提醒  心理辅导缓解
-(KG-RAG)   (规则+LLM)     (LLM)        (LLM)
+   ┌───────────┼────────────┬──────────────┬──────────────┐
+   ▼           ▼            ▼              ▼              ▼
+MedicalQA  HealthAssessment  Reminder  Psychology  RehabPlan
+医学问答    健康风险评估    用药复查提醒  心理辅导缓解  康复计划管理
+(KG-RAG)   (规则+LLM)     (LLM)        (LLM)       (LLM+Tools)
 ```
+
+---
+
+## 🌐 Vue前端功能
+
+### 患者端
+
+| 功能 | 路由 | 说明 |
+|------|------|------|
+| 首页概览 | `/patient/home` | 健康数据总览 |
+| AI问诊 | `/patient/chat` | 多模态智能聊天 |
+| 每日打卡 | `/patient/checkin` | 健康数据记录 |
+| 健康档案 | `/patient/profile` | 个人健康信息 |
+| 康复中心 | `/patient/rehab/*` | 计划/任务/指标/日历/成就 |
+| 医患消息 | `/patient/messages` | 与医生沟通 |
+
+### 医生端
+
+| 功能 | 路由 | 说明 |
+|------|------|------|
+| 仪表盘 | `/doctor/dashboard` | 统计/高风险/异常 |
+| 患者管理 | `/doctor/patients` | 患者列表与详情 |
+| 告警中心 | `/doctor/alerts` | 待处理/已处理告警 |
+| 消息中心 | `/doctor/messages` | 医患消息 |
+| 统计分析 | `/doctor/statistics` | 系统统计数据 |
+
+### 技术特性
+
+- **双Token机制**: access_token + refresh_token，支持无感刷新
+- **SSE流式响应**: AI聊天实时输出
+- **WebSocket推送**: 通知与告警实时推送
+- **请求去重**: 相同GET请求自动取消前一个
 
 ---
 
 ## 📊 API端点
 
-### 核心端点
+### 认证模块 `/api/v1/auth`
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
-| `POST /api/v1/chat` | POST | 多智能体聊天（支持SSE流式） |
-| `GET /api/v1/chat/agent/ws` | WebSocket | 多智能体实时WebSocket |
-| `GET /api/v1/health` | GET | 健康检查 |
-| `GET /docs` | GET | API文档（Swagger UI） |
+| `/login` | POST | 用户登录 |
+| `/register` | POST | 用户注册 |
+| `/refresh` | POST | 刷新Token |
+| `/logout` | POST | 用户登出 |
+| `/me` | GET | 获取当前用户 |
 
-### 功能模块
+### 聊天模块 `/api/v1/chat` & `/api/v1/sessions`
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/chat` | POST | 多智能体聊天（支持SSE流式） |
+| `/sessions/create` | POST | 创建会话 |
+| `/sessions/user/{username}` | GET | 获取用户会话列表 |
+| `/sessions/{sessionId}/messages` | GET | 获取会话消息 |
+
+### 健康模块 `/api/v1/health` & `/api/v1/profile`
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/health/assess/text` | POST | 文本健康评估 |
+| `/health/assess/image` | POST | 图片健康评估 |
+| `/health/assess/speech` | POST | 语音健康评估 |
+| `/profile/me` | GET/POST | 个人档案管理 |
+
+### 康复模块 `/api/v1/rehab-plan`
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/generate` | POST | AI生成康复计划 |
+| `/tasks/today` | GET | 今日任务 |
+| `/tasks/complete` | POST | 完成任务 |
+| `/{id}/calendar` | GET | 康复日历 |
+| `/{id}/metrics` | GET/POST | 康复指标 |
+| `/{id}/journals` | GET/POST | 康复日志 |
+| `/{id}/achievements` | GET | 成就系统 |
+
+### 医生端 `/api/v1/doctor`
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/patients` | GET | 患者列表 |
+| `/high-risk` | GET | 高风险患者 |
+| `/abnormal-checkins` | GET | 异常打卡 |
+| `/alerts` | GET | 告警列表 |
+| `/alerts/process` | POST | 处理告警 |
+| `/message` | POST | 发送消息 |
+
+### 其他模块
 
 | 模块 | 端点前缀 | 说明 |
 |------|---------|------|
-| 认证 | `/api/v1/auth` | 用户注册、登录、Token刷新 |
-| 健康 | `/api/v1/health` | 健康评估、风险分析 |
-| 康复 | `/api/v1/rehab/*` | 康复计划、运动、日记、成就 |
-| 提醒 | `/api/v1/reminder` | 用药提醒、复查提醒 |
-| 医生 | `/api/v1/doctor` | 医生端功能 |
-| 统计 | `/api/v1/stats` | 数据统计与可视化 |
+| 提醒 | `/api/v1/reminder` | 用药/复查提醒 |
+| 通知 | `/api/v1/notifications` | 推送通知 |
+| 统计 | `/api/v1/stats` | 数据统计 |
+| 知识图谱 | `/api/v1/kg` | 疾病/药品/食物查询 |
+| 多模态 | `/api/v1/multimodal` | OCR/STT/TTS |
+| 文件上传 | `/api/v1/upload` | 图片/语音上传 |
 
 ---
 
@@ -295,18 +401,16 @@ MedicalQA  HealthAssessment  Reminder  Psychology
 
 ```bash
 # 运行所有测试
-pytest tests/
+pytest tests/unit/
 
 # 运行特定测试
-pytest tests/test_auth.py
+pytest tests/unit/test_auth.py
 
 # 运行并生成覆盖率报告
-pytest tests/ --cov=app --cov-report=html
+pytest tests/unit/ --cov=app --cov-report=html
 ```
 
 ### 测试脚本
-
-测试脚本位于 `tests/scripts/` 目录：
 
 ```bash
 # 测试DeepSeek API连接
@@ -319,18 +423,31 @@ python tests/scripts/test_mysql.py
 python tests/scripts/test_asr_recognition.py
 ```
 
+### CI/CD
+
+项目使用GitHub Actions进行持续集成：
+- **触发条件**: push/PR 到 master/dev 分支
+- **检查内容**: ruff lint + pytest 单元测试
+- **依赖文件**: `requirements-ci.txt` (轻量版，不含ML库)
+
 ---
 
-## 📈 性能监控
+## 📈 监控与日志
 
 ### Prometheus指标
-
-系统集成了Prometheus监控指标：
 
 - `http_requests_total`: HTTP请求总数
 - `http_request_duration_seconds`: 请求延迟
 
-访问 `/metrics` 端点获取指标数据。
+```bash
+curl http://localhost:8000/metrics
+```
+
+### 结构化日志
+
+- 开发环境: 彩色控制台输出
+- 生产环境: JSON格式输出
+- 请求级上下文: request_id, user
 
 ### 健康检查
 
@@ -338,40 +455,34 @@ python tests/scripts/test_asr_recognition.py
 curl http://localhost:8000/health
 ```
 
-返回各组件状态：
-- MySQL连接状态
-- Neo4j连接状态
-- Redis连接状态（可选）
-- LLM配置状态
+返回各组件状态：MySQL、Neo4j、Redis（可选）、LLM配置
 
 ---
 
-## 🔧 配置说明
+## 🔧 环境变量说明
 
-### 环境变量
+| 变量名 | 必填 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `DEEPSEEK_API_KEY` | ✅ | - | DeepSeek API密钥 |
+| `DEEPSEEK_BASE_URL` | ✅ | `https://api.deepseek.com` | API地址 |
+| `DEEPSEEK_MODEL` | ✅ | `deepseek-chat` | 模型名称 |
+| `NEO4J_URI` | ✅ | `bolt://localhost:7687` | Neo4j连接地址 |
+| `NEO4J_USER` | ✅ | `neo4j` | Neo4j用户名 |
+| `NEO4J_PASSWORD` | ✅ | - | Neo4j密码 |
+| `MYSQL_HOST` | ✅ | `localhost` | MySQL主机 |
+| `MYSQL_PORT` | ✅ | `3306` | MySQL端口 |
+| `MYSQL_USER` | ✅ | `root` | MySQL用户名 |
+| `MYSQL_PASSWORD` | ✅ | - | MySQL密码 |
+| `MYSQL_DATABASE` | ✅ | `RAG` | 数据库名 |
+| `SECRET_KEY` | ✅ | - | JWT签名密钥 |
+| `ADMIN_USERNAME` | ❌ | `admin` | 管理员用户名 |
+| `ADMIN_PASSWORD` | ❌ | - | 管理员密码 |
+| `DASHSCOPE_API_KEY` | ❌ | - | 阿里云语音API |
+| `REDIS_URL` | ❌ | - | Redis地址(可选) |
+| `CORS_ORIGINS` | ❌ | `localhost:5173` | CORS白名单 |
+| `DEBUG` | ❌ | `false` | 调试模式 |
 
-| 变量名 | 必填 | 说明 |
-|--------|------|------|
-| `DEEPSEEK_API_KEY` | ✅ | DeepSeek API密钥 |
-| `NEO4J_URI` | ✅ | Neo4j连接地址 |
-| `NEO4J_PASSWORD` | ✅ | Neo4j密码 |
-| `MYSQL_HOST` | ✅ | MySQL主机地址 |
-| `MYSQL_PASSWORD` | ✅ | MySQL密码 |
-| `SECRET_KEY` | ✅ | JWT密钥 |
-| `DASHSCOPE_API_KEY` | ❌ | 阿里云语音API（可选） |
-
-### 模型配置
-
-```env
-# RoBERTa模型路径
-BERT_MODEL_PATH=./model/chinese-roberta-wwm-ext
-
-# NER模型权重
-NER_MODEL_WEIGHTS=model/best_roberta_rnn_model_ent_aug.pt
-
-# 标签映射
-TAG2IDX_PATH=tmp_data/tag2idx.npy
-```
+完整配置请参考 [.env.example](.env.example)
 
 ---
 
@@ -380,6 +491,7 @@ TAG2IDX_PATH=tmp_data/tag2idx.npy
 ### 代码规范
 
 - 遵循PEP 8规范
+- 使用ruff进行代码检查
 - 注释采用中文风格
 - 使用结构化日志（structlog）
 
@@ -412,10 +524,13 @@ print("[ERROR] ❌ 错误消息")
 - [x] 多智能体架构搭建
 - [x] KG-RAG管线实现
 - [x] 健康风险评估系统
-- [x] 康复计划管理
+- [x] 康复计划管理全流程
 - [x] WebSocket实时通信
 - [x] NER实体识别模型
 - [x] 医生端功能
+- [x] Vue前端（患者端+医生端）
+- [x] 双Token认证机制
+- [x] Docker容器化部署
 
 ### 🔄 进行中
 
@@ -441,12 +556,6 @@ print("[ERROR] ❌ 错误消息")
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
----
-
-## 👥 贡献者
-
-感谢所有为本项目做出贡献的开发者！
 
 ---
 
